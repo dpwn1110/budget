@@ -288,6 +288,8 @@ button.cell:hover{filter:brightness(.94)}
 .tx.in .badge,.tx.in.fixed .badge{background:var(--inc-soft);color:var(--inc);box-shadow:none}
 .tx.in .amt{color:var(--inc)!important}
 .bookSeg[hidden],.wishPanel[hidden]{display:none}
+/* 동기화 비밀번호: 로그인 칸으로 오해받지 않게 type=text + 글자 가리기 (브라우저 비밀번호 저장 알림 방지) */
+.secret{-webkit-text-security:disc;text-security:disc}
 /* 신용카드 */
 .payRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:-4px 0 14px}
 .payRow[hidden]{display:none}
@@ -888,7 +890,7 @@ button.cell:hover{filter:brightness(.94)}
       <p class="note" id="syncState" style="margin-bottom:10px"></p>
       <div id="syncOffBox">
         <div class="inline">
-          <div class="field"><label for="syncPass">동기화 비밀번호</label><input id="syncPass" type="password" autocomplete="new-password" placeholder="8자 이상"></div>
+          <div class="field"><label for="syncPass">동기화 비밀번호</label><input id="syncPass" class="secret" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" data-lpignore="true" data-1p-ignore placeholder="8자 이상"></div>
           <button class="ghost" id="syncConnect">연결</button>
         </div>
         <p class="note" style="margin-top:10px;font-size:12.5px">휴대폰과 컴퓨터에 <b>같은 비밀번호</b>를 넣으면 자동으로 맞춰져요. 이 비밀번호로 잠가서 올리기 때문에 아무도 내용을 볼 수 없어요. 비밀번호를 잊으면 클라우드에 올린 데이터는 되찾을 수 없으니 꼭 기억해 두세요. (기기 안의 데이터는 그대로예요)</p>
