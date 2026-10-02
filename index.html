@@ -802,6 +802,22 @@ button.cell:hover{filter:brightness(.94)}
       </div>
     </section>
 
+    <section class="sec" aria-labelledby="syncTitle" id="syncSec">
+      <h2 id="syncTitle">기기 연동</h2>
+      <p class="note" id="syncState" style="margin-bottom:10px"></p>
+      <div id="syncOffBox">
+        <div class="inline">
+          <div class="field"><label for="syncPass">동기화 비밀번호</label><input id="syncPass" type="password" autocomplete="new-password" placeholder="8자 이상"></div>
+          <button class="ghost" id="syncConnect">연결</button>
+        </div>
+        <p class="note" style="margin-top:10px;font-size:12.5px">휴대폰과 컴퓨터에 <b>같은 비밀번호</b>를 넣으면 자동으로 맞춰져요. 이 비밀번호로 잠가서 올리기 때문에 아무도 내용을 볼 수 없어요. 비밀번호를 잊으면 클라우드에 올린 데이터는 되찾을 수 없으니 꼭 기억해 두세요. (기기 안의 데이터는 그대로예요)</p>
+      </div>
+      <div id="syncOnBox" class="backupRow" hidden>
+        <button class="ghost" id="syncNowBtn">지금 맞추기</button>
+        <button class="ghost" id="syncOffBtn">연결 끊기</button>
+      </div>
+    </section>
+
     <section class="sec" aria-labelledby="bkTitle">
       <h2 id="bkTitle">백업</h2>
       <p class="note" id="bkNote"></p>
@@ -828,6 +844,9 @@ const INC_CATS=['용돈','월급','장학금','부수입','명절·선물','기�
 //  card: 신용카드 — 쓴 날엔 지출로, 돈은 카드 결제일에 '카드값 출금'으로 잔액에서 빠짐
 const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false,names:['내 돈','아빠 카드'],full2:false,card:false};
 const LS=APP.key;
+// 기기 연동용 Firebase 설정 (Firebase 콘솔 → 프로젝트 설정 → 내 앱 → SDK 설정의 firebaseConfig).
+// 공개돼도 괜찮은 값이에요. 데이터는 동기화 비밀번호로 암호화해서 올라가요.
+const FIREBASE=null;
 // 마지막으로 연 탭 기억 (가계부마다 따로)
 const BOOK_KEY=APP.key==='gagyebu-local-v2'?'gagyebu-book':APP.key+'-book';
 const $=id=>document.getElementById(id);
@@ -895,16 +914,34 @@ function migrate(){
 function load(){
   try{
     const r=localStorage.getItem(LS);
-    if(r){const p=JSON.parse(r);state.tx=Array.isArray(p.tx)?p.tx:[];state.settings=Object.assign(DEF_SETTINGS(),p.settings||{});migrate()}
+    if(r){const p=JSON.parse(r);state.tx=Array.isArray(p.tx)?p.tx:[];state.settings=Object.assign(DEF_SETTINGS(),p.settings||{});state.del=p.del||{};state.su=p.su||0;migrate()}
   }catch(e){toast('저장된 데이터를 읽지 못했어요. 백업 파일이 있다면 불러와 주세요.')}
+  initShadow();
 }
-function write(){
+// 기기 연동: 내역마다 마지막으로 바뀐 시각(u), 지운 내역(del), 설정이 바뀐 시각(su)을 기록해 두면
+// 두 기기에서 따로 고쳐도 합칠 수 있다. 저장할 때마다 직전 상태(shadow)와 비교해서 기록한다.
+let shadow=null;
+const txKey=t=>{const {u,...r}=t;return JSON.stringify(r)};
+const setKey=()=>{const c={...state.settings};delete c.lastBackup;return JSON.stringify(c)};
+function initShadow(){const m={};state.tx.forEach(t=>{m[t.id]={k:txKey(t),u:t.u||0}});shadow={tx:m,set:setKey()}}
+function stamp(){
+  const now=Date.now();if(!state.del)state.del={};
+  const prev=shadow||{tx:{},set:setKey()},cur={};
+  state.tx.forEach(t=>{const k=txKey(t),p=prev.tx[t.id];
+    if(p&&p.k===k)t.u=t.u||p.u;else{t.u=now;delete state.del[t.id]}
+    cur[t.id]={k,u:t.u}});
+  Object.keys(prev.tx).forEach(id=>{if(!cur[id])state.del[id]=now});
+  const sk=setKey();if(sk!==prev.set)state.su=now;
+  shadow={tx:cur,set:sk};
+}
+function writeRaw(){
   try{localStorage.setItem(LS,JSON.stringify(state))}
   catch(e){toast('이 브라우저에서는 저장이 안 돼요. 크롬으로 열어 주세요.')}
 }
+function write(){stamp();writeRaw();if(typeof syncSoon==='function')syncSoon()}
 /* ---------- 되돌리기 ---------- */
 let undoStack=[],redoStack=[],lastSnap=null;
-function snap(){const c=JSON.parse(JSON.stringify(state));delete c.settings.lastBackup;return JSON.stringify(c)}
+function snap(){const c=JSON.parse(JSON.stringify(state));delete c.settings.lastBackup;delete c.del;delete c.su;c.tx.forEach(t=>delete t.u);return JSON.stringify(c)}
 function save(){
   const now=snap();
   if(lastSnap!==null&&now!==lastSnap){undoStack.push(lastSnap);if(undoStack.length>100)undoStack.shift();redoStack=[]}
@@ -1919,6 +1956,134 @@ if(!APP.books)$('bookSeg').hidden=true;
 if(!APP.wish)document.querySelector('.wishPanel').hidden=true;
 renderChips();render();
 const addBtn=$('add');addBtn.disabled=false;addBtn.textContent='추가';
+
+/* ---------- 기기 연동 (Firebase + 비밀번호 암호화) ----------
+   - 비밀번호에서 PBKDF2로 '보관함 이름'과 '암호 키'를 만든다. 비밀번호 자체는 어디에도 저장·전송하지 않는다.
+   - 데이터는 gzip → AES-GCM으로 잠가서 Firestore의 vaults/{보관함 이름} 문서 하나에 올린다.
+   - 받아 온 데이터와 기기의 데이터를 합친다: 내역은 더 늦게 바뀐 쪽, 지운 내역은 지운 시각이 더 늦으면 지움,
+     설정은 더 늦게 바뀐 쪽. */
+const SYNC_KEY=LS+'-sync';
+let sync=null,fb=null,syncing=false,syncAgain=false,syncT=null,lastPushAt=0,unlisten=null,syncStatus={state:'off'};
+const te=new TextEncoder(),tdc=new TextDecoder();
+const toB64=u=>{u=new Uint8Array(u);let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
+const fromB64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const hexOf=u=>[...u].map(b=>b.toString(16).padStart(2,'0')).join('');
+async function fbInit(){
+  if(fb)return fb;
+  if(window.__FB_MOCK){fb=window.__FB_MOCK;return fb} // 테스트용
+  if(!FIREBASE)throw new Error('nocfg');
+  const V='10.12.2',B=`https://www.gstatic.com/firebasejs/${V}/`;
+  const [A,U,F]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+  const app=A.initializeApp(FIREBASE);
+  await U.signInAnonymously(U.getAuth(app));
+  fb={db:F.getFirestore(app),doc:F.doc,getDoc:F.getDoc,setDoc:F.setDoc,onSnapshot:F.onSnapshot};
+  return fb;
+}
+async function deriveSync(pass){
+  const base=await crypto.subtle.importKey('raw',te.encode(pass),'PBKDF2',false,['deriveBits']);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:te.encode('gagyebu-sync|'+APP.key),iterations:250000,hash:'SHA-256'},base,512));
+  return {id:hexOf(bits.slice(0,32)),raw:bits.slice(32)};
+}
+const importAes=raw=>crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+async function pack(obj){
+  let data=te.encode(JSON.stringify(obj)),z=0;
+  if(window.CompressionStream){data=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());z=1}
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},sync.key,data);
+  return {v:1,z,iv:toB64(iv),data:toB64(ct),at:Date.now()};
+}
+async function unpack(d){
+  let buf=await crypto.subtle.decrypt({name:'AES-GCM',iv:fromB64(d.iv)},sync.key,fromB64(d.data));
+  if(d.z)buf=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  return JSON.parse(tdc.decode(buf));
+}
+const pick=()=>({tx:state.tx,settings:state.settings,del:state.del||{},su:state.su||0});
+function canon(x){const c={...x.settings};delete c.lastBackup;return JSON.stringify([[...x.tx].sort((a,b)=>a.id<b.id?-1:1),c,Object.keys(x.del||{}).sort().map(k=>[k,x.del[k]]),x.su||0])}
+function mergeStates(a,b){
+  const del={...(a.del||{})};Object.entries(b.del||{}).forEach(([k,v])=>{if(!(del[k]>=v))del[k]=v});
+  const m={};[...(a.tx||[]),...(b.tx||[])].forEach(t=>{const o=m[t.id];if(!o||(t.u||0)>(o.u||0))m[t.id]=t});
+  const tx=Object.values(m).filter(t=>!(del[t.id]>=(t.u||0)));
+  tx.forEach(t=>{if(del[t.id]!==undefined)delete del[t.id]});
+  const useB=(b.su||0)>(a.su||0);
+  const settings=useB?{...b.settings,lastBackup:a.settings.lastBackup}:a.settings;
+  return {tx,settings,del,su:Math.max(a.su||0,b.su||0)};
+}
+function applyMerged(m){
+  state.tx=m.tx;state.settings=Object.assign(DEF_SETTINGS(),m.settings);migrate();state.del=m.del;state.su=m.su;
+  writeRaw();initShadow();lastSnap=snap();undoStack=[];redoStack=[];updateUndo();
+  if(editingId&&!state.tx.some(t=>t.id===editingId))endEdit();else{renderChips();render()}
+}
+function setSync(st,msg){syncStatus={state:st,msg,at:Date.now()};renderSync()}
+function renderSync(){
+  const el=$('syncState');if(!el)return;
+  const on=!!sync;$('syncOffBox').hidden=on;$('syncOnBox').hidden=!on;
+  const t=syncStatus;
+  el.classList.toggle('warn',t.state==='err');
+  el.textContent=!FIREBASE&&!window.__FB_MOCK?'아직 연동 준비 전이에요. (Firebase 설정이 필요해요)':!on?'연결 안 됨 — 이 기기에만 저장돼요.':
+    t.state==='busy'?'맞추는 중…':t.state==='err'?`연결 오류: ${t.msg||'인터넷 연결을 확인해 주세요'}`:
+    `연결됨 · ${t.msg||'다른 기기와 자동으로 맞춰져요'}`;
+  $('syncConnect').disabled=!FIREBASE&&!window.__FB_MOCK;
+}
+function syncSoon(){if(!sync)return;clearTimeout(syncT);syncT=setTimeout(syncNow,1200)}
+async function syncNow(first){
+  if(!sync)return;if(syncing){syncAgain=true;return}
+  syncing=true;setSync('busy');
+  let note='';
+  try{
+    const f=await fbInit(),ref=f.doc(f.db,'vaults',sync.id);
+    const r=await f.getDoc(ref),local=pick();
+    let merged=local,remote=null;
+    if(r.exists()){
+      remote=await unpack(r.data());
+      merged=mergeStates(local,remote);
+      if(canon(merged)!==canon(local)){applyMerged(merged);note='다른 기기의 내용을 가져왔어요'}
+    }else if(first)note='새 연동을 만들었어요. 다른 기기에도 같은 비밀번호를 넣어 주세요';
+    if(!remote||canon(merged)!==canon(remote)){const d=await pack(merged);lastPushAt=d.at;await f.setDoc(ref,d)}
+    if(first&&remote)note='기존 연동과 합쳤어요';
+    const t=new Date();setSync('ok',`마지막으로 맞춘 시각 ${pad(t.getHours())}:${pad(t.getMinutes())}`);
+    if(note)toast(note);
+  }catch(e){
+    setSync('err',e&&e.message==='nocfg'?'Firebase 설정이 없어요':e&&e.name==='OperationError'?'비밀번호가 맞지 않아요':'인터넷 연결을 확인해 주세요');
+  }finally{syncing=false;if(syncAgain){syncAgain=false;syncNow()}}
+}
+async function listen(){
+  try{
+    const f=await fbInit();if(unlisten)unlisten();
+    unlisten=f.onSnapshot(f.doc(f.db,'vaults',sync.id),s=>{
+      if(!s.exists()||(s.metadata&&s.metadata.hasPendingWrites))return;
+      if(s.data().at!==lastPushAt)syncNow(); // 다른 기기가 올린 것
+    },()=>{});
+  }catch(e){}
+}
+async function startSync(id,raw,first){
+  sync={id,key:await importAes(raw)};
+  renderSync();await syncNow(first);listen();
+}
+$('syncConnect').onclick=async()=>{
+  const pass=$('syncPass').value;
+  if(pass.length<8){toast('비밀번호를 8자 이상으로 정해 주세요');$('syncPass').focus();return}
+  $('syncConnect').disabled=true;setSync('busy');
+  try{
+    const {id,raw}=await deriveSync(pass);
+    try{localStorage.setItem(SYNC_KEY,JSON.stringify({id,k:toB64(raw)}))}catch(e){}
+    $('syncPass').value='';
+    await startSync(id,raw,true);
+  }finally{$('syncConnect').disabled=false;renderSync()}
+};
+$('syncPass').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('syncConnect').click()});
+$('syncNowBtn').onclick=()=>syncNow();
+$('syncOffBtn').onclick=()=>{
+  if(unlisten)unlisten();unlisten=null;sync=null;
+  try{localStorage.removeItem(SYNC_KEY)}catch(e){}
+  setSync('off');toast('연결을 끊었어요. 이 기기의 데이터는 그대로예요');
+};
+(async()=>{
+  renderSync();
+  let saved=null;try{saved=JSON.parse(localStorage.getItem(SYNC_KEY)||'null')}catch(e){}
+  if(saved&&saved.id&&saved.k&&(FIREBASE||window.__FB_MOCK))startSync(saved.id,fromB64(saved.k),false);
+})();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&sync)syncNow()});
+addEventListener('online',()=>{if(sync)syncNow()});
 
 /* ---------- 새 버전 확인 ----------
    아이폰 홈 화면 앱은 예전 파일을 오래 들고 있어서, 열 때·다시 볼 때마다 서버의 파일을 새로 받아

@@ -1,0 +1,21 @@
+// 가계부 기기 연동용 Firestore 보안 규칙
+// Firebase 콘솔 → Firestore Database → 규칙 탭에 그대로 붙여 넣고 '게시'를 눌러요.
+//
+// - 익명 로그인한 앱만 읽고 쓸 수 있어요.
+// - 보관함 이름(64자)은 동기화 비밀번호에서 만들어져서, 비밀번호를 모르면 찾을 수 없어요.
+// - 목록 보기와 삭제는 막혀 있어요.
+// - 올라가는 내용은 기기에서 암호화된 문자열뿐이에요.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /vaults/{vid} {
+      allow get: if request.auth != null;
+      allow create, update: if request.auth != null
+        && vid.size() == 64
+        && request.resource.data.keys().hasOnly(['v', 'z', 'iv', 'data', 'at'])
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 1000000;
+      allow list, delete: if false;
+    }
+  }
+}
