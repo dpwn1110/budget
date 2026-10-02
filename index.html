@@ -10,6 +10,7 @@
   --bg:#ECEDF0; --panel:#FFFFFF; --soft:#F4F5F7; --ink:#15171C; --sub:#737885; --line:#E4E6EB;
   --accent:#3355FF; --accent-ink:#FFFFFF; --warn:#F0461F; --warn-soft:rgba(240,70,31,.12);
   --h1:rgba(51,85,255,.16); --h2:rgba(51,85,255,.38); --h3:rgba(51,85,255,.66); --h4:#3355FF;
+  --warm:#F6F0E6;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
@@ -17,11 +18,13 @@
   --bg:#0E0F12; --panel:#17191E; --soft:#1F2228; --ink:#F2F3F5; --sub:#9096A3; --line:#272A32;
   --accent:#7D93FF; --accent-ink:#0E0F12; --warn:#FF7452; --warn-soft:rgba(255,116,82,.16);
   --h1:rgba(125,147,255,.18); --h2:rgba(125,147,255,.4); --h3:rgba(125,147,255,.68); --h4:#7D93FF;
+  --warm:#26231E;
 }}
 :root[data-theme="dark"]{
   --bg:#0E0F12; --panel:#17191E; --soft:#1F2228; --ink:#F2F3F5; --sub:#9096A3; --line:#272A32;
   --accent:#7D93FF; --accent-ink:#0E0F12; --warn:#FF7452; --warn-soft:rgba(255,116,82,.16);
   --h1:rgba(125,147,255,.18); --h2:rgba(125,147,255,.4); --h3:rgba(125,147,255,.68); --h4:#7D93FF;
+  --warm:#26231E;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
@@ -72,8 +75,14 @@ h2{font-size:15px;font-weight:700;margin:0 0 12px;letter-spacing:-.02em}
 .stats dd{margin:2px 0 0;font-weight:700;font-size:18px;letter-spacing:-.03em}
 .stats dd.pos{color:var(--accent)} .stats dd.neg{color:var(--warn)}
 .stats small{display:block;font-size:11.5px;color:var(--sub);margin-top:1px;line-height:1.35}
-.stats .daily{background:var(--soft);border-radius:12px;padding:8px 10px;margin:-8px -10px}
+.stats .daily{background:var(--soft);border-radius:12px;padding:8px 10px;margin:-8px -6px}
 .stats .daily dd{font-size:20px}
+.stats .daily.money{background:var(--h1)}
+.stats .daily.money dt,.stats .daily.money small{color:var(--accent)}
+.stats .daily.budget{background:var(--warm)}
+.stats .netBox dd{font-size:26px;font-weight:800;letter-spacing:-.045em}
+.stats .netBox dd:not(.pos):not(.neg){color:var(--ink)}
+.stats .netBox dt{font-weight:600;color:var(--ink)}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}}
 .days{padding-left:28px;border-left:1px solid var(--line)}
 .daysHead{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:12.5px}
@@ -228,6 +237,9 @@ button.cell:hover{filter:brightness(.92)}
 .fixedList li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .fixedList li b{font-weight:600}
 .fixedList .when{display:block;font-size:12.5px;color:var(--sub)}
+.earlyBtn{border:0;background:var(--soft);color:var(--sub);border-radius:999px;padding:1px 8px;margin-left:4px;font-size:11.5px;font-weight:600}
+.earlyBtn[aria-pressed="true"]{background:var(--h1);color:var(--accent)}
+.earlyBtn:hover{background:var(--line)}
 .fixedForm .row{margin-bottom:8px}
 .fixedForm .ghost{width:100%}
 .fixedTotal{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0 16px;margin-top:-14px;border-top:2px solid var(--ink)}
@@ -330,10 +342,10 @@ button.cell:hover{filter:brightness(.92)}
     <dl class="stats">
       <div><dt>수입</dt><dd id="inc">0원</dd></div>
       <div><dt>그중 고정지출</dt><dd id="fx">0원</dd></div>
-      <div><dt id="netLabel">남는 돈</dt><dd id="net">0원</dd></div>
+      <div class="netBox"><dt>남는 돈</dt><dd id="net">0원</dd><small id="netNote"></small></div>
       <div><dt>하루 평균 지출</dt><dd id="avg">0원</dd></div>
-      <div class="daily"><dt>남은 돈으로 하루에</dt><dd id="perMoney">—</dd><small id="perMoneyNote"></small></div>
-      <div class="daily"><dt>예산 지키려면 하루에</dt><dd id="perBudget">—</dd><small id="perBudgetNote"></small></div>
+      <div class="daily money"><dt>남은 돈으로 하루에</dt><dd id="perMoney">—</dd><small id="perMoneyNote"></small></div>
+      <div class="daily budget"><dt>예산 지키려면 하루에</dt><dd id="perBudget">—</dd><small id="perBudgetNote"></small></div>
     </dl>
     <div class="days">
       <div class="daysHead" id="daysHead"><span>날짜별 지출</span><span>날짜를 누르면 합계</span></div>
@@ -408,6 +420,9 @@ button.cell:hover{filter:brightness(.92)}
         </div>
         <div class="row">
           <div class="field"><label for="inStart">언제부터</label><select id="inStart"><option value="this">이번 기간부터</option><option value="next">다음 기간부터 (이번 건 이미 입력함)</option></select></div>
+        </div>
+        <div class="row" id="inEarlyRow" hidden>
+          <div class="field"><label for="inEarly">이 돈은</label><select id="inEarly"><option value="next">다음 기간에 쓸 돈 (용돈 받는 날 전에 미리 들어옴)</option><option value="same">받은 기간에 쓸 돈</option></select></div>
         </div>
         <button class="ghost" id="addIncome">고정수입 추가</button>
       </div>
@@ -522,6 +537,9 @@ function updateUndo(){
 }
 
 /* ---------- 고정지출 ---------- */
+// 용돈 받는 날 전에 들어오는 수입을 '다음 기간에 쓸 돈'으로 정하면, 이 기간 몫은 직전 기간 끝에 들어온 돈
+function canEarly(i){return sd()>1&&(i.day||1)<sd()}
+function incomeDate(i,key){return i.early&&canEarly(i)?fixedDate(i,shiftYm(key,-1)):fixedDate(i,key)}
 function activeIncomes(key){return (state.settings.incomes||[]).filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
 function spentBetween(a,b){
   let sum=state.tx.filter(t=>t.type==='out'&&t.date>=a&&t.date<=b).reduce((s,t)=>s+t.amount,0);
@@ -559,7 +577,7 @@ function render(){
   const autoIncs=incs.filter(i=>!(i.skipCat&&txs.some(t=>t.type==='in'&&t.cat===i.skipCat)));
   // 고정 항목은 날짜가 지나야 실제 수입·지출로 계산
   const fixedDue=fixed.filter(f=>fixedDate(f,view)<=todayS);
-  const incDue=autoIncs.filter(i=>fixedDate(i,view)<=todayS);
+  const incDue=autoIncs.filter(i=>incomeDate(i,view)<=todayS);
   const income=txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0)+incDue.reduce((s,i)=>s+i.amount,0);
   const varOut=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   const fixedOut=fixedDue.reduce((s,f)=>s+f.amount,0);
@@ -573,7 +591,7 @@ function render(){
   netEl.textContent=(net>0?'+':'')+won(net);
   const goal=allowance&&state.settings.budget?allowance-state.settings.budget:0;
   netEl.className=net<0?'neg':(goal>0?net>=goal:net>0)?'pos':'';
-  $('netLabel').textContent=goal>0?`남는 돈 (목표 ${won(goal)})`:'남는 돈';
+  $('netNote').textContent=goal>0?(net>=goal?`목표 ${won(goal)} 달성`:`목표 ${won(goal)}까지 ${won(goal-net)}`):'';
 
   // 예산
   const budget=state.settings.budget||0;
@@ -599,7 +617,7 @@ function render(){
   if(isNow){
     const daysLeft=Math.round((end-t0)/86400000)+1;
     const pendOut=fixed.filter(f=>fixedDate(f,view)>todayS).reduce((s,f)=>s+f.amount,0);
-    const pendIn=autoIncs.filter(i=>fixedDate(i,view)>todayS).reduce((s,i)=>s+i.amount,0);
+    const pendIn=autoIncs.filter(i=>incomeDate(i,view)>todayS).reduce((s,i)=>s+i.amount,0);
     const moneyLeft=net-pendOut;
     const perM=moneyLeft/daysLeft;
     pm.textContent=won(Math.max(0,perM));pm.className=perM<=0?'neg':'';
@@ -647,7 +665,7 @@ function render(){
   // 내역
   const items=txs.map(t=>({...t,kind:'tx'}));
   fixed.forEach(f=>{const date=fixedDate(f,view);items.push({id:f.id,kind:'fixed',type:'out',amount:f.amount,cat:'고정',memo:f.name,date,at:0,pending:date>todayS})});
-  autoIncs.forEach(i=>{const date=fixedDate(i,view);items.push({id:i.id,kind:'allow',type:'in',amount:i.amount,cat:i.name,memo:i.name,date,at:-1,pending:date>todayS})});
+  autoIncs.forEach(i=>{const date=incomeDate(i,view);items.push({id:i.id,kind:'allow',type:'in',amount:i.amount,cat:i.name,memo:i.name,date,at:-1,pending:date>todayS})});
   items.sort((a,b)=>b.date.localeCompare(a.date)||(b.at||0)-(a.at||0));
   const unk=items.filter(it=>it.kind==='tx'&&isUnknown(it));
   const unkSum=unk.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
@@ -700,7 +718,7 @@ function render(){
   $('planNote').textContent=allowance&&budget?(allowance>budget?`매달 받는 ${won(allowance)} 중 ${won(budget)}을 쓰고 ${won(allowance-budget)}을 남기는 계획이에요.`:`쓸 돈이 매달 받는 ${won(allowance)}보다 많아요.`):allowance?'쓸 돈을 정하면 매달 얼마를 남길지 보여 줄게요.':'고정수입을 추가하면 매달 받는 돈이 자동으로 계산돼요.';
   const it=$('incTotal');it.hidden=!incs.length;
   if(incs.length){$('incSum').textContent=won(allowance);$('incShare').textContent=`${incs.length}개`}
-  $('incList').innerHTML=incs.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일</span></span><span>${won(f.amount)}</span><button class="del" data-delinc="${esc(f.id)}" aria-label="${esc(f.name)} 고정수입 그만두기">✕</button></li>`).join('');
+  $('incList').innerHTML=incs.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${canEarly(f)?`<button type="button" class="earlyBtn" data-early="${esc(f.id)}" aria-pressed="${!!f.early}" title="눌러서 바꾸기">${f.early?'다음 기간에 쓸 돈':'받은 기간에 쓸 돈'}</button>`:''}</span></span><span>${won(f.amount)}</span><button class="del" data-delinc="${esc(f.id)}" aria-label="${esc(f.name)} 고정수입 그만두기">✕</button></li>`).join('');
   if(document.activeElement!==$('startDay'))$('startDay').value=sd();
 
   const ft=$('fixedTotal');ft.hidden=!fixed.length;
@@ -818,11 +836,21 @@ $('addIncome').onclick=()=>{
   if(!name){toast('이름을 입력해 주세요.');$('inName').focus();return}
   if(!amount){toast('금액을 입력해 주세요.');$('inAmt').focus();return}
   const startKey=$('inStart').value==='next'?shiftYm(view,1):view;
-  state.settings.incomes=(state.settings.incomes||[]).concat({id:newId(),name,amount,day,start:startKey});
-  save();$('inName').value='';$('inAmt').value='';$('inDay').value='';
+  const inc={id:newId(),name,amount,day,start:startKey};
+  if(canEarly(inc)&&$('inEarly').value==='next')inc.early=true;
+  state.settings.incomes=(state.settings.incomes||[]).concat(inc);
+  save();$('inName').value='';$('inAmt').value='';$('inDay').value='';syncEarlyRow();
   render();toast($('inStart').value==='next'?`${name}을(를) 다음 기간부터 넣을게요`:'고정수입을 추가했어요');
 };
+function syncEarlyRow(){const d=Math.round(Number($('inDay').value))||sd();$('inEarlyRow').hidden=!canEarly({day:d})}
+$('inDay').addEventListener('input',syncEarlyRow);
 $('incList').addEventListener('click',e=>{
+  const eb=e.target.closest('[data-early]');
+  if(eb){
+    const f=(state.settings.incomes||[]).find(x=>x.id===eb.dataset.early);if(!f)return;
+    f.early=!f.early;if(!f.early)delete f.early;save();render();
+    toast(f.early?`${f.name}을(를) 다음 기간에 쓸 돈으로 계산할게요`:`${f.name}을(를) 받은 기간에 쓸 돈으로 계산할게요`);return;
+  }
   const b=e.target.closest('[data-delinc]');if(!b)return;
   const f=(state.settings.incomes||[]).find(x=>x.id===b.dataset.delinc);if(!f)return;
   const prev=shiftYm(view,-1);
@@ -880,7 +908,7 @@ $('importFile').addEventListener('change',async e=>{
 
 /* ---------- 설정 서랍 ---------- */
 const dlg=$('settings');
-$('openSettings').onclick=()=>dlg.showModal();
+$('openSettings').onclick=()=>{syncEarlyRow();dlg.showModal()};
 $('closeSettings').onclick=()=>dlg.close();
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
 
@@ -904,7 +932,7 @@ function buildReport(){
   const fixed=activeFixed(key),incs=activeIncomes(key);
   const autoIncs=incs.filter(i=>!(i.skipCat&&txs.some(t=>t.type==='in'&&t.cat===i.skipCat)));
   const todayR=todayStr();
-  const fixedDue=fixed.filter(f=>fixedDate(f,key)<=todayR),incDue=autoIncs.filter(i=>fixedDate(i,key)<=todayR);
+  const fixedDue=fixed.filter(f=>fixedDate(f,key)<=todayR),incDue=autoIncs.filter(i=>incomeDate(i,key)<=todayR);
   const income=txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0)+incDue.reduce((s,i)=>s+i.amount,0);
   const fixedOut=fixedDue.reduce((s,f)=>s+f.amount,0);
   const out=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0)+fixedOut;
@@ -943,7 +971,7 @@ function buildReport(){
   // 내역 (날짜순)
   const items=txs.map(t=>({...t,kind:'tx'}));
   fixedDue.forEach(f=>items.push({kind:'fixed',type:'out',amount:f.amount,cat:'고정지출',memo:f.name,date:fixedDate(f,key)}));
-  incDue.forEach(i=>items.push({kind:'allow',type:'in',amount:i.amount,cat:'고정수입',memo:i.name,date:fixedDate(i,key)}));
+  incDue.forEach(i=>items.push({kind:'allow',type:'in',amount:i.amount,cat:'고정수입',memo:i.name,date:incomeDate(i,key)}));
   items.sort((a,b)=>a.date.localeCompare(b.date)||(a.at||0)-(b.at||0));
   const listHTML=items.map(it=>{
     const unk=it.kind==='tx'&&isUnknown(it);
