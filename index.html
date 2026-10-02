@@ -362,6 +362,25 @@ button.cell:hover{filter:brightness(.94)}
 .pkFoot button:hover{background:var(--hl);color:var(--hl-ink);border-color:var(--hl)}
 .pkFoot .pkClear{color:var(--sub)}
 
+/* 앱 안 작은 팝업 (모으기, 지우기 확인) */
+.picker.popBox{width:300px}
+.popHead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:2px}
+.popHead b{font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.popHead span{font-size:12.5px;color:var(--sub);white-space:nowrap}
+.popBox .wBar{margin:8px 0 12px}
+.popBox .amountBox{padding:8px 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+.popBox .amountBox:focus-within{box-shadow:inset 0 0 0 2px var(--ink)}
+.popBox .amountBox input{font-size:24px}
+.popBox .amountBox span{font-size:15px}
+.popChips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.popChips button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+.popChips button:hover{background:var(--card)}
+.popAfter{margin:10px 0 0;font-size:12.5px;color:var(--sub);min-height:1.5em}
+.popAfter b{color:var(--ink)}
+.popMsg{margin:4px 0 2px;font-size:14px;line-height:1.5}
+.pkFoot .pkMain,.pkFoot .pkMain:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pkFoot .pkDanger,.pkFoot .pkDanger:hover{background:var(--warn);color:#fff;border-color:var(--warn)}
+
 /* ---------- 위시리스트 ---------- */
 .addMini{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px;white-space:nowrap}
 .addMini:hover,.addMini[aria-expanded="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -387,6 +406,11 @@ button.cell:hover{filter:brightness(.94)}
 .wMeta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--sub);white-space:nowrap}
 .wMeta span:last-child{overflow:hidden;text-overflow:ellipsis}
 .wActs{display:none;gap:3px;flex:none;margin-left:auto}
+.wish:has([aria-expanded="true"]) .wActs{display:flex}
+.wish:has([aria-expanded="true"]) .wLeft{display:none}
+.wLink{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;color:var(--sub);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none}
+.wLink svg{width:11px;height:11px}
+.wLink:hover{background:var(--ink);color:var(--bg);box-shadow:none}
 .wish:hover .wActs,.wish:focus-within .wActs{display:flex}
 .wish:hover .wLeft,.wish:focus-within .wLeft{display:none}
 @media (hover:none){.wActs,.wish:hover .wActs{display:flex;margin-left:4px}.wish:hover .wLeft{display:inline}}
@@ -607,6 +631,9 @@ button.cell:hover{filter:brightness(.94)}
           <div class="row">
             <div class="field"><label for="wSaved">지금까지 모은 돈</label><input id="wSaved" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
             <div class="field"><label for="wDueBtn">언제 살까 (선택)</label><input id="wDue" type="hidden"><button type="button" class="pickBtn" id="wDueBtn" aria-haspopup="dialog" aria-expanded="false"><span></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2.5"/><path d="M2.5 7h11M5.5 2v3M10.5 2v3"/></svg></button></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="wUrl">링크 (선택)</label><input id="wUrl" type="url" inputmode="url" autocomplete="off" placeholder="상품 페이지 주소를 붙여 넣어요"></div>
           </div>
           <div class="formBtns" style="margin-top:10px"><button type="button" class="ghost" id="wCancel">취소</button><button type="button" class="ghost wSave" id="wSave">저장</button></div>
         </div>
@@ -1044,7 +1071,8 @@ function dateLabel(v){
   if(!v)return '';const d=new Date(v+'T00:00'),n=new Date();
   const t=todayStr(),y=new Date();y.setDate(y.getDate()-1);
   const md=`${d.getFullYear()!==n.getFullYear()?d.getFullYear()+'년 ':''}${d.getMonth()+1}월 ${d.getDate()}일`;
-  return v===t?`오늘 (${md})`:v===fmtDate(y)?`어제 (${md})`:`${md} (${WD[d.getDay()]})`;
+  const sh=`${d.getMonth()+1}/${d.getDate()}`;
+  return v===t?`오늘 ${sh}`:v===fmtDate(y)?`어제 ${sh}`:`${md} (${WD[d.getDay()]})`;
 }
 function monthLabel(v){if(!v)return '';const [y,m]=v.split('-').map(Number);return `${y!==new Date().getFullYear()?y+'년 ':''}${m}월`}
 // 숨은 입력칸 값이 바뀌면 버튼 글자도 같이 바뀌게
@@ -1067,7 +1095,14 @@ function openPicker(anchor,mode,value,onPick,clearable){
   drawPicker();picker.hidden=false;placePicker();anchor.setAttribute('aria-expanded','true');
   (picker.querySelector('.sel')||picker.querySelector('.today,.now')||picker.querySelector('.pkGrid button,.pkMonths button')).focus({preventScroll:true});
 }
-function closePicker(){if(!pk)return;pk.anchor.setAttribute('aria-expanded','false');pk=null;picker.hidden=true}
+function closePicker(){if(!pk)return;pk.anchor.setAttribute('aria-expanded','false');pk=null;picker.hidden=true;picker.classList.remove('popBox')}
+// 달력이 아닌 작은 팝업 (같은 자리·같은 닫기 방식)
+function openPop(anchor,html,bind){
+  if(pk&&pk.anchor===anchor){closePicker();return}
+  closePicker();
+  pk={anchor,mode:'pop'};picker.innerHTML=html;picker.classList.add('popBox');picker.hidden=false;
+  anchor.setAttribute('aria-expanded','true');placePicker();bind(picker);
+}
 function placePicker(){
   const r=pk.anchor.getBoundingClientRect(),w=picker.offsetWidth,h=picker.offsetHeight;
   const x=Math.min(Math.max(8,r.left),innerWidth-w-8);let y=r.bottom+6;
@@ -1099,7 +1134,7 @@ function drawPicker(){
   }
 }
 picker.addEventListener('click',e=>{
-  const b=e.target.closest('button');if(!b||!pk)return;
+  const b=e.target.closest('button');if(!b||!pk||pk.mode==='pop')return;
   const a=b.dataset.pk;
   if(a==='prev'||a==='next'){const d=a==='prev'?-1:1;if(pk.mode==='date'){const t=new Date(pk.y,pk.m+d,1);pk.y=t.getFullYear();pk.m=t.getMonth()}else pk.y+=d;drawPicker();placePicker();return}
   let v=b.dataset.v;
@@ -1310,8 +1345,8 @@ function renderWish(){
       if(left)plan=d<=0?'이번 달 안에':d===1?'다음 달까지':`한 달에 ${won(Math.ceil(left/d/1000)*1000)}씩`;
     }
     return `<div class="wish" data-wid="${esc(w.id)}">
-      <div class="wTop"><b data-wact="edit" title="눌러서 고치기">${esc(w.name)}</b>${due}<span class="wLeft">${left?`${won(left)}<small>남음</small>`:'다 모았어요!'}</span>
-        <span class="wActs"><button type="button" data-wact="add" title="모은 돈 더하기" aria-label="${esc(w.name)} 모은 돈 더하기">+</button><button type="button" data-wact="buy" title="샀어요" aria-label="${esc(w.name)} 샀어요">✓</button><button type="button" class="wDel" data-wact="del" title="지우기" aria-label="${esc(w.name)} 지우기">✕</button></span></div>
+      <div class="wTop"><b data-wact="edit" title="눌러서 고치기">${esc(w.name)}</b>${w.url?`<a class="wLink" href="${esc(w.url)}" target="_blank" rel="noopener noreferrer" title="${esc(w.url)}" aria-label="${esc(w.name)} 상품 페이지 열기"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 2.5h5v5M9.5 2.5 3 9"/></svg></a>`:''}${due}<span class="wLeft">${left?`${won(left)}<small>남음</small>`:'다 모았어요!'}</span>
+        <span class="wActs"><button type="button" data-wact="add" aria-expanded="false" title="모은 돈 더하기" aria-label="${esc(w.name)} 모은 돈 더하기">+</button><button type="button" data-wact="buy" title="샀어요" aria-label="${esc(w.name)} 샀어요">✓</button><button type="button" class="wDel" data-wact="del" aria-expanded="false" title="지우기" aria-label="${esc(w.name)} 지우기">✕</button></span></div>
       <div class="wBar"><i class="${left?'':'full'}" style="width:${pct.toFixed(1)}%"></i></div>
       <div class="wMeta"><span>${won(saved)} / ${won(w.price)} · ${Math.round(pct)}%</span><span>${plan}</span></div>
     </div>`;
@@ -1323,7 +1358,7 @@ function renderWish(){
 function openWishForm(w){
   wishEdit=w?w.id:null;
   $('wName').value=w?w.name:'';$('wPrice').value=w?w.price.toLocaleString('ko-KR'):'';
-  $('wSaved').value=w&&w.saved?w.saved.toLocaleString('ko-KR'):'';$('wDue').value=w&&w.due||'';
+  $('wSaved').value=w&&w.saved?w.saved.toLocaleString('ko-KR'):'';$('wDue').value=w&&w.due||'';$('wUrl').value=w&&w.url||'';
   $('wishForm').hidden=false;$('wishAdd').setAttribute('aria-expanded','true');$('wSave').textContent=w?'수정 완료':'저장';
   renderWish();$('wName').focus();
 }
@@ -1333,23 +1368,48 @@ $('wishAdd').onclick=()=>$('wishForm').hidden?openWishForm(null):closeWishForm()
 $('wCancel').onclick=closeWishForm;
 $('wSave').onclick=()=>{
   const name=$('wName').value.trim(),price=num($('wPrice').value),saved=num($('wSaved').value),due=$('wDue').value;
+  let url=$('wUrl').value.trim();
+  if(url){
+    if(!/^https?:\/\//i.test(url))url='https://'+url;
+    try{const u=new URL(url);if(!/^https?:$/.test(u.protocol)||!u.hostname.includes('.'))throw 0;url=u.href}
+    catch(err){toast('링크 주소가 이상해요. 상품 페이지 주소를 그대로 붙여 넣어 주세요.');$('wUrl').focus();return}
+  }
   if(!name){toast('갖고 싶은 걸 적어 주세요.');$('wName').focus();return}
   if(!price){toast('가격을 입력해 주세요.');$('wPrice').focus();return}
   const w=wishEdit&&wishes().find(x=>x.id===wishEdit);
-  if(w)Object.assign(w,{name,price,saved,due});
-  else wishes().push({id:newId(),name,price,saved,due,at:Date.now()});
+  if(w){Object.assign(w,{name,price,saved,due,url});if(!url)delete w.url}
+  else{const nw={id:newId(),name,price,saved,due,at:Date.now()};if(url)nw.url=url;wishes().push(nw)}
   save();toast(w?'위시리스트를 고쳤어요':'위시리스트에 넣었어요');closeWishForm();
 };
-['wName','wPrice','wSaved'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('wSave').click()}));
+['wName','wPrice','wSaved','wUrl'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('wSave').click()}));
 $('wishList').addEventListener('click',e=>{
   const b=e.target.closest('[data-wact]');if(!b)return;
   const w=wishes().find(x=>x.id===b.closest('[data-wid]').dataset.wid);if(!w)return;
   const act=b.dataset.wact;
   if(act==='edit')openWishForm(w);
   else if(act==='add'){
-    const v=num(prompt(`${w.name}: 얼마를 더 모았나요?`,'')||'');if(!v)return;
-    w.saved=(w.saved||0)+v;save();renderWish();
-    toast(w.saved>=w.price?`${w.name} 살 돈을 다 모았어요!`:`${w.name}까지 ${won(w.price-w.saved)} 남았어요`);
+    const saved=w.saved||0,left=Math.max(0,w.price-saved),pct=w.price?Math.min(100,saved/w.price*100):0;
+    openPop(b,`<div class="popHead"><b>${esc(w.name)} 모으기</b><span>${left?won(left)+' 남음':'다 모았어요'}</span></div>
+      <div class="wBar"><i style="width:${pct.toFixed(1)}%"></i></div>
+      <label class="sr" for="popAmt">더 모은 금액</label>
+      <div class="amountBox"><input id="popAmt" type="text" inputmode="numeric" autocomplete="off" placeholder="0"><span>원</span></div>
+      <div class="popChips"><button type="button" data-q="10000">+1만</button><button type="button" data-q="50000">+5만</button><button type="button" data-q="100000">+10만</button>${left?`<button type="button" data-q="left">남은 ${won(left)} 전부</button>`:''}</div>
+      <p class="popAfter" id="popAfter"></p>
+      <div class="pkFoot"><button type="button" data-a="cancel">취소</button><button type="button" class="pkMain" data-a="ok">모으기</button></div>`,el=>{
+      const inp=el.querySelector('#popAmt'),after=el.querySelector('#popAfter');
+      moneyInput(inp);
+      const upd=()=>{const v=num(inp.value),t=saved+v;after.innerHTML=v?`모은 돈 <b>${won(t)}</b> · ${w.price?Math.min(100,Math.round(t/w.price*100)):0}%${t>=w.price?' · 다 모아요!':` · ${won(w.price-t)} 남음`}`:''};
+      inp.addEventListener('input',upd);
+      const ok=()=>{const v=num(inp.value);if(!v){inp.focus();return}
+        closePicker();w.saved=saved+v;save();renderWish();
+        toast(w.saved>=w.price?`${w.name} 살 돈을 다 모았어요!`:`${w.name}까지 ${won(w.price-w.saved)} 남았어요`)};
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)ok()});
+      el.addEventListener('click',e=>{const c=e.target.closest('button');if(!c)return;
+        if(c.dataset.q){inp.value=(num(inp.value)+(c.dataset.q==='left'?left:Number(c.dataset.q))).toLocaleString('ko-KR');if(c.dataset.q==='left')inp.value=left.toLocaleString('ko-KR');upd();inp.focus()}
+        else if(c.dataset.a==='cancel'){closePicker();b.focus()}
+        else if(c.dataset.a==='ok')ok()});
+      inp.focus();
+    });
   }
   else if(act==='buy'){
     w.bought=true;w.boughtAt=todayStr();save();renderWish();
@@ -1361,7 +1421,14 @@ $('wishList').addEventListener('click',e=>{
     $('amt').focus();
   }
   else if(act==='undo'){delete w.bought;delete w.boughtAt;save();renderWish();toast('위시리스트로 되돌렸어요')}
-  else if(act==='del'){if(!confirm(`${w.name}을(를) 위시리스트에서 지울까요?`))return;state.settings.wish=wishes().filter(x=>x!==w);save();renderWish();toast('지웠어요')}
+  else if(act==='del'){
+    openPop(b,`<p class="popMsg"><b>${esc(w.name)}</b>을(를) 위시리스트에서 지울까요?</p><div class="pkFoot"><button type="button" data-a="cancel">취소</button><button type="button" class="pkDanger" data-a="ok">지우기</button></div>`,el=>{
+      el.addEventListener('click',e=>{const c=e.target.closest('button');if(!c)return;
+        closePicker();
+        if(c.dataset.a==='ok'){state.settings.wish=wishes().filter(x=>x!==w);save();renderWish();toast('지웠어요')}else b.focus()});
+      el.querySelector('[data-a="cancel"]').focus();
+    });
+  }
 });
 
 /* ---------- 가계부 바꾸기 ---------- */
