@@ -846,7 +846,14 @@ const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,d
 const LS=APP.key;
 // 기기 연동용 Firebase 설정 (Firebase 콘솔 → 프로젝트 설정 → 내 앱 → SDK 설정의 firebaseConfig).
 // 공개돼도 괜찮은 값이에요. 데이터는 동기화 비밀번호로 암호화해서 올라가요.
-const FIREBASE=null;
+const FIREBASE={
+  apiKey:"AIzaSyBvOqpDcJY8rsEmi8_15L1EFRqm0azORg0",
+  authDomain:"budget-31123.firebaseapp.com",
+  projectId:"budget-31123",
+  storageBucket:"budget-31123.firebasestorage.app",
+  messagingSenderId:"648828219389",
+  appId:"1:648828219389:web:2ce67f5b99b82275dab394"
+};
 // 마지막으로 연 탭 기억 (가계부마다 따로)
 const BOOK_KEY=APP.key==='gagyebu-local-v2'?'gagyebu-book':APP.key+'-book';
 const $=id=>document.getElementById(id);
