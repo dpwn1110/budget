@@ -26,6 +26,19 @@
   --h1:rgba(125,147,255,.18); --h2:rgba(125,147,255,.4); --h3:rgba(125,147,255,.68); --h4:#7D93FF;
   --warm:#26231E;
 }
+/* 아빠 카드: 초록 */
+:root[data-book="dad"]{
+  --accent:#12A150; --accent-ink:#FFFFFF;
+  --h1:rgba(18,161,80,.16); --h2:rgba(18,161,80,.38); --h3:rgba(18,161,80,.66); --h4:#12A150;
+}
+@media (prefers-color-scheme:dark){:root[data-book="dad"]:not([data-theme="light"]){
+  --accent:#4CC38A; --accent-ink:#0E0F12;
+  --h1:rgba(76,195,138,.18); --h2:rgba(76,195,138,.4); --h3:rgba(76,195,138,.68); --h4:#4CC38A;
+}}
+:root[data-theme="dark"][data-book="dad"]{
+  --accent:#4CC38A; --accent-ink:#0E0F12;
+  --h1:rgba(76,195,138,.18); --h2:rgba(76,195,138,.4); --h3:rgba(76,195,138,.68); --h4:#4CC38A;
+}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{
@@ -41,7 +54,11 @@ button{cursor:pointer}
 
 /* 상단 */
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.brand{font-weight:800;font-size:17px;letter-spacing:-.03em;flex:1}
+.brand{flex:1;display:flex;align-items:center;gap:12px}
+.brandName{font-weight:800;font-size:17px;letter-spacing:-.03em}
+.bookSeg{display:inline-flex;background:var(--panel);border-radius:999px;padding:4px}
+.bookSeg button{border:0;background:transparent;border-radius:999px;padding:0 14px;height:34px;font-weight:600;color:var(--sub);white-space:nowrap}
+.bookSeg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .month{display:flex;align-items:center;gap:2px;background:var(--panel);border-radius:999px;padding:4px}
 .month h1{font-size:15px;font-weight:700;margin:0;padding:0 10px;white-space:nowrap;min-width:9.5em;text-align:center}
 .icon{width:34px;height:34px;border:0;border-radius:50%;background:transparent;display:grid;place-items:center}
@@ -60,7 +77,7 @@ h2{font-size:15px;font-weight:700;margin:0 0 12px;letter-spacing:-.02em}
 .note{color:var(--sub);font-size:13.5px;margin:0}
 
 /* 히어로 */
-.hero{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(220px,260px);gap:28px;align-items:stretch;margin-bottom:14px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(220px,260px);gap:28px;align-items:stretch;margin-bottom:14px}
 .hlabel{margin:0 0 2px;color:var(--sub);font-weight:500}
 .big{font-size:clamp(44px,5vw,72px);font-weight:800;letter-spacing:-.055em;line-height:1;margin:0}
 .big small{font-size:.38em;font-weight:700;letter-spacing:-.02em;margin-left:.12em}
@@ -80,7 +97,7 @@ h2{font-size:15px;font-weight:700;margin:0 0 12px;letter-spacing:-.02em}
 .stats .daily.money{background:var(--h1)}
 .stats .daily.money dt,.stats .daily.money small{color:var(--accent)}
 .stats .daily.budget{background:var(--warm)}
-.stats .netBox dd{font-size:26px;font-weight:800;letter-spacing:-.045em}
+.stats .netBox dd{font-size:23px;font-weight:800;letter-spacing:-.045em;white-space:nowrap}
 .stats .netBox dd:not(.pos):not(.neg){color:var(--ink)}
 .stats .netBox dt{font-weight:600;color:var(--ink)}
 @media (max-width:520px){.stats{grid-template-columns:1fr 1fr}}
@@ -138,6 +155,7 @@ button.cell:hover{filter:brightness(.92)}
 
 /* 입력 */
 .seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;margin-bottom:12px}
+.seg[hidden]{display:none}
 .seg button{border:0;background:transparent;border-radius:999px;padding:6px 16px;font-weight:600;color:var(--sub)}
 .seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .amountBox{display:flex;align-items:baseline;gap:6px;border-bottom:2px solid var(--line);padding-bottom:4px;transition:border-color .15s}
@@ -191,6 +209,11 @@ button.cell:hover{filter:brightness(.92)}
 .badge{width:36px;height:36px;border-radius:11px;background:var(--soft);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:-.04em}
 .tx.in .badge{background:var(--h1);color:var(--accent)}
 .tx.fixed .badge{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+.tx.save .badge{box-shadow:inset 0 0 0 1px var(--accent);color:var(--accent)}
+.tx.save .amt{color:var(--sub)}
+.stats [hidden]{display:none}
+.moveBtn{border:0;background:var(--soft);color:var(--sub);border-radius:999px;padding:1px 8px;margin-left:4px;font-size:11.5px;font-weight:600}
+.moveBtn:hover{background:var(--line)}
 .tx .badge,.tx .amt,.tx .del{align-self:center}
 .txText{min-width:0}
 .txText b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -254,7 +277,7 @@ button.cell:hover{filter:brightness(.92)}
 .toast{position:fixed;left:50%;transform:translate(-50%,8px);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--panel);padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100% - 40px);z-index:10}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (max-width:520px){.wrap{padding:14px 12px 56px}.panel{padding:18px;border-radius:18px}.month h1{min-width:0;font-size:14px}.brand{display:none}.settingsBtn span{display:none}.settingsBtn{padding:0 12px}}
+@media (max-width:520px){.wrap{padding:14px 12px 56px}.panel{padding:18px;border-radius:18px}.month h1{min-width:0;font-size:14px}.top{flex-wrap:wrap}.brand{flex:1 0 100%}.brandName{display:none}.bookSeg{flex:1}.bookSeg button{flex:1}.settingsBtn span{display:none}.settingsBtn{padding:0 12px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ---------- PDF 리포트 ---------- */
 #report{display:none}
@@ -316,7 +339,9 @@ button.cell:hover{filter:brightness(.92)}
 <body>
 <div class="wrap">
   <header class="top">
-    <div class="brand">가계부</div>
+    <div class="brand"><span class="brandName">가계부</span>
+      <div class="bookSeg" id="bookSeg" role="group" aria-label="가계부 고르기"><button type="button" data-book="main">내 돈</button><button type="button" data-book="dad">아빠 카드</button></div>
+    </div>
     <nav class="month" aria-label="기간 이동">
       <button class="icon" id="prev" aria-label="이전 달"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3 5 8l5 5"/></svg></button>
       <h1 id="mtitle"></h1>
@@ -340,15 +365,15 @@ button.cell:hover{filter:brightness(.92)}
       <p class="meterText" id="meterText"></p>
     </div>
     <dl class="stats">
-      <div><dt>수입</dt><dd id="inc">0원</dd></div>
+      <div id="incBox"><dt>수입</dt><dd id="inc">0원</dd></div>
       <div><dt>그중 고정지출</dt><dd id="fx">0원</dd></div>
-      <div class="netBox"><dt>남는 돈</dt><dd id="net">0원</dd><small id="netNote"></small></div>
-      <div><dt>하루 평균 지출</dt><dd id="avg">0원</dd></div>
-      <div class="daily money"><dt>남은 돈으로 하루에</dt><dd id="perMoney">—</dd><small id="perMoneyNote"></small></div>
+      <div id="svBox"><dt>저축</dt><dd id="sv">0원</dd><small id="svNote"></small></div>
+      <div class="netBox"><dt id="netLabel">남는 돈</dt><dd id="net">0원</dd><small id="netNote"></small></div>
+      <div class="daily money" id="moneyBox"><dt>남은 돈으로 하루에</dt><dd id="perMoney">—</dd><small id="perMoneyNote"></small></div>
       <div class="daily budget"><dt>예산 지키려면 하루에</dt><dd id="perBudget">—</dd><small id="perBudgetNote"></small></div>
     </dl>
     <div class="days">
-      <div class="daysHead" id="daysHead"><span>날짜별 지출</span><span>날짜를 누르면 합계</span></div>
+      <div class="daysHead" id="daysHead"><span>날짜별 지출</span><span></span></div>
       <div class="week" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
       <div class="heat" id="heat"></div>
     </div>
@@ -401,13 +426,13 @@ button.cell:hover{filter:brightness(.92)}
         <button class="ghost" id="saveStart">저장</button>
       </div>
       <div class="inline">
-        <div class="field"><label for="budget">한 달에 쓸 돈</label><input id="budget" type="text" inputmode="numeric" autocomplete="off" placeholder="예: 500,000"></div>
+        <div class="field"><label for="budget" id="budgetLabel">한 달에 쓸 돈</label><input id="budget" type="text" inputmode="numeric" autocomplete="off" placeholder="예: 500,000"></div>
         <button class="ghost" id="saveBudget">저장</button>
       </div>
       <p class="note" id="planNote" style="margin-top:10px"></p>
     </section>
 
-    <section class="sec" aria-labelledby="incTitle">
+    <section class="sec" aria-labelledby="incTitle" data-main>
       <h2 id="incTitle">고정수입</h2>
       <p class="note" style="margin-bottom:10px">용돈, 조교비처럼 매달 들어오는 돈이에요. 받는 날에 수입으로 자동으로 들어가요.</p>
       <ul class="fixedList" id="incList"></ul>
@@ -430,7 +455,7 @@ button.cell:hover{filter:brightness(.92)}
 
     <section class="sec" aria-labelledby="fixTitle">
       <h2 id="fixTitle">고정지출</h2>
-      <p class="note" style="margin-bottom:10px">구독료, 통신비처럼 매달 나가는 돈이에요. 추가한 달부터 매달 지출에 자동으로 들어가요.</p>
+      <p class="note" style="margin-bottom:10px" id="fixNote">구독료, 통신비처럼 매달 나가는 돈이에요. 추가한 달부터 매달 지출에 자동으로 들어가요.</p>
       <ul class="fixedList" id="fixedList"></ul>
       <div class="fixedTotal" id="fixedTotal" hidden><span>합계<small id="fixedShare"></small></span><b id="fixedSum"></b></div>
       <div class="fixedForm">
@@ -440,6 +465,21 @@ button.cell:hover{filter:brightness(.92)}
           <div class="field small"><label for="fxDay">결제일</label><input id="fxDay" type="number" min="1" max="31" placeholder="15"></div>
         </div>
         <button class="ghost" id="addFixed">고정지출 추가</button>
+      </div>
+    </section>
+
+    <section class="sec" aria-labelledby="svTitle" data-main>
+      <h2 id="svTitle">저축</h2>
+      <p class="note" style="margin-bottom:10px">적금처럼 매달 모으는 돈이에요. 쓴 돈과 예산에는 안 들어가고, 남는 돈에서만 빠져요.</p>
+      <ul class="fixedList" id="svList"></ul>
+      <div class="fixedTotal" id="svTotal" hidden><span>합계<small id="svShare"></small></span><b id="svSum"></b></div>
+      <div class="fixedForm">
+        <div class="row">
+          <div class="field"><label for="svName">이름</label><input id="svName" type="text" maxlength="30" placeholder="예: 청년 적금"></div>
+          <div class="field"><label for="svAmt">금액</label><input id="svAmt" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <div class="field small"><label for="svDay">이체일</label><input id="svDay" type="number" min="1" max="31" placeholder="25"></div>
+        </div>
+        <button class="ghost" id="addSaving">저축 추가</button>
       </div>
     </section>
 
@@ -464,7 +504,16 @@ const LS='gagyebu-local-v2';
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 
-let state={tx:[],settings:{budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0}};
+const DEF_SETTINGS=()=>({budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0,dad:{budget:0,fixed:[]}});
+let state={tx:[],settings:DEF_SETTINGS()};
+// 가계부 두 개: main = 내 돈(현금·통장·체크카드), dad = 아빠 카드
+let book=(()=>{try{return localStorage.getItem('gagyebu-book')==='dad'?'dad':'main'}catch(e){return 'main'}})();
+const isDad=()=>book==='dad';
+function dadSet(){const s=state.settings;if(!s.dad||typeof s.dad!=='object')s.dad={budget:0,fixed:[]};if(!Array.isArray(s.dad.fixed))s.dad.fixed=[];return s.dad}
+function bookTx(){return state.tx.filter(t=>isDad()?t.book==='dad':t.book!=='dad')}
+function curBudget(){return (isDad()?dadSet().budget:state.settings.budget)||0}
+function fixedList(){return isDad()?dadSet().fixed:(state.settings.fixed||[])}
+function setFixedList(arr){if(isDad())dadSet().fixed=arr;else state.settings.fixed=arr}
 let txType='out', cat=EXP_CATS[0], editingId=null, rangeStart=null, filterCat=null; // null | '?' | 카테고리 | '고정지출'
 const isUnknown=t=>t.cat==='?'||(t.kind==='tx'||!t.kind)&&String(t.memo||'').trim().startsWith('?');
 
@@ -503,11 +552,12 @@ function migrate(){
   if(!Array.isArray(st.incomes))st.incomes=[];
   if(st.allowance>0&&!st.incomes.length)st.incomes.push({id:'allow',name:'용돈',amount:st.allowance,day:st.startDay||1,start:st.allowanceStart||'',skipCat:'용돈'});
   delete st.allowance;delete st.allowanceStart;
+  dadSet();
 }
 function load(){
   try{
     const r=localStorage.getItem(LS);
-    if(r){const p=JSON.parse(r);state.tx=Array.isArray(p.tx)?p.tx:[];state.settings=Object.assign({budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0},p.settings||{});migrate()}
+    if(r){const p=JSON.parse(r);state.tx=Array.isArray(p.tx)?p.tx:[];state.settings=Object.assign(DEF_SETTINGS(),p.settings||{});migrate()}
   }catch(e){toast('저장된 데이터를 읽지 못했어요. 백업 파일이 있다면 불러와 주세요.')}
 }
 function write(){
@@ -540,14 +590,17 @@ function updateUndo(){
 // 용돈 받는 날 전에 들어오는 수입을 '다음 기간에 쓸 돈'으로 정하면, 이 기간 몫은 직전 기간 끝에 들어온 돈
 function canEarly(i){return sd()>1&&(i.day||1)<sd()}
 function incomeDate(i,key){return i.early&&canEarly(i)?fixedDate(i,shiftYm(key,-1)):fixedDate(i,key)}
-function activeIncomes(key){return (state.settings.incomes||[]).filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
+function activeIncomes(key){return isDad()?[]:(state.settings.incomes||[]).filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
 function spentBetween(a,b){
-  let sum=state.tx.filter(t=>t.type==='out'&&t.date>=a&&t.date<=b).reduce((s,t)=>s+t.amount,0);
+  let sum=bookTx().filter(t=>t.type==='out'&&t.date>=a&&t.date<=b).reduce((s,t)=>s+t.amount,0);
   for(let k=periodOf(a),last=periodOf(b);k<=last;k=shiftYm(k,1))
     activeFixed(k).forEach(f=>{const d=fixedDate(f,k);if(d>=a&&d<=b)sum+=f.amount});
   return sum;
 }
-function activeFixed(key){return (state.settings.fixed||[]).filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
+// 고정지출과 저축은 같은 목록에 있고, 저축은 save:true
+function activeAll(key){return fixedList().filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
+function activeFixed(key){return activeAll(key).filter(f=>!f.save)}
+function activeSavings(key){return isDad()?[]:activeAll(key).filter(f=>f.save)}
 function fixedDate(f,key){
   const {start}=periodRange(key);
   const day=f.day||1;
@@ -566,12 +619,17 @@ function renderChips(){
 
 function render(){
   $('mtitle').textContent=periodLabel(view);
+  document.documentElement.dataset.book=book;
+  document.querySelectorAll('#bookSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.book===book));
   const todayS=todayStr();
   const isNow=view===periodOf(todayS);
-  $('hlabel').textContent=isNow?'이번 달 쓴 돈':'이 기간에 쓴 돈';
+  $('hlabel').textContent=(isNow?'이번 달 ':'이 기간에 ')+(isDad()?'아빠 카드로 쓴 돈':'쓴 돈');
 
-  const txs=state.tx.filter(t=>periodOf(t.date)===view);
+  const txs=bookTx().filter(t=>periodOf(t.date)===view);
   const fixed=activeFixed(view);
+  const savings=activeSavings(view);
+  const saveDue=savings.filter(f=>fixedDate(f,view)<=todayS);
+  const saveOut=saveDue.reduce((s,f)=>s+f.amount,0),saveAll=savings.reduce((s,f)=>s+f.amount,0);
   const incs=activeIncomes(view);
   const allowance=incs.reduce((s,i)=>s+i.amount,0); // 매달 받는 돈 합계
   const autoIncs=incs.filter(i=>!(i.skipCat&&txs.some(t=>t.type==='in'&&t.cat===i.skipCat)));
@@ -587,14 +645,26 @@ function render(){
   $('spent').innerHTML=`${Math.round(out).toLocaleString('ko-KR')}<small>원</small>`;
   $('inc').textContent=won(income);
   $('fx').textContent=won(fixedOut);
-  const net=income-out, netEl=$('net');
-  netEl.textContent=(net>0?'+':'')+won(net);
-  const goal=allowance&&state.settings.budget?allowance-state.settings.budget:0;
-  netEl.className=net<0?'neg':(goal>0?net>=goal:net>0)?'pos':'';
-  $('netNote').textContent=goal>0?(net>=goal?`목표 ${won(goal)} 달성`:`목표 ${won(goal)}까지 ${won(goal-net)}`):'';
+  $('sv').textContent=won(saveOut);
+  $('svNote').textContent=saveAll>saveOut?`${won(saveAll-saveOut)} 이체 예정`:saveAll?'쓴 돈과 따로 계산':'설정에서 추가';
+  $('incBox').hidden=$('svBox').hidden=$('moneyBox').hidden=isDad();
+  const budget=curBudget();
+  const net=income-out-saveOut, netEl=$('net');
+  if(isDad()){
+    // 아빠 카드는 수입이 없으니 남은 예산을 강조
+    const left=budget-out;
+    $('netLabel').textContent='남은 예산';
+    netEl.textContent=budget?won(left):'—';netEl.className=budget?(left<0?'neg':'pos'):'';
+    $('netNote').textContent=budget?`예산 ${won(budget)}`:'예산을 정하면 보여요';
+  }else{
+    $('netLabel').textContent='남는 돈';
+    netEl.textContent=(net>0?'+':'')+won(net);
+    const goal=allowance&&budget?allowance-budget-saveAll:0;
+    netEl.className=net<0?'neg':(goal>0?net>=goal:net>0)?'pos':'';
+    $('netNote').textContent=(goal>0?(net>=goal?`목표 ${won(goal)} 달성`:`목표 ${won(goal)}까지 ${won(goal-net)}`):'')+(saveOut?`${goal>0?', ':''}저축 뺌`:'');
+  }
 
   // 예산
-  const budget=state.settings.budget||0;
   const mt=$('meterText'),fill=$('fill');
   const {start,end}=periodRange(view);
   const t0=new Date();t0.setHours(0,0,0,0);
@@ -617,12 +687,13 @@ function render(){
   if(isNow){
     const daysLeft=Math.round((end-t0)/86400000)+1;
     const pendOut=fixed.filter(f=>fixedDate(f,view)>todayS).reduce((s,f)=>s+f.amount,0);
+    const pendSave=savings.filter(f=>fixedDate(f,view)>todayS).reduce((s,f)=>s+f.amount,0);
     const pendIn=autoIncs.filter(i=>incomeDate(i,view)>todayS).reduce((s,i)=>s+i.amount,0);
-    const moneyLeft=net-pendOut;
+    const moneyLeft=net-pendOut-pendSave;
     const perM=moneyLeft/daysLeft;
     pm.textContent=won(Math.max(0,perM));pm.className=perM<=0?'neg':'';
     let note=perM<=0?'남은 돈을 이미 다 썼어요':`${daysLeft}일 동안 ${won(moneyLeft)}`;
-    if(pendOut)note+=`, 나갈 고정지출 뺌`;
+    if(pendOut||pendSave)note+=`, 나갈 ${pendOut&&pendSave?'고정지출·저축':pendOut?'고정지출':'저축'} 뺌`;
     if(pendIn)note+=`<br>들어올 돈까지 치면 ${won(Math.max(0,(moneyLeft+pendIn)/daysLeft))}`;
     pmN.innerHTML=note;
     if(budget){
@@ -655,16 +726,17 @@ function render(){
   }
   $('heat').innerHTML=cells;
   const dh=$('daysHead');
+  dh.title='날짜를 누르면 그날부터 오늘까지 합계를 보여 줘요';
   if(rangeStart){
     const rd=new Date(rangeStart+'T00:00'),n=Math.round((t0-rd)/86400000)+1;
     dh.className='daysHead active';
     dh.innerHTML=`<span>${rd.getMonth()+1}월 ${rd.getDate()}일부터 ${n}일간</span><span style="color:inherit;display:flex;align-items:center"><b>${won(spentBetween(rangeStart,todayS))}</b><button type="button" id="clearRange" aria-label="합계 닫기">✕</button></span>`;
-  }else{dh.className='daysHead';dh.innerHTML='<span>날짜별 지출</span><span>날짜를 누르면 합계</span>'}
-  $('avg').textContent=won(elapsed?out/elapsed:0);
+  }else{dh.className='daysHead';dh.innerHTML=`<span>날짜별 지출</span><span>하루 평균 ${won(elapsed?out/elapsed:0)}</span>`}
 
   // 내역
   const items=txs.map(t=>({...t,kind:'tx'}));
   fixed.forEach(f=>{const date=fixedDate(f,view);items.push({id:f.id,kind:'fixed',type:'out',amount:f.amount,cat:'고정',memo:f.name,date,at:0,pending:date>todayS})});
+  savings.forEach(f=>{const date=fixedDate(f,view);items.push({id:f.id,kind:'save',type:'out',amount:f.amount,cat:'저축',memo:f.name,date,at:0,pending:date>todayS})});
   autoIncs.forEach(i=>{const date=incomeDate(i,view);items.push({id:i.id,kind:'allow',type:'in',amount:i.amount,cat:i.name,memo:i.name,date,at:-1,pending:date>todayS})});
   items.sort((a,b)=>b.date.localeCompare(a.date)||(b.at||0)-(a.at||0));
   const unk=items.filter(it=>it.kind==='tx'&&isUnknown(it));
@@ -688,19 +760,19 @@ function render(){
   else{
     const wd=['일','월','화','수','목','금','토'];
     const dayTotals={};
-    items.forEach(it=>{if(it.type==='out'&&!it.pending)dayTotals[it.date]=(dayTotals[it.date]||0)+it.amount});
+    items.forEach(it=>{if(it.type==='out'&&it.kind!=='save'&&!it.pending)dayTotals[it.date]=(dayTotals[it.date]||0)+it.amount});
     let html='',cur='';
     items.forEach(it=>{
       if(it.date!==cur){cur=it.date;const dt=new Date(it.date+'T00:00');
         html+=`<div class="day"><span>${dt.getMonth()+1}월 ${dt.getDate()}일 ${wd[dt.getDay()]}요일</span><span>${dayTotals[cur]?won(dayTotals[cur]):''}</span></div>`}
-      const sign=it.type==='in'?'+':'−';
+      const sign=it.type==='in'?'+':it.kind==='save'?'→':'−';
       const unknown=it.kind==='tx'&&isUnknown(it);
       const badge=unknown?'?':esc(it.cat.split('·')[0].slice(0,2));
       const title=esc(it.memo||(it.cat==='?'?'출처 모름':it.cat));
-      const sub=it.pending?(it.type==='in'?'들어올 예정':'나갈 예정'):it.kind==='fixed'?'매달 나가는 돈':it.kind==='allow'?'매달 들어오는 돈':(it.memo?esc(it.cat):'');
+      const sub=it.pending?(it.type==='in'?'들어올 예정':'나갈 예정'):it.kind==='fixed'?'매달 나가는 돈':it.kind==='save'?'매달 모으는 돈':it.kind==='allow'?'매달 들어오는 돈':(it.memo?esc(it.cat):'');
       const delBtn=it.kind==='tx'?`<button class="del" data-del="${esc(it.id)}" aria-label="${title} 삭제">✕</button>`:'<span style="width:30px"></span>';
       const editAttrs=it.kind==='tx'?` data-id="${esc(it.id)}" tabindex="0" role="button" aria-label="${title} ${won(it.amount)} 수정"`:'';
-      html+=`<div class="tx${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><b>${title}</b>${sub?`<span>${sub}</span>`:''}${it.detail?`<p>${esc(it.detail)}</p>`:''}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
+      html+=`<div class="tx${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.kind==='save'?' save':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><b>${title}</b>${sub?`<span>${sub}</span>`:''}${it.detail?`<p>${esc(it.detail)}</p>`:''}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
     });
     list.innerHTML=html;
   }
@@ -715,7 +787,11 @@ function render(){
 
   $('bars').classList.toggle('filtering',!!filterCat&&rows.some(([c])=>c===filterCat));
   if(document.activeElement!==$('budget'))$('budget').value=budget?budget.toLocaleString('ko-KR'):'';
-  $('planNote').textContent=allowance&&budget?(allowance>budget?`매달 받는 ${won(allowance)} 중 ${won(budget)}을 쓰고 ${won(allowance-budget)}을 남기는 계획이에요.`:`쓸 돈이 매달 받는 ${won(allowance)}보다 많아요.`):allowance?'쓸 돈을 정하면 매달 얼마를 남길지 보여 줄게요.':'고정수입을 추가하면 매달 받는 돈이 자동으로 계산돼요.';
+  $('budgetLabel').textContent=isDad()?'아빠 카드로 한 달에 쓸 돈':'한 달에 쓸 돈';
+  $('planNote').textContent=isDad()?'아빠 카드 가계부예요. 기간(용돈 받는 날)은 내 돈 가계부와 같이 써요.':allowance&&budget?(allowance>budget+saveAll?`매달 받는 ${won(allowance)} 중 ${won(budget)}을 쓰고${saveAll?` ${won(saveAll)}을 저축하고`:''} ${won(allowance-budget-saveAll)}을 남기는 계획이에요.`:`쓸 돈${saveAll?'과 저축':''}이 매달 받는 ${won(allowance)}보다 많아요.`):allowance?'쓸 돈을 정하면 매달 얼마를 남길지 보여 줄게요.':'고정수입을 추가하면 매달 받는 돈이 자동으로 계산돼요.';
+  document.querySelectorAll('#settings [data-main]').forEach(el=>el.hidden=isDad());
+  $('setTitle').textContent=isDad()?'아빠 카드 예산과 고정 항목':'예산과 고정 항목';
+  $('fixTitle').textContent=isDad()?'아빠 카드 고정지출':'고정지출';
   const it=$('incTotal');it.hidden=!incs.length;
   if(incs.length){$('incSum').textContent=won(allowance);$('incShare').textContent=`${incs.length}개`}
   $('incList').innerHTML=incs.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${canEarly(f)?`<button type="button" class="earlyBtn" data-early="${esc(f.id)}" aria-pressed="${!!f.early}" title="눌러서 바꾸기">${f.early?'다음 기간에 쓸 돈':'받은 기간에 쓸 돈'}</button>`:''}</span></span><span>${won(f.amount)}</span><button class="del" data-delinc="${esc(f.id)}" aria-label="${esc(f.name)} 고정수입 그만두기">✕</button></li>`).join('');
@@ -727,7 +803,11 @@ function render(){
     const base=budget||allowance;
     $('fixedShare').textContent=`${fixed.length}개`+(base?`, ${budget?'쓸 돈':'받는 돈'}의 ${Math.round(fixedAll/base*100)}%`:'');
   }
-  $('fixedList').innerHTML=fixed.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 고정지출 그만두기">✕</button></li>`).join('');
+  $('fixedList').innerHTML=fixed.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${isDad()?'':`<button type="button" class="moveBtn" data-tosave="${esc(f.id)}">저축으로 옮기기</button>`}</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 고정지출 그만두기">✕</button></li>`).join('');
+
+  const st=$('svTotal');st.hidden=!savings.length;
+  if(savings.length){$('svSum').textContent=won(saveAll);$('svShare').textContent=`${savings.length}개`+(allowance?`, 받는 돈의 ${Math.round(saveAll/allowance*100)}%`:'')}
+  $('svList').innerHTML=savings.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일<button type="button" class="moveBtn" data-tosave="${esc(f.id)}">고정지출로 옮기기</button></span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 저축 그만두기">✕</button></li>`).join('');
 
   const lb=state.settings.lastBackup,note=$('bkNote');
   if(!state.tx.length){note.textContent='기록이 쌓이면 가끔 백업 파일로 저장해 두세요.';note.classList.remove('warn')}
@@ -738,7 +818,7 @@ function render(){
 
 /* ---------- 입력 ---------- */
 function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):''})}
-moneyInput($('amt'));moneyInput($('budget'));moneyInput($('fxAmt'));
+moneyInput($('amt'));moneyInput($('budget'));moneyInput($('fxAmt'));moneyInput($('svAmt'));
 
 function syncDate(){
   const d=$('date'),isNow=view===periodOf(todayStr());
@@ -749,10 +829,10 @@ $('next').onclick=()=>{view=shiftYm(view,1);syncDate();render()};
 
 function setType(t){
   txType=t;
-  document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.type===t));
+  document.querySelectorAll('.entryPanel .seg button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.type===t));
   renderChips();
 }
-document.querySelector('.seg').addEventListener('click',e=>{
+document.querySelector('.entryPanel .seg').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;setType(b.dataset.type);
 });
 
@@ -786,7 +866,9 @@ function addTx(){
     if(t)Object.assign(t,{type:txType,amount,cat,memo:$('memo').value.trim(),detail:$('detail').value.trim(),date});
     save();view=periodOf(date);endEdit();toast('수정했어요');return;
   }
-  state.tx.push({id:newId(),type:txType,amount,cat,memo:$('memo').value.trim(),detail:$('detail').value.trim(),date,at:Date.now()});
+  const tx={id:newId(),type:txType,amount,cat,memo:$('memo').value.trim(),detail:$('detail').value.trim(),date,at:Date.now()};
+  if(isDad())tx.book='dad';
+  state.tx.push(tx);
   save();
   $('amt').value='';$('memo').value='';$('detail').value='';fitDetail();
   view=periodOf(date);
@@ -826,8 +908,8 @@ $('list').addEventListener('keydown',e=>{
 });
 
 $('saveBudget').onclick=()=>{
-  state.settings.budget=num($('budget').value);save();
-  $('budget').blur();render();toast(state.settings.budget?'예산을 저장했어요':'예산을 지웠어요');
+  const v=num($('budget').value);if(isDad())dadSet().budget=v;else state.settings.budget=v;save();
+  $('budget').blur();render();toast(v?'예산을 저장했어요':'예산을 지웠어요');
 };
 moneyInput($('inAmt'));
 $('addIncome').onclick=()=>{
@@ -873,17 +955,46 @@ $('addFixed').onclick=()=>{
   let day=Math.round(Number($('fxDay').value))||1;day=Math.max(1,Math.min(31,day));
   if(!name){toast('이름을 입력해 주세요.');$('fxName').focus();return}
   if(!amount){toast('금액을 입력해 주세요.');$('fxAmt').focus();return}
-  state.settings.fixed=(state.settings.fixed||[]).concat({id:newId(),name,amount,day,start:view});
+  setFixedList(fixedList().concat({id:newId(),name,amount,day,start:view}));
   save();$('fxName').value='';$('fxAmt').value='';$('fxDay').value='';
   render();toast('고정지출을 추가했어요');
 };
-$('fixedList').addEventListener('click',e=>{
+$('addSaving').onclick=()=>{
+  const name=$('svName').value.trim(),amount=num($('svAmt').value);
+  let day=Math.round(Number($('svDay').value))||1;day=Math.max(1,Math.min(31,day));
+  if(!name){toast('이름을 입력해 주세요.');$('svName').focus();return}
+  if(!amount){toast('금액을 입력해 주세요.');$('svAmt').focus();return}
+  setFixedList(fixedList().concat({id:newId(),name,amount,day,start:view,save:true}));
+  save();$('svName').value='';$('svAmt').value='';$('svDay').value='';
+  render();toast('저축을 추가했어요');
+};
+// 고정지출·저축 목록 공통: 그만두기, 서로 옮기기
+function onFixedClick(e){
+  const mv=e.target.closest('[data-tosave]');
+  if(mv){
+    const f=fixedList().find(x=>x.id===mv.dataset.tosave);if(!f)return;
+    if(f.save)delete f.save;else f.save=true;
+    save();render();toast(f.save?`${f.name}을(를) 저축으로 옮겼어요`:`${f.name}을(를) 고정지출로 옮겼어요`);return;
+  }
   const b=e.target.closest('[data-delfx]');if(!b)return;
-  const f=(state.settings.fixed||[]).find(x=>x.id===b.dataset.delfx);if(!f)return;
+  const f=fixedList().find(x=>x.id===b.dataset.delfx);if(!f)return;
   const prev=shiftYm(view,-1);
-  if(f.start&&f.start>prev)state.settings.fixed=state.settings.fixed.filter(x=>x!==f);
+  if(f.start&&f.start>prev)setFixedList(fixedList().filter(x=>x!==f));
   else f.end=prev;
   save();render();toast(`${f.name}을(를) 이번 달부터 뺐어요`);
+}
+$('fixedList').addEventListener('click',onFixedClick);
+$('svList').addEventListener('click',onFixedClick);
+
+/* ---------- 가계부 바꾸기 ---------- */
+$('bookSeg').addEventListener('click',e=>{
+  const b=e.target.closest('[data-book]');if(!b||b.dataset.book===book)return;
+  book=b.dataset.book;
+  try{localStorage.setItem('gagyebu-book',book)}catch(err){}
+  filterCat=null;rangeStart=null;
+  if(isDad())setType('out');
+  document.querySelector('.entryPanel .seg').hidden=isDad();
+  if(editingId)endEdit();else render();
 });
 
 /* ---------- 백업 ---------- */
@@ -901,7 +1012,7 @@ $('importFile').addEventListener('change',async e=>{
     const p=JSON.parse(await file.text());
     if(!Array.isArray(p.tx)||typeof p.settings!=='object')throw 0;
     if(!confirm(`백업 파일의 내역 ${p.tx.length}건으로 지금 데이터를 바꿀까요? 지금 데이터는 지워져요.`))return;
-    state.tx=p.tx;state.settings=Object.assign({budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0},p.settings);migrate();
+    state.tx=p.tx;state.settings=Object.assign(DEF_SETTINGS(),p.settings);migrate();
     save();view=periodOf(todayStr());syncDate();render();toast('백업을 불러왔어요');
   }catch(err){toast('가계부 백업 파일이 아니에요. 저장해 둔 .json 파일을 골라 주세요.')}
 });
@@ -928,15 +1039,17 @@ document.addEventListener('keydown',e=>{
 function buildReport(){
   const key=view,{start,end}=periodRange(key);
   const t0=new Date();t0.setHours(0,0,0,0);
-  const txs=state.tx.filter(t=>periodOf(t.date)===key);
-  const fixed=activeFixed(key),incs=activeIncomes(key);
+  const txs=bookTx().filter(t=>periodOf(t.date)===key);
+  const fixed=activeFixed(key),incs=activeIncomes(key),savings=activeSavings(key);
   const autoIncs=incs.filter(i=>!(i.skipCat&&txs.some(t=>t.type==='in'&&t.cat===i.skipCat)));
   const todayR=todayStr();
   const fixedDue=fixed.filter(f=>fixedDate(f,key)<=todayR),incDue=autoIncs.filter(i=>incomeDate(i,key)<=todayR);
   const income=txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0)+incDue.reduce((s,i)=>s+i.amount,0);
   const fixedOut=fixedDue.reduce((s,f)=>s+f.amount,0);
   const out=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0)+fixedOut;
-  const budget=state.settings.budget||0,net=income-out;
+  const saveDue=savings.filter(f=>fixedDate(f,key)<=todayR),saveOut=saveDue.reduce((s,f)=>s+f.amount,0);
+  const budget=curBudget(),net=income-out-saveOut;
+  const A=isDad()?'#12A150':'#3355FF';
   const d2=d=>`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;
   const md=s=>s.slice(5).replace('-','.');
 
@@ -960,7 +1073,7 @@ function buildReport(){
   svg+=`<line x1="0" y1="${H-bot}" x2="${W}" y2="${H-bot}" stroke="#DADDE3" stroke-width=".6"/>`;
   days.forEach((x,i)=>{
     const h=(x.v/dmax)*(H-top-bot),xx=i*bw+bw*.15;
-    if(x.v)svg+=`<rect x="${xx.toFixed(2)}" y="${(H-bot-h).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${h.toFixed(2)}" rx="1" fill="${perDay&&x.v>perDay?'#F0461F':'#3355FF'}"/>`;
+    if(x.v)svg+=`<rect x="${xx.toFixed(2)}" y="${(H-bot-h).toFixed(2)}" width="${(bw*.7).toFixed(2)}" height="${h.toFixed(2)}" rx="1" fill="${perDay&&x.v>perDay?'#F0461F':A}"/>`;
     else if(!x.future)svg+=`<rect x="${xx.toFixed(2)}" y="${H-bot-1}" width="${(bw*.7).toFixed(2)}" height="1" fill="#C9CDD5"/>`;
     if(i===0||x.n===1||(x.n%5===0&&x.n<=25&&Math.abs(i)>2))svg+=`<text x="${(i*bw+bw/2).toFixed(2)}" y="${H-3}" font-size="6.5" fill="#737885" text-anchor="middle">${x.n===1||i===0?(new Date(x.ds).getMonth()+1)+'/':''}${x.n}</text>`;
   });
@@ -971,13 +1084,14 @@ function buildReport(){
   // 내역 (날짜순)
   const items=txs.map(t=>({...t,kind:'tx'}));
   fixedDue.forEach(f=>items.push({kind:'fixed',type:'out',amount:f.amount,cat:'고정지출',memo:f.name,date:fixedDate(f,key)}));
+  saveDue.forEach(f=>items.push({kind:'save',type:'out',amount:f.amount,cat:'저축',memo:f.name,date:fixedDate(f,key)}));
   incDue.forEach(i=>items.push({kind:'allow',type:'in',amount:i.amount,cat:'고정수입',memo:i.name,date:incomeDate(i,key)}));
   items.sort((a,b)=>a.date.localeCompare(b.date)||(a.at||0)-(b.at||0));
   const listHTML=items.map(it=>{
     const unk=it.kind==='tx'&&isUnknown(it);
     const title=esc(it.memo||(it.cat==='?'?'출처 모름':it.cat));
-    const cat=it.kind==='fixed'?'':it.kind==='allow'?'고정수입':(it.memo&&it.cat!=='?'?esc(it.cat):'');
-    return `<div class="r${it.type==='in'?' in':''}${unk?' unk':''}${it.kind==='fixed'?' fx':''}"><span class="d">${md(it.date)}</span><span class="t">${unk&&!title.startsWith('?')?'? ':''}${title}${cat||it.kind==='fixed'?`<small>${cat}</small>`:''}</span><span class="m">${it.type==='in'?'+':'−'}${won(it.amount)}</span></div>`;
+    const cat=it.kind==='fixed'?'':it.kind==='save'?'저축':it.kind==='allow'?'고정수입':(it.memo&&it.cat!=='?'?esc(it.cat):'');
+    return `<div class="r${it.type==='in'?' in':''}${unk?' unk':''}${it.kind==='fixed'?' fx':''}"><span class="d">${md(it.date)}</span><span class="t">${unk&&!title.startsWith('?')?'? ':''}${title}${cat||it.kind==='fixed'?`<small>${cat}</small>`:''}</span><span class="m">${it.type==='in'?'+':it.kind==='save'?'→':'−'}${won(it.amount)}</span></div>`;
   }).join('');
 
   const pct=budget?out/budget:0;
@@ -985,15 +1099,16 @@ function buildReport(){
   let bars='';for(let i=0;i<46;i++){const w=[1,1,2,1,3,1,2][(i*7+key.length*3+out)%7];bars+=`<i style="width:${w}px"></i>`}
   const now=new Date();
 
-  return `<div class="rp">
+  return `<div class="rp" style="--a:${A}">
   <div class="edge"></div>
   <div class="paper">
-    <div class="head"><h1>지출 영수증</h1><p><b>${d2(start)} – ${d2(end)}</b>발행 ${d2(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}</p></div>
+    <div class="head"><h1>${isDad()?'아빠 카드 영수증':'지출 영수증'}</h1><p><b>${d2(start)} – ${d2(end)}</b>발행 ${d2(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}</p></div>
     <dl class="tot" style="margin:0">
       <div class="hl"><dt>쓴 돈</dt><dd>${won(out)}</dd>${budget?`<div class="rmeter"><i class="${pct>1?'over':''}" style="width:${Math.min(100,pct*100)}%"></i></div>`:''}</div>
       <div><dt>예산</dt><dd>${budget?won(budget):'—'}</dd><dt style="margin-top:2px">${budget?(pct>1?`<span class="neg">${won(out-budget)} 초과</span>`:`${Math.round(pct*100)}% 사용`):''}</dt></div>
-      <div><dt>수입</dt><dd>${won(income)}</dd></div>
-      <div><dt>남는 돈</dt><dd class="${net<0?'neg':net>0?'pos':''}">${(net>0?'+':'')+won(net)}</dd></div>
+      ${isDad()?`<div><dt>그중 고정지출</dt><dd>${won(fixedOut)}</dd></div>
+      <div><dt>남은 예산</dt><dd class="${budget-out<0?'neg':'pos'}">${budget?won(budget-out):'—'}</dd></div>`:`<div><dt>수입</dt><dd>${won(income)}</dd></div>
+      <div><dt>남는 돈</dt><dd class="${net<0?'neg':net>0?'pos':''}">${(net>0?'+':'')+won(net)}</dd>${saveOut?`<dt style="margin-top:2px">저축 ${won(saveOut)} 뺌</dt>`:''}</div>`}
     </dl>
     <div class="cols">
       <div><h2>카테고리별<span>${rows.length}개</span></h2>${catHTML}${unkSum?`<p style="margin:8px 0 0;color:var(--w);font-weight:700">출처 확인 필요 ${won(unkSum)}</p>`:''}</div>
@@ -1004,7 +1119,7 @@ function buildReport(){
       <div class="rows">${listHTML||'<p style="color:var(--s)">기록 없음</p>'}</div>
       <div class="grand"><span>지출 합계</span><b>${won(out)}</b></div>
     </div>
-    <div class="foot"><span>가계부에서 출력함</span><span class="bc">${bars}</span></div>
+    <div class="foot"><span>${isDad()?'가계부 · 아빠 카드':'가계부'}에서 출력함</span><span class="bc">${bars}</span></div>
   </div>
   <div class="edge b"></div>
 </div>`;
@@ -1025,7 +1140,7 @@ function printReport(){
   }
   r.style.cssText='';
   sheet.style.zoom=z<1?z.toFixed(4):'';
-  const old=document.title;document.title=`가계부 ${periodLabel(view)}`;
+  const old=document.title;document.title=`가계부${isDad()?' 아빠 카드':''} ${periodLabel(view)}`;
   setTimeout(()=>{window.print();document.title=old},50);
 }
 $('pdfBtn').onclick=printReport;
@@ -1035,6 +1150,8 @@ load();
 lastSnap=snap();
 view=periodOf(todayStr());
 $('date').value=todayStr();syncDate();
+if(isDad())setType('out');
+document.querySelector('.entryPanel .seg').hidden=isDad();
 renderChips();render();
 const addBtn=$('add');addBtn.disabled=false;addBtn.textContent='추가';
 </script>
