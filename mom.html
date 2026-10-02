@@ -49,9 +49,9 @@
 }
 /* 아빠 카드: 보라 */
 :root[data-book="dad"]{
-  --blob1:rgba(190,170,255,.55);
-  --hl:#C9B8FF; --hl-ink:#1A1530;
-  --h1:rgba(201,184,255,.45); --h2:#C9B8FF; --h3:#A48EF5; --h4:#7656E3; --h4-ink:#FFFFFF;
+  --blob1:rgba(255,205,110,.42);
+  --hl:#FFE08A; --hl-ink:#3A2A00;
+  --h1:rgba(255,111,97,.18); --h2:#FFB8AE; --h3:#FF8A7A; --h4:#E8553F; --h4-ink:#FFFFFF;
 }
 @media (prefers-color-scheme:dark){:root[data-book="dad"]:not([data-theme="light"]){
   --blob1:rgba(150,120,255,.16);
@@ -527,7 +527,7 @@ button.cell:hover{filter:brightness(.94)}
   .ledgerPanel{padding:16px 12px}
   /* 위 카드를 작게: 열자마자 수입 | 지출 표가 보이게 */
   .wrap{gap:8px;padding-top:10px}
-  .top{flex-wrap:nowrap;gap:6px}
+  .top{flex-wrap:wrap;gap:6px}
   .month{padding:2px}.month h1{min-width:0;padding:0 4px;font-size:15px}
   .undoGroup #redoBtn{display:none}
   .settingsBtn{height:44px;padding:0 11px}
@@ -555,7 +555,8 @@ button.cell:hover{filter:brightness(.94)}
   .tx.c .txText b{font-size:15px}
   .tx.c .amt{font-size:15.5px}
   .cSub{font-size:12.5px}
-  .brand{display:none}
+  .brand{flex:1 0 100%;order:-1}.brandName{display:none}
+  .bookSeg{flex:1}.bookSeg button{flex:1;height:44px;font-size:16px}
   .month h1{font-size:16px}
   .icon{width:40px;height:40px}
   .settingsBtn{height:48px}
@@ -778,6 +779,14 @@ button.cell:hover{filter:brightness(.94)}
     <button class="icon" id="closeSettings" aria-label="닫기"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
   </div>
   <div class="drawerBody">
+    <section class="sec" aria-labelledby="nameTitle" id="nameSec" hidden>
+      <h2 id="nameTitle">이 가계부 이름</h2>
+      <div class="inline">
+        <div class="field"><label for="bookNameIn">위쪽 탭에 보이는 이름</label><input id="bookNameIn" type="text" maxlength="12"></div>
+        <button class="ghost" id="saveBookName">저장</button>
+      </div>
+    </section>
+
     <section class="sec" aria-labelledby="budTitle">
       <h2 id="budTitle">한 달 기준과 예산</h2>
       <div class="inline" style="margin-bottom:10px">
@@ -865,22 +874,32 @@ const INC_CATS=['월급','부수입','용돈','이자·환급','기타'];
 // 가계부 설정. 엄마 가계부(mom.html)는 tools/make_mom.py가 이 값을 바꿔서 만든다.
 //  books: 두 번째 가계부(아빠 카드) 탭, wish: 위시리스트,
 //  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기,
-//  donut: '어디에 썼나'를 막대 대신 동그라미 그래프(지출/수입)로
-const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true,donut:true};
+//  donut: '어디에 썼나'를 막대 대신 동그라미 그래프(지출/수입)로,
+//  names: 두 가계부 탭 이름, full2: 두 번째 가계부도 첫 번째와 똑같은 기능(수입·고정·저축)으로
+//         (false면 '아빠 카드'처럼 지출만 쓰는 간단한 가계부)
+const APP={key:'gagyebu-mom-v1',books:true,wish:false,split:true,carry:true,donut:true,names:['가계부 1','가계부 2'],full2:true};
 const LS=APP.key;
+// 마지막으로 연 탭 기억 (가계부마다 따로)
+const BOOK_KEY=APP.key==='gagyebu-local-v2'?'gagyebu-book':APP.key+'-book';
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 
 const DEF_SETTINGS=()=>({budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0,dad:{budget:0,fixed:[]},wish:[]});
 let state={tx:[],settings:DEF_SETTINGS()};
 // 가계부 두 개: main = 내 돈(현금·통장·체크카드), dad = 아빠 카드
-let book=!APP.books?'main':(()=>{try{return localStorage.getItem('gagyebu-book')==='dad'?'dad':'main'}catch(e){return 'main'}})();
+let book=!APP.books?'main':(()=>{try{return localStorage.getItem(BOOK_KEY)==='dad'?'dad':'main'}catch(e){return 'main'}})();
 const isDad=()=>book==='dad';
-function dadSet(){const s=state.settings;if(!s.dad||typeof s.dad!=='object')s.dad={budget:0,fixed:[]};if(!Array.isArray(s.dad.fixed))s.dad.fixed=[];return s.dad}
+// 지출만 쓰는 간단한 두 번째 가계부인지 (내 가계부의 아빠 카드)
+const lite=()=>isDad()&&!APP.full2;
+function bookName(b=book){const n=state.settings.bookNames||[];return n[b==='dad'?1:0]||APP.names[b==='dad'?1:0]}
+function dadSet(){const s=state.settings;if(!s.dad||typeof s.dad!=='object')s.dad={budget:0,fixed:[]};if(!Array.isArray(s.dad.fixed))s.dad.fixed=[];if(APP.full2&&!Array.isArray(s.dad.incomes))s.dad.incomes=[];return s.dad}
+// 고정수입 목록 (두 번째 가계부가 같은 기능이면 그쪽 목록)
+function incList(){return isDad()?(APP.full2?dadSet().incomes:[]):(state.settings.incomes||(state.settings.incomes=[]))}
+function setIncList(arr){if(isDad())dadSet().incomes=arr;else state.settings.incomes=arr}
 function bookTx(){return state.tx.filter(t=>isDad()?t.book==='dad':t.book!=='dad')}
 function curBudget(){return (isDad()?dadSet().budget:state.settings.budget)||0}
 // 아빠 카드는 구독이 안 되니 고정지출 없음
-function fixedList(){return isDad()?[]:(state.settings.fixed||[])}
+function fixedList(){return isDad()?(APP.full2?dadSet().fixed:[]):(state.settings.fixed||[])}
 function setFixedList(arr){if(isDad())dadSet().fixed=arr;else state.settings.fixed=arr}
 let donutType='out';
 let txType='out', cat=EXP_CATS[0], editingId=null, rangeStart=null, filterCat=null; // null | '?' | 카테고리 | '고정지출'
@@ -960,7 +979,7 @@ function updateUndo(){
 // 용돈 받는 날 전에 들어오는 수입을 '다음 기간에 쓸 돈'으로 정하면, 이 기간 몫은 직전 기간 끝에 들어온 돈
 function canEarly(i){return sd()>1&&(i.day||1)<sd()}
 function incomeDate(i,key){return i.early&&canEarly(i)?fixedDate(i,shiftYm(key,-1)):fixedDate(i,key)}
-function activeIncomes(key){return isDad()?[]:(state.settings.incomes||[]).filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
+function activeIncomes(key){return incList().filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
 function spentBetween(a,b){
   let sum=bookTx().filter(t=>t.type==='out'&&t.date>=a&&t.date<=b).reduce((s,t)=>s+t.amount,0);
   for(let k=periodOf(a),last=periodOf(b);k<=last;k=shiftYm(k,1))
@@ -993,7 +1012,7 @@ function carryBefore(key){
   for(let i=0;k<key&&i<600;k=shiftYm(k,1),i++)s+=periodNet(k);
   return s;
 }
-function activeSavings(key){return isDad()?[]:activeAll(key).filter(f=>f.save)}
+function activeSavings(key){return lite()?[]:activeAll(key).filter(f=>f.save)}
 function fixedDate(f,key){
   const {start}=periodRange(key);
   const day=f.day||1;
@@ -1041,17 +1060,17 @@ function render(){
   $('sv').textContent=won(saveOut);
   const svTotal=savings.reduce((s,f)=>s+savedSoFar(f).sum,0);
   $('svNote').textContent=saveAll>saveOut?`${won(saveAll-saveOut)} 이체 예정`:svTotal>saveOut?`지금까지 ${won(svTotal)} 모음`:saveAll?'쓴 돈과 따로 계산':'설정에서 추가';
-  $('moneyBox').hidden=isDad();
+  $('moneyBox').hidden=lite();
   let firstMini=true;
   document.querySelectorAll('.mini>div').forEach(el=>{
-    el.hidden=el.hasAttribute('data-dad')?!isDad():isDad();
+    el.hidden=el.hasAttribute('data-dad')?!lite():lite();
     el.classList.toggle('first',!el.hidden&&firstMini);if(!el.hidden)firstMini=false;
     if(el.dataset.filter)el.setAttribute('aria-pressed',filterCat===el.dataset.filter);
   });
   const budget=curBudget();
   const net=income-out-saveOut, netEl=$('net'),gb=$('goal'),gf=$('goalFill'),gt=$('goalText');
-  const carry=APP.carry&&!isDad()?carryBefore(view):0;
-  if(isDad()){
+  const carry=APP.carry&&!lite()?carryBefore(view):0;
+  if(lite()){
     // 아빠 카드는 수입이 없으니 남은 예산을 강조
     const left=budget-out;
     $('netLabel').textContent='남은 예산';
@@ -1248,17 +1267,20 @@ function render(){
     $('bars').innerHTML=`<div class="dSeg" role="group" aria-label="그래프 고르기"><button type="button" data-dt="out" aria-pressed="${donutType==='out'}">지출</button><button type="button" data-dt="in" aria-pressed="${donutType==='in'}">수입</button></div><svg class="donut" viewBox="0 0 120 120" role="img" aria-label="${donutType==='in'?'수입':'지출'} 비율 그래프">${svg}</svg><div class="dLegend">${leg||`<p class="note" style="text-align:center">${donutType==='in'?'수입':'지출'}을 기록하면 보여 줄게요.</p>`}</div>`;
   }
   $('bars').classList.toggle('filtering',!!filterCat&&rows.some(([c])=>c===filterCat));
-  if(isDad()){
+  if(lite()){
     $('dadDays').textContent=`${Object.keys(daily).filter(d=>d<=todayS).length}일`;
     $('dadTop').textContent=rows.length?(rows[0][0]==='?'?'출처 모름':rows[0][0]):'—';
   }
   renderWish();
   if(document.activeElement!==$('budget'))$('budget').value=budget?budget.toLocaleString('ko-KR'):'';
-  $('budgetLabel').textContent=isDad()?'아빠 카드로 한 달에 쓸 돈':'한 달에 쓸 돈';
-  $('planNote').textContent=isDad()?'아빠 카드 가계부예요. 기간(용돈 받는 날)은 내 돈 가계부와 같이 써요.':allowance&&budget?(allowance>budget+saveAll?`매달 받는 ${won(allowance)} 중 ${won(budget)}을 쓰고${saveAll?` ${won(saveAll)}을 저축하고`:''} ${won(allowance-budget-saveAll)}을 남기는 계획이에요.`:`쓸 돈${saveAll?'과 저축':''}이 매달 받는 ${won(allowance)}보다 많아요.`):allowance?'쓸 돈을 정하면 매달 얼마를 남길지 보여 줄게요.':'고정수입을 추가하면 매달 받는 돈이 자동으로 계산돼요.';
-  document.querySelectorAll('#settings [data-main]').forEach(el=>el.hidden=isDad());
-  $('setTitle').textContent=isDad()?'아빠 카드 예산과 고정 항목':'예산과 고정 항목';
-  $('fixTitle').textContent=isDad()?'아빠 카드 고정지출':'고정지출';
+  $('budgetLabel').textContent=lite()?'아빠 카드로 한 달에 쓸 돈':'한 달에 쓸 돈';
+  $('planNote').textContent=lite()?'아빠 카드 가계부예요. 기간(용돈 받는 날)은 내 돈 가계부와 같이 써요.':allowance&&budget?(allowance>budget+saveAll?`매달 받는 ${won(allowance)} 중 ${won(budget)}을 쓰고${saveAll?` ${won(saveAll)}을 저축하고`:''} ${won(allowance-budget-saveAll)}을 남기는 계획이에요.`:`쓸 돈${saveAll?'과 저축':''}이 매달 받는 ${won(allowance)}보다 많아요.`):allowance?'쓸 돈을 정하면 매달 얼마를 남길지 보여 줄게요.':'고정수입을 추가하면 매달 받는 돈이 자동으로 계산돼요.';
+  document.querySelectorAll('#settings [data-main]').forEach(el=>el.hidden=lite());
+  $('setTitle').textContent=APP.full2?`${bookName()} · 예산과 고정 항목`:lite()?'아빠 카드 예산과 고정 항목':'예산과 고정 항목';
+  $('fixTitle').textContent=lite()?'아빠 카드 고정지출':'고정지출';
+  document.querySelectorAll('#bookSeg [data-book]').forEach(b=>{b.textContent=bookName(b.dataset.book)});
+  $('nameSec').hidden=!(APP.books&&APP.full2);
+  if(document.activeElement!==$('bookNameIn'))$('bookNameIn').value=bookName();
   const it=$('incTotal');it.hidden=!incs.length;
   if(incs.length){$('incSum').textContent=won(allowance);$('incShare').textContent=`${incs.length}개`}
   $('incList').innerHTML=incs.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${canEarly(f)?`<button type="button" class="earlyBtn" data-early="${esc(f.id)}" aria-pressed="${!!f.early}" title="눌러서 바꾸기">${f.early?'다음 기간에 쓸 돈':'받은 기간에 쓸 돈'}</button>`:''}</span></span><span>${won(f.amount)}</span><button class="del" data-delinc="${esc(f.id)}" aria-label="${esc(f.name)} 고정수입 그만두기">✕</button></li>`).join('');
@@ -1270,7 +1292,7 @@ function render(){
     const base=budget||allowance;
     $('fixedShare').textContent=`${fixed.length}개`+(base?`, ${budget?'쓸 돈':'받는 돈'}의 ${Math.round(fixedAll/base*100)}%`:'');
   }
-  $('fixedList').innerHTML=fixed.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${isDad()?'':`<button type="button" class="moveBtn" data-tosave="${esc(f.id)}">저축으로 옮기기</button>`}</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 고정지출 그만두기">✕</button></li>`).join('');
+  $('fixedList').innerHTML=fixed.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일${lite()?'':`<button type="button" class="moveBtn" data-tosave="${esc(f.id)}">저축으로 옮기기</button>`}</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 고정지출 그만두기">✕</button></li>`).join('');
 
   const st=$('svTotal');st.hidden=!savings.length;
   if(savings.length){$('svSum').textContent=won(saveAll);$('svShare').textContent=`${savings.length}개`+(allowance?`, 받는 돈의 ${Math.round(saveAll/allowance*100)}%`:'')}
@@ -1485,7 +1507,7 @@ $('addIncome').onclick=()=>{
   const startKey=$('inStart').value==='next'?shiftYm(view,1):view;
   const inc={id:newId(),name,amount,day,start:startKey};
   if(canEarly(inc)&&$('inEarly').value==='next')inc.early=true;
-  state.settings.incomes=(state.settings.incomes||[]).concat(inc);
+  setIncList(incList().concat(inc));
   save();$('inName').value='';$('inAmt').value='';$('inDay').value='';syncEarlyRow();
   render();toast($('inStart').value==='next'?`${name}을(를) 다음 기간부터 넣을게요`:'고정수입을 추가했어요');
 };
@@ -1494,19 +1516,25 @@ $('inDay').addEventListener('input',syncEarlyRow);
 $('incList').addEventListener('click',e=>{
   const eb=e.target.closest('[data-early]');
   if(eb){
-    const f=(state.settings.incomes||[]).find(x=>x.id===eb.dataset.early);if(!f)return;
+    const f=incList().find(x=>x.id===eb.dataset.early);if(!f)return;
     f.early=!f.early;if(!f.early)delete f.early;save();render();
     toast(f.early?`${f.name}을(를) 다음 기간에 쓸 돈으로 계산할게요`:`${f.name}을(를) 받은 기간에 쓸 돈으로 계산할게요`);return;
   }
   const b=e.target.closest('[data-delinc]');if(!b)return;
-  const f=(state.settings.incomes||[]).find(x=>x.id===b.dataset.delinc);if(!f)return;
+  const f=incList().find(x=>x.id===b.dataset.delinc);if(!f)return;
   const prev=shiftYm(view,-1);
-  if(f.start&&f.start>prev)state.settings.incomes=state.settings.incomes.filter(x=>x!==f);
+  if(f.start&&f.start>prev)setIncList(incList().filter(x=>x!==f));
   else f.end=prev;
   save();render();toast(`${f.name}을(를) 이번 달부터 뺐어요`);
 });
 $('budget').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('saveBudget').click()});
 
+$('saveBookName').onclick=()=>{
+  const v=$('bookNameIn').value.trim().slice(0,12);
+  const n=(state.settings.bookNames||APP.names).slice();n[isDad()?1:0]=v||APP.names[isDad()?1:0];
+  state.settings.bookNames=n;save();$('bookNameIn').blur();render();toast(`이름을 '${bookName()}'(으)로 바꿨어요`);
+};
+$('bookNameIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing)$('saveBookName').click()});
 $('saveStart').onclick=()=>{
   let d=Math.round(Number($('startDay').value))||1;d=Math.max(1,Math.min(28,d));
   state.settings.startDay=d;save();
@@ -1670,10 +1698,10 @@ $('wishList').addEventListener('click',e=>{
 $('bookSeg').addEventListener('click',e=>{
   const b=e.target.closest('[data-book]');if(!b||b.dataset.book===book)return;
   book=b.dataset.book;
-  try{localStorage.setItem('gagyebu-book',book)}catch(err){}
+  try{localStorage.setItem(BOOK_KEY,book)}catch(err){}
   filterCat=null;rangeStart=null;
-  if(isDad())setType('out');
-  document.querySelector('.entryPanel .seg').hidden=isDad();
+  if(lite())setType('out');
+  document.querySelector('.entryPanel .seg').hidden=lite();
   if(editingId)endEdit();else render();
 });
 
@@ -1729,7 +1757,7 @@ function buildReport(){
   const out=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0)+fixedOut;
   const saveDue=savings.filter(f=>fixedDate(f,key)<=todayR),saveOut=saveDue.reduce((s,f)=>s+f.amount,0);
   const budget=curBudget(),net=income-out-saveOut;
-  const dad=isDad();
+  const dad=lite();
   // 인쇄용 색 (화면 테마와 별개로 항상 밝은 종이)
   // 인쇄는 모노톤: 보통 날은 회색, 하루 예산 넘은 날은 검정
   const C={dp:'#A8A8A8',hl:'#FFFFFF',w:'#111111',l:'#DCDCDC',s:'#777777'};
@@ -1811,7 +1839,7 @@ function buildReport(){
       ${APP.carry?`<div class="hl"><dt>잔액</dt><dd class="${carry+net<0?'neg':''}">${won(carry+net)}</dd><small>${carry?`전월이월 ${sgn(carry)} 포함`:`수입 − 쓴 돈${saveOut?' − 저축':''}`}</small></div>`:`<div class="hl"><dt>남는 돈</dt><dd class="${net<0?'neg':''}">${sgn(net)}</dd><small>수입 − 쓴 돈${saveOut?' − 저축':''}</small></div>`}`;
 
   return `<div class="rp${dad?' dad':''}">
-  <div class="rTop"><b><i>₩</i>가계부${dad?' · 아빠 카드':''}</b><span>${d2(start)} – ${d2(end)}</span></div>
+  <div class="rTop"><b><i>₩</i>가계부${isDad()?' · '+esc(bookName()):''}</b><span>${d2(start)} – ${d2(end)}</span></div>
   <section class="rHero">
     <div>
       <p class="k">${periodLabel(key)}에 ${dad?'아빠 카드로 ':''}쓴 돈</p>
@@ -1849,7 +1877,7 @@ function printReport(){
   }
   r.style.cssText='';
   sheet.style.zoom=z<1?z.toFixed(4):'';
-  const old=document.title;document.title=`가계부${isDad()?' 아빠 카드':''} ${periodLabel(view)}`;
+  const old=document.title;document.title=`가계부${isDad()?' '+bookName():''} ${periodLabel(view)}`;
   setTimeout(()=>{window.print();document.title=old},50);
 }
 $('pdfBtn').onclick=printReport;
@@ -1859,8 +1887,8 @@ load();
 lastSnap=snap();
 view=periodOf(todayStr());
 $('date').value=todayStr();syncDate();
-if(isDad())setType('out');
-document.querySelector('.entryPanel .seg').hidden=isDad();
+if(lite())setType('out');
+document.querySelector('.entryPanel .seg').hidden=lite();
 if(!APP.books)$('bookSeg').hidden=true;
 if(!APP.wish)document.querySelector('.wishPanel').hidden=true;
 renderChips();render();

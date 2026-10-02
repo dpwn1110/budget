@@ -8,7 +8,7 @@
 - 다크 모드 없이 항상 밝은 화면
 - 휴대폰 위주: 글씨·버튼을 크게, 휴대폰에서는 수입 | 지출 표를 위로
 - 살림용 카테고리
-- 두 번째 가계부(아빠 카드) 탭과 위시리스트는 뺌
+- 가계부 탭 두 개: 둘 다 같은 기능 (탭 이름은 설정에서 바꿈), 위시리스트는 뺌
 - 보여 주는 방식은 엄마가 쓰던 Numbers 가계부처럼:
   내역을 수입 | 지출 두 칸으로 나란히, 지난달 남은 돈은 전월이월로 잔액에 더함,
   '어디에 썼나'는 동그라미 그래프, '하루에 쓸 돈' 카드는 뺌
@@ -32,8 +32,8 @@ rep("<title>가계부</title>", "<title>엄마 가계부</title>")
 # 엄마는 밝은 화면이 좋다고 해서 휴대폰이 다크 모드여도 항상 밝게
 rep('<html lang="ko">', '<html lang="ko" data-theme="light">')
 rep('<meta name="viewport"', '<meta name="color-scheme" content="light">\n<meta name="viewport"')
-rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false};",
-    "const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true,donut:true};")
+rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false,names:['내 돈','아빠 카드'],full2:false};",
+    "const APP={key:'gagyebu-mom-v1',books:true,wish:false,split:true,carry:true,donut:true,names:['가계부 1','가계부 2'],full2:true};")
 rep("a.download=`가계부-백업-${todayStr()}.json`", "a.download=`엄마-가계부-백업-${todayStr()}.json`")
 
 # ---------- 카테고리 ----------
@@ -55,7 +55,7 @@ rep('구독료, 통신비처럼 매달 나가는 돈이에요.', '관리비, 보
 rep('placeholder="예: 청년 적금"', 'placeholder="예: 주택청약"')
 
 # ---------- 숫자 이름: Numbers처럼 ----------
-rep("(isNow?'이번 달 ':'이 기간에 ')+(isDad()?'아빠 카드로 쓴 돈':'쓴 돈')", "(isNow?'이번 달 ':'이 기간 ')+'지출 총액'")
+rep("(isNow?'이번 달 ':'이 기간에 ')+(lite()?'아빠 카드로 쓴 돈':'쓴 돈')", "(isNow?'이번 달 ':'이 기간 ')+'지출 총액'")
 rep('<dt>수입<span class="arr">', '<dt>수입 총액<span class="arr">')
 
 # ---------- 색: 수입 청록 · 지출 코랄 (보색) · 잔액 연보라 ----------
@@ -68,6 +68,12 @@ rep("--blob1:rgba(220,232,80,.13);", "--blob1:rgba(124,140,248,.14);", 2)
 rep("--hl:#E3EE5C; --hl-ink:#15160A;", "--hl:#A9B4FF; --hl-ink:#151C55;", 2)
 rep("--h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;",
     "--h1:rgba(255,138,122,.18); --h2:rgba(255,138,122,.42); --h3:rgba(255,138,122,.72); --h4:#FF8A7A; --h4-ink:#2A0E08;", 2)
+rep("""  --blob1:rgba(190,170,255,.55);
+  --hl:#C9B8FF; --hl-ink:#1A1530;
+  --h1:rgba(201,184,255,.45); --h2:#C9B8FF; --h3:#A48EF5; --h4:#7656E3; --h4-ink:#FFFFFF;""",
+"""  --blob1:rgba(255,205,110,.42);
+  --hl:#FFE08A; --hl-ink:#3A2A00;
+  --h1:rgba(255,111,97,.18); --h2:#FFB8AE; --h3:#FF8A7A; --h4:#E8553F; --h4-ink:#FFFFFF;""")
 rep("--outc:var(--ink); --out-soft:var(--soft);", "--outc:#E8553F; --out-soft:rgba(255,111,97,.13);")
 rep("--inc:#2F6FEB; --inc-soft:rgba(93,148,255,.2); --fix:#16975A; --fix-soft:rgba(46,191,120,.2);",
     "--inc:#0E9C96; --inc-soft:rgba(20,166,160,.15); --fix:#6E7BEF; --fix-soft:rgba(124,140,248,.18);")
@@ -94,7 +100,7 @@ rep("/* ---------- PDF 리포트 ---------- */\n#report{display:none}", """/* --
   .ledgerPanel{padding:16px 12px}
   /* 위 카드를 작게: 열자마자 수입 | 지출 표가 보이게 */
   .wrap{gap:8px;padding-top:10px}
-  .top{flex-wrap:nowrap;gap:6px}
+  .top{flex-wrap:wrap;gap:6px}
   .month{padding:2px}.month h1{min-width:0;padding:0 4px;font-size:15px}
   .undoGroup #redoBtn{display:none}
   .settingsBtn{height:44px;padding:0 11px}
@@ -122,7 +128,8 @@ rep("/* ---------- PDF 리포트 ---------- */\n#report{display:none}", """/* --
   .tx.c .txText b{font-size:15px}
   .tx.c .amt{font-size:15.5px}
   .cSub{font-size:12.5px}
-  .brand{display:none}
+  .brand{flex:1 0 100%;order:-1}.brandName{display:none}
+  .bookSeg{flex:1}.bookSeg button{flex:1;height:44px;font-size:16px}
   .month h1{font-size:16px}
   .icon{width:40px;height:40px}
   .settingsBtn{height:48px}
