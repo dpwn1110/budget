@@ -8,35 +8,35 @@
 <style>
 /* 유리 느낌 + 미니멀, 악센트는 하나 (내 돈: 노랑, 아빠 카드: 보라) */
 :root{
-  --bg:#DDE2E9; --blob1:rgba(255,236,40,.5); --blob2:rgba(160,184,214,.55); --blob3:rgba(255,255,255,.7);
+  --bg:#DDE2E9; --blob1:rgba(236,244,106,.55); --blob2:rgba(160,184,214,.55); --blob3:rgba(255,255,255,.7);
   --panel:rgba(255,255,255,.46); --card:rgba(255,255,255,.72); --soft:rgba(255,255,255,.55);
   --glass-line:rgba(255,255,255,.75); --blur:saturate(160%) blur(22px);
   --ink:#121316; --sub:#6A6F79; --line:rgba(18,19,22,.10);
-  --hl:#FFEE2E; --hl-ink:#161400; --accent:#121316; --accent-ink:#FFFFFF;
+  --hl:#ECF46A; --hl-ink:#15160A; --accent:#121316; --accent-ink:#FFFFFF;
   --warn:#E5484D; --warn-soft:rgba(229,72,77,.12);
-  --h1:rgba(255,238,46,.38); --h2:#FFEE2E; --h3:#F5CE00; --h4:#121316; --h4-ink:#FFEE2E;
+  --h1:rgba(236,244,106,.45); --h2:#ECF46A; --h3:#C9D33A; --h4:#121316; --h4-ink:#ECF46A;
   --shadow:0 8px 32px rgba(40,52,70,.08);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E0F12; --blob1:rgba(255,230,40,.12); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
+  --bg:#0E0F12; --blob1:rgba(220,232,80,.13); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
   --panel:rgba(32,34,40,.5); --card:rgba(255,255,255,.07); --soft:rgba(255,255,255,.05);
   --glass-line:rgba(255,255,255,.08);
   --ink:#F2F3F5; --sub:#999EA8; --line:rgba(255,255,255,.10);
-  --hl:#FFEA2E; --hl-ink:#161400; --accent:#F2F3F5; --accent-ink:#121316;
+  --hl:#E3EE5C; --hl-ink:#15160A; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
-  --h1:rgba(255,234,46,.18); --h2:rgba(255,234,46,.45); --h3:rgba(255,234,46,.75); --h4:#FFEA2E; --h4-ink:#161400;
+  --h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }}
 :root[data-theme="dark"]{
-  --bg:#0E0F12; --blob1:rgba(255,230,40,.12); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
+  --bg:#0E0F12; --blob1:rgba(220,232,80,.13); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
   --panel:rgba(32,34,40,.5); --card:rgba(255,255,255,.07); --soft:rgba(255,255,255,.05);
   --glass-line:rgba(255,255,255,.08);
   --ink:#F2F3F5; --sub:#999EA8; --line:rgba(255,255,255,.10);
-  --hl:#FFEA2E; --hl-ink:#161400; --accent:#F2F3F5; --accent-ink:#121316;
+  --hl:#E3EE5C; --hl-ink:#15160A; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
-  --h1:rgba(255,234,46,.18); --h2:rgba(255,234,46,.45); --h3:rgba(255,234,46,.75); --h4:#FFEA2E; --h4-ink:#161400;
+  --h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }
 /* 아빠 카드: 보라 */
@@ -202,7 +202,8 @@ button.cell:hover{filter:brightness(.94)}
   .main>.panel{min-height:0;overflow:auto}
   .side{min-height:0}
   .side>.panel{min-height:0;overflow:auto;flex:1 1 0}
-  .wishPanel{flex-grow:1.25!important}
+  .catPanel{flex-grow:1.5!important}
+  .wishPanel{padding:20px 22px}
   .ledgerPanel{display:flex;flex-direction:column;overflow:hidden!important}
   #list{flex:1;min-height:0;overflow:auto;margin:0 -8px;padding:0 8px}
   .calTile .cell{aspect-ratio:1.5/1;border-radius:10px}
@@ -338,28 +339,30 @@ button.cell:hover{filter:brightness(.94)}
 .wishForm .formBtns .ghost{min-height:44px;flex:1}
 .wishForm .wSave{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .wishForm .field input{background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
-.wish{padding:12px 0;border-top:1px solid var(--line)}
-.wish:first-child{border-top:0;padding-top:2px}
-.wTop{display:flex;align-items:center;gap:7px;min-width:0}
-.wTop b{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.wish{padding:8px 0;border-top:1px solid var(--line)}
+.wish:first-child{border-top:0;padding-top:0}
+.wTop{display:flex;align-items:center;gap:6px;min-width:0;font-size:14px}
+.wTop b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .wTop b:hover{text-decoration:underline;text-underline-offset:3px}
-.due{flex:none;border-radius:999px;padding:1px 8px;font-size:11.5px;font-weight:700;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);color:var(--sub)}
+.due{flex:none;border-radius:999px;padding:0 7px;font-size:11px;font-weight:700;line-height:18px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);color:var(--sub)}
 .due.soon{background:var(--hl);color:var(--hl-ink);box-shadow:none}
 .due.late{background:var(--warn-soft);color:var(--warn);box-shadow:none}
-.wPrice{margin-left:auto;font-weight:700;white-space:nowrap;letter-spacing:-.02em}
-.wBar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0 6px}
-.wBar i{display:block;height:100%;background:var(--ink);border-radius:4px}
-.wBar i.full{background:var(--hl)}
-.wMeta{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--sub)}
-.wMeta b{color:var(--ink);font-weight:700}
-.wPlan{font-size:12.5px;color:var(--sub);margin-top:2px}
-.wActs{display:flex;gap:5px;margin-top:8px}
-.wActs button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:3px 11px;font-size:12px;font-weight:600}
-.wActs button:hover{background:var(--card)}
-.wActs .wDel{margin-left:auto;border:0;background:transparent;color:var(--sub)}
-.wActs .wDel:hover{color:var(--warn)}
-.wishDone{margin-top:8px;font-size:12.5px;color:var(--sub)}
-.wishDone summary{cursor:pointer;font-weight:600;padding:6px 0}
+.wLeft{margin-left:auto;font-weight:700;white-space:nowrap;letter-spacing:-.02em;font-size:13.5px}
+.wLeft small{font-weight:500;color:var(--sub);font-size:12px;margin-left:2px}
+.wBar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin:6px 0 4px}
+.wBar i{display:block;height:100%;background:var(--ink);border-radius:2px}
+.wBar i.full{background:var(--hl);box-shadow:inset 0 0 0 1px var(--ink)}
+.wMeta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--sub);white-space:nowrap}
+.wMeta span:last-child{overflow:hidden;text-overflow:ellipsis}
+.wActs{display:none;gap:3px;flex:none;margin-left:auto}
+.wish:hover .wActs,.wish:focus-within .wActs{display:flex}
+.wish:hover .wLeft,.wish:focus-within .wLeft{display:none}
+@media (hover:none){.wActs,.wish:hover .wActs{display:flex;margin-left:4px}.wish:hover .wLeft{display:inline}}
+.wActs button{width:24px;height:24px;border:1px solid var(--line);background:var(--soft);border-radius:50%;padding:0;font-size:12px;font-weight:700;display:grid;place-items:center;color:var(--ink)}
+.wActs button:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.wActs .wDel:hover{background:var(--warn);border-color:var(--warn);color:#fff}
+.wishDone{margin-top:4px;font-size:12px;color:var(--sub)}
+.wishDone summary{cursor:pointer;font-weight:600;padding:4px 0}
 .wishDone ul{list-style:none;margin:0;padding:0}
 .wishDone li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 0}
 .wishDone li span{text-decoration:line-through}
@@ -1191,17 +1194,16 @@ function renderWish(){
     if(w.due){
       const d=monthDiff(w.due),m=Number(w.due.split('-')[1]);
       due=d<0?`<span class="due late">${m}월 지남</span>`:d===0?'<span class="due soon">이번 달</span>':d===1?'<span class="due soon">다음 달</span>':`<span class="due">${d}달 뒤 · ${m}월</span>`;
-      if(left)plan=d<=0?`이번 달 안에 ${won(left)} 필요`:d===1?`다음 달까지 ${won(left)} 모으기`:`${m}월까지 한 달에 ${won(Math.ceil(left/d/1000)*1000)}씩`;
+      if(left)plan=d<=0?'이번 달 안에':d===1?'다음 달까지':`한 달에 ${won(Math.ceil(left/d/1000)*1000)}씩`;
     }
     return `<div class="wish" data-wid="${esc(w.id)}">
-      <div class="wTop"><b data-wact="edit" title="눌러서 고치기">${esc(w.name)}</b>${due}<span class="wPrice">${won(w.price)}</span></div>
+      <div class="wTop"><b data-wact="edit" title="눌러서 고치기">${esc(w.name)}</b>${due}<span class="wLeft">${left?`${won(left)}<small>남음</small>`:'다 모았어요!'}</span>
+        <span class="wActs"><button type="button" data-wact="add" title="모은 돈 더하기" aria-label="${esc(w.name)} 모은 돈 더하기">+</button><button type="button" data-wact="buy" title="샀어요" aria-label="${esc(w.name)} 샀어요">✓</button><button type="button" class="wDel" data-wact="del" title="지우기" aria-label="${esc(w.name)} 지우기">✕</button></span></div>
       <div class="wBar"><i class="${left?'':'full'}" style="width:${pct.toFixed(1)}%"></i></div>
-      <div class="wMeta"><span>모은 돈 ${won(saved)} · ${Math.round(pct)}%</span><span>${left?`<b>${won(left)}</b> 남음`:'<b>다 모았어요!</b>'}</span></div>
-      ${plan?`<div class="wPlan">${plan}</div>`:''}
-      <div class="wActs"><button type="button" data-wact="add">+ 모으기</button><button type="button" data-wact="buy">샀어요</button><button type="button" class="wDel" data-wact="del" aria-label="${esc(w.name)} 지우기">✕</button></div>
+      <div class="wMeta"><span>${won(saved)} / ${won(w.price)} · ${Math.round(pct)}%</span><span>${plan}</span></div>
     </div>`;
   }).join('');
-  if(!open.length&&$('wishForm').hidden)html='<p class="note" style="padding:4px 0 8px">사고 싶은 걸 적어 두면 얼마나 모았는지, 언제까지 얼마가 필요한지 보여 줄게요.</p>';
+  if(!open.length&&$('wishForm').hidden)html='<p class="note" style="padding:0 0 4px;font-size:12.5px">사고 싶은 걸 적어 두면 얼마나 모았는지, 언제까지 얼마가 필요한지 보여 줄게요.</p>';
   if(done.length)html+=`<details class="wishDone"><summary>산 것 ${done.length}개</summary><ul>${done.map(w=>`<li data-wid="${esc(w.id)}"><span>${esc(w.name)} ${won(w.price)}</span><button type="button" data-wact="undo">되돌리기</button></li>`).join('')}</ul></details>`;
   $('wishList').innerHTML=html;
 }
