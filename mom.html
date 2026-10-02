@@ -1422,7 +1422,10 @@ function render(){
   $('svList').innerHTML=savings.map(f=>{const so=savedSoFar(f);return `<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일 · <button type="button" class="moveBtn" style="margin-left:0" data-svstart="${esc(f.id)}" aria-expanded="false" title="처음 넣은 달 바꾸기">${f.start?`${f.start.slice(0,4)}년 ${Number(f.start.slice(5))}월`:'처음'}부터 ✎</button><button type="button" class="moveBtn" data-tosave="${esc(f.id)}">고정지출로 옮기기</button></span><span class="acc">지금까지 ${so.n}번 · ${won(so.sum)}</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 저축 그만두기">✕</button></li>`}).join('');
 
   const lb=state.settings.lastBackup,note=$('bkNote');
-  if(!state.tx.length){note.textContent='기록이 쌓이면 가끔 백업 파일로 저장해 두세요.';note.classList.remove('warn')}
+  // 기기 연동 중이면 클라우드에 자동 저장되니 백업 알림(빨간 점)은 띄우지 않음
+  let synced=false;try{synced=!!sync&&syncStatus.state!=='err'}catch(e){}
+  if(synced){note.textContent='☁︎ 기기 연동 중이라 클라우드에 자동으로 저장되고 있어요. 백업 파일은 가끔 받아 두면 더 안심이에요.';note.classList.remove('warn')}
+  else if(!state.tx.length){note.textContent='기록이 쌓이면 가끔 백업 파일로 저장해 두세요.';note.classList.remove('warn')}
   else if(!lb){note.textContent='아직 백업한 적이 없어요.';note.classList.add('warn')}
   else{const days=Math.floor((Date.now()-lb)/86400000);note.textContent=days===0?'오늘 백업했어요.':`마지막 백업: ${days}일 전`;note.classList.toggle('warn',days>=14)}
   $('openSettings').classList.toggle('alert',note.classList.contains('warn'));
@@ -2100,7 +2103,7 @@ function applyMerged(m){
   writeRaw();initShadow();lastSnap=snap();undoStack=[];redoStack=[];updateUndo();
   if(editingId&&!state.tx.some(t=>t.id===editingId))endEdit();else{renderChips();render()}
 }
-function setSync(st,msg){syncStatus={state:st,msg,at:Date.now()};renderSync()}
+function setSync(st,msg){const was=syncStatus.state;syncStatus={state:st,msg,at:Date.now()};renderSync();if(st!=='busy'&&st!==was)render()}
 function renderSync(){
   const el=$('syncState');if(!el)return;
   const on=!!sync;$('syncOffBox').hidden=on;$('syncOnBox').hidden=!on;
