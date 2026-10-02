@@ -287,6 +287,22 @@ button.cell:hover{filter:brightness(.94)}
 .tx.in .badge,.tx.in.fixed .badge{background:var(--inc-soft);color:var(--inc);box-shadow:none}
 .tx.in .amt{color:var(--inc)!important}
 .bookSeg[hidden],.wishPanel[hidden]{display:none}
+/* 동그라미 그래프 (donut) */
+.dSeg{display:flex;gap:4px;justify-content:center;margin:-4px 0 10px}
+.dSeg button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 16px;font-weight:600;font-size:13.5px;color:var(--sub)}
+.dSeg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.donut{display:block;width:min(100%,210px);aspect-ratio:1;margin:0 auto 10px}
+.donut text{font-family:inherit}
+.dLegend{display:flex;flex-direction:column}
+.dItem{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:7px 8px;border-radius:12px;border-bottom:1px solid var(--line);font-size:14.5px}
+.dItem:last-child{border-bottom:0}
+.dItem:hover{background:var(--card)}
+.dItem i{width:12px;height:12px;border-radius:4px}
+.dItem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dItem b{font-weight:700;white-space:nowrap}
+.dItem small{color:var(--sub);font-weight:500;margin-left:6px}
+.dItem[aria-pressed="true"]{background:var(--hl);color:var(--hl-ink)}
+.dItem[aria-pressed="true"] small{color:inherit;opacity:.7}
 /* 내역 두 칸 (split) */
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
 .sCol{min-width:0;border-radius:18px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);padding:0 4px 4px;overflow:hidden}
@@ -763,8 +779,9 @@ const EXP_CATS=['식비','카페·간식','교통','의류','쇼핑','생활','�
 const INC_CATS=['용돈','월급','장학금','부수입','명절·선물','기타'];
 // 가계부 설정. 엄마 가계부(mom.html)는 tools/make_mom.py가 이 값을 바꿔서 만든다.
 //  books: 두 번째 가계부(아빠 카드) 탭, wish: 위시리스트,
-//  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기
-const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false};
+//  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기,
+//  donut: '어디에 썼나'를 막대 대신 동그라미 그래프(지출/수입)로
+const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false};
 const LS=APP.key;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
@@ -780,6 +797,7 @@ function curBudget(){return (isDad()?dadSet().budget:state.settings.budget)||0}
 // 아빠 카드는 구독이 안 되니 고정지출 없음
 function fixedList(){return isDad()?[]:(state.settings.fixed||[])}
 function setFixedList(arr){if(isDad())dadSet().fixed=arr;else state.settings.fixed=arr}
+let donutType='out';
 let txType='out', cat=EXP_CATS[0], editingId=null, rangeStart=null, filterCat=null; // null | '?' | 카테고리 | '고정지출'
 const isUnknown=t=>t.cat==='?'||(t.kind==='tx'||!t.kind)&&String(t.memo||'').trim().startsWith('?');
 
@@ -1123,6 +1141,27 @@ function render(){
   const max=rows.length?rows[0][1]:0;
   $('bars').innerHTML=rows.length?rows.map(([c,v],i)=>`<button type="button" class="bar${c==='?'?' unknown':i===0?' lead':''}" data-fcat="${esc(c)}" aria-pressed="${filterCat===c}"><div class="lab"><b>${c==='?'?'? 출처 모름':esc(c)} <span style="color:var(--sub);font-weight:500">${won(v)}</span></b><span>${Math.round(v/out*100)}%</span></div><div class="track"><div style="width:${(v/max*100).toFixed(1)}%"></div></div></button>`).join(''):'<p class="note">지출을 기록하면 어디에 많이 썼는지 보여 줄게요.</p>';
 
+  if(APP.donut){
+    // 동그라미 그래프: 지출은 카테고리별, 수입은 종류별
+    let dRows=rows,dSum=out;
+    if(donutType==='in'){
+      const byIn={};
+      txs.filter(t=>t.type==='in').forEach(t=>{byIn[t.cat]=(byIn[t.cat]||0)+t.amount});
+      incDue.forEach(i=>{byIn[i.name]=(byIn[i.name]||0)+i.amount});
+      dRows=Object.entries(byIn).sort((a,b)=>b[1]-a[1]);dSum=income;
+    }
+    // 청록은 수입 색이라 지출 그래프에는 쓰지 않음
+    const PAL=donutType==='in'?['#14A6A0','#7C8CF8','#FFC24B','#B98AF2','#F49AC1','#8FD3E8','#C9B79C','#9AA0AA']:['#FF6F61','#7C8CF8','#FFC24B','#B98AF2','#F49AC1','#8FD3E8','#C9B79C','#9AA0AA'];
+    const parts=dRows.slice(0,7);
+    if(dRows.length>7)parts.push(['나머지',dRows.slice(7).reduce((s,r)=>s+r[1],0)]);
+    const R=44,C=2*Math.PI*R;let off=0,svg='';
+    if(dSum>0)parts.forEach(([c,v],i)=>{const len=v/dSum*C;svg+=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="${c==='?'?'var(--warn)':PAL[i]}" stroke-width="18" stroke-dasharray="${Math.max(0,len-.8).toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"/>`;off+=len});
+    else svg=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--line)" stroke-width="18"/>`;
+    svg+=`<text x="60" y="56" text-anchor="middle" font-size="8.5" fill="var(--sub)">${donutType==='in'?'수입':'지출'} 총액</text><text x="60" y="70" text-anchor="middle" font-size="${dSum>=1e8?9.5:11}" font-weight="800" fill="var(--ink)">${won(dSum)}</text>`;
+    const leg=parts.map(([c,v],i)=>{const f=donutType==='in'?'수입':c;const on=filterCat===f;return `<button type="button" class="dItem" data-fcat="${esc(f)}" aria-pressed="${on}"><i style="background:${c==='?'?'var(--warn)':PAL[i]}"></i><span>${c==='?'?'? 출처 모름':esc(c)}</span><b>${Math.round(v/dSum*100)}%<small>${won(v)}</small></b></button>`}).join('');
+    $('catTitle').textContent=donutType==='in'?'어디서 들어왔나':'어디에 썼나';
+    $('bars').innerHTML=`<div class="dSeg" role="group" aria-label="그래프 고르기"><button type="button" data-dt="out" aria-pressed="${donutType==='out'}">지출</button><button type="button" data-dt="in" aria-pressed="${donutType==='in'}">수입</button></div><svg class="donut" viewBox="0 0 120 120" role="img" aria-label="${donutType==='in'?'수입':'지출'} 비율 그래프">${svg}</svg><div class="dLegend">${leg||`<p class="note" style="text-align:center">${donutType==='in'?'수입':'지출'}을 기록하면 보여 줄게요.</p>`}</div>`;
+  }
   $('bars').classList.toggle('filtering',!!filterCat&&rows.some(([c])=>c===filterCat));
   if(isDad()){
     $('dadDays').textContent=`${Object.keys(daily).filter(d=>d<=todayS).length}일`;
@@ -1320,6 +1359,7 @@ $('daysHead').addEventListener('click',e=>{if(e.target.closest('#clearRange')){r
 $('flagBtn').onclick=()=>{filterCat=filterCat==='?'?null:'?';render()};
 $('filterPill').onclick=()=>{filterCat=null;render()};
 $('bars').addEventListener('click',e=>{
+  const dt=e.target.closest('[data-dt]');if(dt){donutType=dt.dataset.dt;render();return}
   const b=e.target.closest('[data-fcat]');if(!b)return;
   const c=b.dataset.fcat;filterCat=filterCat===c?null:c;render();
   $('list').scrollTop=0;

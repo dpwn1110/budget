@@ -10,7 +10,8 @@
 - 두 번째 가계부(아빠 카드) 탭과 위시리스트는 뺌
 - 보여 주는 방식은 엄마가 쓰던 Numbers 가계부처럼:
   내역을 수입 | 지출 두 칸으로 나란히, 지난달 남은 돈은 전월이월로 잔액에 더함,
-  수입 초록 · 지출 빨강 · 잔액 파랑
+  '어디에 썼나'는 동그라미 그래프, '하루에 쓸 돈' 카드는 뺌
+- 색: 수입 청록(teal) · 지출 코랄 (서로 보색) · 잔액 연보라(periwinkle)
 """
 from pathlib import Path
 
@@ -27,8 +28,8 @@ def rep(old, new, cnt=1):
 
 # ---------- 저장 위치·이름 ----------
 rep("<title>가계부</title>", "<title>엄마 가계부</title>")
-rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false};",
-    "const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true};")
+rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false};",
+    "const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true,donut:true};")
 rep("a.download=`가계부-백업-${todayStr()}.json`", "a.download=`엄마-가계부-백업-${todayStr()}.json`")
 
 # ---------- 카테고리 ----------
@@ -53,24 +54,31 @@ rep('placeholder="예: 청년 적금"', 'placeholder="예: 주택청약"')
 rep("(isNow?'이번 달 ':'이 기간에 ')+(isDad()?'아빠 카드로 쓴 돈':'쓴 돈')", "(isNow?'이번 달 ':'이 기간 ')+'지출 총액'")
 rep('<dt>수입<span class="arr">', '<dt>수입 총액<span class="arr">')
 
-# ---------- 색: 수입 초록 · 지출 빨강 · 잔액(악센트) 파랑 ----------
-rep("--bg:#DDE2E9; --blob1:rgba(236,244,106,.55);", "--bg:#E0E4EB; --blob1:rgba(140,180,255,.45);")
-rep("--hl:#ECF46A; --hl-ink:#15160A;", "--hl:#AFCFFF; --hl-ink:#0B2647;")
+# ---------- 색: 수입 청록 · 지출 코랄 (보색) · 잔액 연보라 ----------
+rep("--bg:#DDE2E9; --blob1:rgba(236,244,106,.55); --blob2:rgba(160,184,214,.55);",
+    "--bg:#E3E4EC; --blob1:rgba(150,160,255,.42); --blob2:rgba(110,205,195,.38);")
+rep("--hl:#ECF46A; --hl-ink:#15160A;", "--hl:#C9D0FF; --hl-ink:#1E2768;")
 rep("--h1:rgba(236,244,106,.45); --h2:#ECF46A; --h3:#D3DD3E; --h4:#A9B518; --h4-ink:#15160A;",
-    "--h1:rgba(140,185,255,.32); --h2:#AFCFFF; --h3:#76A9F5; --h4:#2F6FDB; --h4-ink:#FFFFFF;")
-rep("--blob1:rgba(220,232,80,.13);", "--blob1:rgba(110,160,255,.13);", 2)
-rep("--hl:#E3EE5C; --hl-ink:#15160A;", "--hl:#8DB9FF; --hl-ink:#0B2647;", 2)
+    "--h1:rgba(255,111,97,.18); --h2:#FFB8AE; --h3:#FF8A7A; --h4:#E8553F; --h4-ink:#FFFFFF;")
+rep("--blob1:rgba(220,232,80,.13);", "--blob1:rgba(124,140,248,.14);", 2)
+rep("--hl:#E3EE5C; --hl-ink:#15160A;", "--hl:#A9B4FF; --hl-ink:#151C55;", 2)
 rep("--h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;",
-    "--h1:rgba(141,185,255,.18); --h2:rgba(141,185,255,.45); --h3:rgba(141,185,255,.75); --h4:#8DB9FF; --h4-ink:#0B2647;", 2)
-rep("--outc:var(--ink); --out-soft:var(--soft);", "--outc:#E5432F; --out-soft:rgba(240,80,60,.12);")
+    "--h1:rgba(255,138,122,.18); --h2:rgba(255,138,122,.42); --h3:rgba(255,138,122,.72); --h4:#FF8A7A; --h4-ink:#2A0E08;", 2)
+rep("--outc:var(--ink); --out-soft:var(--soft);", "--outc:#E8553F; --out-soft:rgba(255,111,97,.13);")
 rep("--inc:#2F6FEB; --inc-soft:rgba(93,148,255,.2); --fix:#16975A; --fix-soft:rgba(46,191,120,.2);",
-    "--inc:#1E9E52; --inc-soft:rgba(46,191,110,.16); --fix:#C98500; --fix-soft:rgba(240,170,20,.18);")
+    "--inc:#0E9C96; --inc-soft:rgba(20,166,160,.15); --fix:#6E7BEF; --fix-soft:rgba(124,140,248,.18);")
 rep("--inc:#7FAEFF; --inc-soft:rgba(127,174,255,.18); --fix:#5FD49A; --fix-soft:rgba(95,212,154,.16);",
-    "--inc:#4CD38A; --inc-soft:rgba(76,211,138,.14); --fix:#F2B84B; --fix-soft:rgba(242,184,75,.16);", 2)
+    "--inc:#45D1C8; --inc-soft:rgba(69,209,200,.14); --fix:#A2ACFF; --fix-soft:rgba(162,172,255,.16); --outc:#FF8A7A; --out-soft:rgba(255,138,122,.14);", 2)
 
 # ---------- 휴대폰 위주 ----------
 rep("/* ---------- PDF 리포트 ---------- */\n#report{display:none}", """/* ---------- 엄마 가계부: 휴대폰에서 크게, 입력 칸을 위로 ---------- */
 .big{color:var(--outc)}
+/* '하루에 쓸 돈' 카드 없이: 잔액 칸이 그 자리까지 */
+.dailyRow{display:none!important}
+.hero{grid-template-areas:"spent net cal" "spent net cal"}
+.netTile #net{font-size:clamp(34px,13cqi,58px)}
+@media (max-width:1100px){.hero{grid-template-areas:"spent net" "spent net" "cal cal"}}
+@media (max-width:720px){.hero{grid-template-areas:"spent" "net" "cal"}}
 .goalText{white-space:normal}
 @media (max-width:720px){
   body{font-size:16px}

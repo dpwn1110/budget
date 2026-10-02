@@ -8,42 +8,42 @@
 <style>
 /* 유리 느낌 + 미니멀, 악센트는 하나 (내 돈: 노랑, 아빠 카드: 보라) */
 :root{
-  --bg:#E0E4EB; --blob1:rgba(140,180,255,.45); --blob2:rgba(160,184,214,.55); --blob3:rgba(255,255,255,.7);
+  --bg:#E3E4EC; --blob1:rgba(150,160,255,.42); --blob2:rgba(110,205,195,.38); --blob3:rgba(255,255,255,.7);
   --panel:rgba(255,255,255,.46); --card:rgba(255,255,255,.72); --soft:rgba(255,255,255,.55);
   --glass-line:rgba(255,255,255,.75); --blur:saturate(160%) blur(22px);
   --ink:#121316; --sub:#6A6F79; --line:rgba(18,19,22,.10);
-  --hl:#AFCFFF; --hl-ink:#0B2647; --accent:#121316; --accent-ink:#FFFFFF;
+  --hl:#C9D0FF; --hl-ink:#1E2768; --accent:#121316; --accent-ink:#FFFFFF;
   --warn:#E5484D; --warn-soft:rgba(229,72,77,.12);
-  --h1:rgba(140,185,255,.32); --h2:#AFCFFF; --h3:#76A9F5; --h4:#2F6FDB; --h4-ink:#FFFFFF;
+  --h1:rgba(255,111,97,.18); --h2:#FFB8AE; --h3:#FF8A7A; --h4:#E8553F; --h4-ink:#FFFFFF;
   --pop:rgba(248,249,251,.97);
-  --outc:#E5432F; --out-soft:rgba(240,80,60,.12);
-  --inc:#1E9E52; --inc-soft:rgba(46,191,110,.16); --fix:#C98500; --fix-soft:rgba(240,170,20,.18);
+  --outc:#E8553F; --out-soft:rgba(255,111,97,.13);
+  --inc:#0E9C96; --inc-soft:rgba(20,166,160,.15); --fix:#6E7BEF; --fix-soft:rgba(124,140,248,.18);
   --shadow:0 8px 32px rgba(40,52,70,.08);
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#0E0F12; --blob1:rgba(110,160,255,.13); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
+  --bg:#0E0F12; --blob1:rgba(124,140,248,.14); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
   --panel:rgba(32,34,40,.5); --card:rgba(255,255,255,.07); --soft:rgba(255,255,255,.05);
   --glass-line:rgba(255,255,255,.08);
   --ink:#F2F3F5; --sub:#999EA8; --line:rgba(255,255,255,.10);
-  --hl:#8DB9FF; --hl-ink:#0B2647; --accent:#F2F3F5; --accent-ink:#121316;
+  --hl:#A9B4FF; --hl-ink:#151C55; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
-  --h1:rgba(141,185,255,.18); --h2:rgba(141,185,255,.45); --h3:rgba(141,185,255,.75); --h4:#8DB9FF; --h4-ink:#0B2647;
+  --h1:rgba(255,138,122,.18); --h2:rgba(255,138,122,.42); --h3:rgba(255,138,122,.72); --h4:#FF8A7A; --h4-ink:#2A0E08;
   --pop:rgba(30,32,38,.97);
-  --inc:#4CD38A; --inc-soft:rgba(76,211,138,.14); --fix:#F2B84B; --fix-soft:rgba(242,184,75,.16);
+  --inc:#45D1C8; --inc-soft:rgba(69,209,200,.14); --fix:#A2ACFF; --fix-soft:rgba(162,172,255,.16); --outc:#FF8A7A; --out-soft:rgba(255,138,122,.14);
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }}
 :root[data-theme="dark"]{
-  --bg:#0E0F12; --blob1:rgba(110,160,255,.13); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
+  --bg:#0E0F12; --blob1:rgba(124,140,248,.14); --blob2:rgba(90,110,150,.22); --blob3:rgba(255,255,255,.03);
   --panel:rgba(32,34,40,.5); --card:rgba(255,255,255,.07); --soft:rgba(255,255,255,.05);
   --glass-line:rgba(255,255,255,.08);
   --ink:#F2F3F5; --sub:#999EA8; --line:rgba(255,255,255,.10);
-  --hl:#8DB9FF; --hl-ink:#0B2647; --accent:#F2F3F5; --accent-ink:#121316;
+  --hl:#A9B4FF; --hl-ink:#151C55; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
-  --h1:rgba(141,185,255,.18); --h2:rgba(141,185,255,.45); --h3:rgba(141,185,255,.75); --h4:#8DB9FF; --h4-ink:#0B2647;
+  --h1:rgba(255,138,122,.18); --h2:rgba(255,138,122,.42); --h3:rgba(255,138,122,.72); --h4:#FF8A7A; --h4-ink:#2A0E08;
   --pop:rgba(30,32,38,.97);
-  --inc:#4CD38A; --inc-soft:rgba(76,211,138,.14); --fix:#F2B84B; --fix-soft:rgba(242,184,75,.16);
+  --inc:#45D1C8; --inc-soft:rgba(69,209,200,.14); --fix:#A2ACFF; --fix-soft:rgba(162,172,255,.16); --outc:#FF8A7A; --out-soft:rgba(255,138,122,.14);
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }
 /* 아빠 카드: 보라 */
@@ -287,6 +287,22 @@ button.cell:hover{filter:brightness(.94)}
 .tx.in .badge,.tx.in.fixed .badge{background:var(--inc-soft);color:var(--inc);box-shadow:none}
 .tx.in .amt{color:var(--inc)!important}
 .bookSeg[hidden],.wishPanel[hidden]{display:none}
+/* 동그라미 그래프 (donut) */
+.dSeg{display:flex;gap:4px;justify-content:center;margin:-4px 0 10px}
+.dSeg button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:5px 16px;font-weight:600;font-size:13.5px;color:var(--sub)}
+.dSeg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.donut{display:block;width:min(100%,210px);aspect-ratio:1;margin:0 auto 10px}
+.donut text{font-family:inherit}
+.dLegend{display:flex;flex-direction:column}
+.dItem{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:9px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:7px 8px;border-radius:12px;border-bottom:1px solid var(--line);font-size:14.5px}
+.dItem:last-child{border-bottom:0}
+.dItem:hover{background:var(--card)}
+.dItem i{width:12px;height:12px;border-radius:4px}
+.dItem span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.dItem b{font-weight:700;white-space:nowrap}
+.dItem small{color:var(--sub);font-weight:500;margin-left:6px}
+.dItem[aria-pressed="true"]{background:var(--hl);color:var(--hl-ink)}
+.dItem[aria-pressed="true"] small{color:inherit;opacity:.7}
 /* 내역 두 칸 (split) */
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
 .sCol{min-width:0;border-radius:18px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);padding:0 4px 4px;overflow:hidden}
@@ -493,6 +509,12 @@ button.cell:hover{filter:brightness(.94)}
 
 /* ---------- 엄마 가계부: 휴대폰에서 크게, 입력 칸을 위로 ---------- */
 .big{color:var(--outc)}
+/* '하루에 쓸 돈' 카드 없이: 잔액 칸이 그 자리까지 */
+.dailyRow{display:none!important}
+.hero{grid-template-areas:"spent net cal" "spent net cal"}
+.netTile #net{font-size:clamp(34px,13cqi,58px)}
+@media (max-width:1100px){.hero{grid-template-areas:"spent net" "spent net" "cal cal"}}
+@media (max-width:720px){.hero{grid-template-areas:"spent" "net" "cal"}}
 .goalText{white-space:normal}
 @media (max-width:720px){
   body{font-size:16px}
@@ -808,8 +830,9 @@ const EXP_CATS=['장보기','외식','관리비·공과금','통신','보험','�
 const INC_CATS=['월급','부수입','용돈','이자·환급','기타'];
 // 가계부 설정. 엄마 가계부(mom.html)는 tools/make_mom.py가 이 값을 바꿔서 만든다.
 //  books: 두 번째 가계부(아빠 카드) 탭, wish: 위시리스트,
-//  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기
-const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true};
+//  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기,
+//  donut: '어디에 썼나'를 막대 대신 동그라미 그래프(지출/수입)로
+const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true,donut:true};
 const LS=APP.key;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
@@ -825,6 +848,7 @@ function curBudget(){return (isDad()?dadSet().budget:state.settings.budget)||0}
 // 아빠 카드는 구독이 안 되니 고정지출 없음
 function fixedList(){return isDad()?[]:(state.settings.fixed||[])}
 function setFixedList(arr){if(isDad())dadSet().fixed=arr;else state.settings.fixed=arr}
+let donutType='out';
 let txType='out', cat=EXP_CATS[0], editingId=null, rangeStart=null, filterCat=null; // null | '?' | 카테고리 | '고정지출'
 const isUnknown=t=>t.cat==='?'||(t.kind==='tx'||!t.kind)&&String(t.memo||'').trim().startsWith('?');
 
@@ -1168,6 +1192,27 @@ function render(){
   const max=rows.length?rows[0][1]:0;
   $('bars').innerHTML=rows.length?rows.map(([c,v],i)=>`<button type="button" class="bar${c==='?'?' unknown':i===0?' lead':''}" data-fcat="${esc(c)}" aria-pressed="${filterCat===c}"><div class="lab"><b>${c==='?'?'? 출처 모름':esc(c)} <span style="color:var(--sub);font-weight:500">${won(v)}</span></b><span>${Math.round(v/out*100)}%</span></div><div class="track"><div style="width:${(v/max*100).toFixed(1)}%"></div></div></button>`).join(''):'<p class="note">지출을 기록하면 어디에 많이 썼는지 보여 줄게요.</p>';
 
+  if(APP.donut){
+    // 동그라미 그래프: 지출은 카테고리별, 수입은 종류별
+    let dRows=rows,dSum=out;
+    if(donutType==='in'){
+      const byIn={};
+      txs.filter(t=>t.type==='in').forEach(t=>{byIn[t.cat]=(byIn[t.cat]||0)+t.amount});
+      incDue.forEach(i=>{byIn[i.name]=(byIn[i.name]||0)+i.amount});
+      dRows=Object.entries(byIn).sort((a,b)=>b[1]-a[1]);dSum=income;
+    }
+    // 청록은 수입 색이라 지출 그래프에는 쓰지 않음
+    const PAL=donutType==='in'?['#14A6A0','#7C8CF8','#FFC24B','#B98AF2','#F49AC1','#8FD3E8','#C9B79C','#9AA0AA']:['#FF6F61','#7C8CF8','#FFC24B','#B98AF2','#F49AC1','#8FD3E8','#C9B79C','#9AA0AA'];
+    const parts=dRows.slice(0,7);
+    if(dRows.length>7)parts.push(['나머지',dRows.slice(7).reduce((s,r)=>s+r[1],0)]);
+    const R=44,C=2*Math.PI*R;let off=0,svg='';
+    if(dSum>0)parts.forEach(([c,v],i)=>{const len=v/dSum*C;svg+=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="${c==='?'?'var(--warn)':PAL[i]}" stroke-width="18" stroke-dasharray="${Math.max(0,len-.8).toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"/>`;off+=len});
+    else svg=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--line)" stroke-width="18"/>`;
+    svg+=`<text x="60" y="56" text-anchor="middle" font-size="8.5" fill="var(--sub)">${donutType==='in'?'수입':'지출'} 총액</text><text x="60" y="70" text-anchor="middle" font-size="${dSum>=1e8?9.5:11}" font-weight="800" fill="var(--ink)">${won(dSum)}</text>`;
+    const leg=parts.map(([c,v],i)=>{const f=donutType==='in'?'수입':c;const on=filterCat===f;return `<button type="button" class="dItem" data-fcat="${esc(f)}" aria-pressed="${on}"><i style="background:${c==='?'?'var(--warn)':PAL[i]}"></i><span>${c==='?'?'? 출처 모름':esc(c)}</span><b>${Math.round(v/dSum*100)}%<small>${won(v)}</small></b></button>`}).join('');
+    $('catTitle').textContent=donutType==='in'?'어디서 들어왔나':'어디에 썼나';
+    $('bars').innerHTML=`<div class="dSeg" role="group" aria-label="그래프 고르기"><button type="button" data-dt="out" aria-pressed="${donutType==='out'}">지출</button><button type="button" data-dt="in" aria-pressed="${donutType==='in'}">수입</button></div><svg class="donut" viewBox="0 0 120 120" role="img" aria-label="${donutType==='in'?'수입':'지출'} 비율 그래프">${svg}</svg><div class="dLegend">${leg||`<p class="note" style="text-align:center">${donutType==='in'?'수입':'지출'}을 기록하면 보여 줄게요.</p>`}</div>`;
+  }
   $('bars').classList.toggle('filtering',!!filterCat&&rows.some(([c])=>c===filterCat));
   if(isDad()){
     $('dadDays').textContent=`${Object.keys(daily).filter(d=>d<=todayS).length}일`;
@@ -1365,6 +1410,7 @@ $('daysHead').addEventListener('click',e=>{if(e.target.closest('#clearRange')){r
 $('flagBtn').onclick=()=>{filterCat=filterCat==='?'?null:'?';render()};
 $('filterPill').onclick=()=>{filterCat=null;render()};
 $('bars').addEventListener('click',e=>{
+  const dt=e.target.closest('[data-dt]');if(dt){donutType=dt.dataset.dt;render();return}
   const b=e.target.closest('[data-fcat]');if(!b)return;
   const c=b.dataset.fcat;filterCat=filterCat===c?null:c;render();
   $('list').scrollTop=0;
