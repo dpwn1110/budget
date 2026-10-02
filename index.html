@@ -442,6 +442,8 @@ button.cell:hover{filter:brightness(.94)}
 .fixedList li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
 .fixedList li b{font-weight:600}
 .fixedList .when{display:block;font-size:12.5px;color:var(--sub)}
+.fixedList .acc{display:block;font-size:12.5px;color:var(--ink);font-weight:600;margin-top:1px}
+.sec .pickBtn{background:var(--card)}
 .earlyBtn,.moveBtn{border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:999px;padding:0 8px;margin-left:5px;font-size:11.5px;font-weight:600}
 .earlyBtn[aria-pressed="true"]{background:var(--hl);border-color:var(--hl);color:var(--hl-ink)}
 .earlyBtn:hover,.moveBtn:hover{background:var(--soft)}
@@ -713,6 +715,9 @@ button.cell:hover{filter:brightness(.94)}
           <div class="field"><label for="svAmt">금액</label><input id="svAmt" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
           <div class="field small"><label for="svDay">이체일</label><input id="svDay" type="number" min="1" max="31" placeholder="25"></div>
         </div>
+        <div class="row">
+          <div class="field"><label for="svStartBtn">처음 넣은 달</label><input id="svStart" type="hidden"><button type="button" class="pickBtn" id="svStartBtn" aria-haspopup="dialog" aria-expanded="false"><span></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2.5"/><path d="M2.5 7h11M5.5 2v3M10.5 2v3"/></svg></button></div>
+        </div>
         <button class="ghost" id="addSaving">저축 추가</button>
       </div>
     </section>
@@ -836,6 +841,12 @@ function spentBetween(a,b){
 // 고정지출과 저축은 같은 목록에 있고, 저축은 save:true
 function activeAll(key){return fixedList().filter(f=>(!f.start||f.start<=key)&&(!f.end||key<=f.end))}
 function activeFixed(key){return activeAll(key).filter(f=>!f.save)}
+// 저축이 처음부터 지금까지 실제로 들어간 횟수와 합계
+function savedSoFar(f){
+  const today=todayStr(),last=f.end&&f.end<periodOf(today)?f.end:periodOf(today);
+  let n=0;for(let k=f.start||last;k<=last;k=shiftYm(k,1))if(fixedDate(f,k)<=today)n++;
+  return {n,sum:n*f.amount};
+}
 function activeSavings(key){return isDad()?[]:activeAll(key).filter(f=>f.save)}
 function fixedDate(f,key){
   const {start}=periodRange(key);
@@ -882,7 +893,8 @@ function render(){
   $('inc').textContent=won(income);
   $('fx').textContent=won(fixedOut);
   $('sv').textContent=won(saveOut);
-  $('svNote').textContent=saveAll>saveOut?`${won(saveAll-saveOut)} 이체 예정`:saveAll?'쓴 돈과 따로 계산':'설정에서 추가';
+  const svTotal=savings.reduce((s,f)=>s+savedSoFar(f).sum,0);
+  $('svNote').textContent=saveAll>saveOut?`${won(saveAll-saveOut)} 이체 예정`:svTotal>saveOut?`지금까지 ${won(svTotal)} 모음`:saveAll?'쓴 돈과 따로 계산':'설정에서 추가';
   $('moneyBox').hidden=isDad();
   let firstMini=true;
   document.querySelectorAll('.mini>div').forEach(el=>{
@@ -1061,7 +1073,7 @@ function render(){
 
   const st=$('svTotal');st.hidden=!savings.length;
   if(savings.length){$('svSum').textContent=won(saveAll);$('svShare').textContent=`${savings.length}개`+(allowance?`, 받는 돈의 ${Math.round(saveAll/allowance*100)}%`:'')}
-  $('svList').innerHTML=savings.map(f=>`<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일<button type="button" class="moveBtn" data-tosave="${esc(f.id)}">고정지출로 옮기기</button></span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 저축 그만두기">✕</button></li>`).join('');
+  $('svList').innerHTML=savings.map(f=>{const so=savedSoFar(f);return `<li><span><b>${esc(f.name)}</b><span class="when">매월 ${f.day||1}일 · <button type="button" class="moveBtn" style="margin-left:0" data-svstart="${esc(f.id)}" aria-expanded="false" title="처음 넣은 달 바꾸기">${f.start?`${f.start.slice(0,4)}년 ${Number(f.start.slice(5))}월`:'처음'}부터 ✎</button><button type="button" class="moveBtn" data-tosave="${esc(f.id)}">고정지출로 옮기기</button></span><span class="acc">지금까지 ${so.n}번 · ${won(so.sum)}</span></span><span>${won(f.amount)}</span><button class="del" data-delfx="${esc(f.id)}" aria-label="${esc(f.name)} 저축 그만두기">✕</button></li>`}).join('');
 
   const lb=state.settings.lastBackup,note=$('bkNote');
   if(!state.tx.length){note.textContent='기록이 쌓이면 가끔 백업 파일로 저장해 두세요.';note.classList.remove('warn')}
@@ -1090,6 +1102,7 @@ function bindPick(inputId,btnId,fmt,ph){
 }
 bindPick('date','dateBtn',dateLabel,'날짜 고르기');
 bindPick('wDue','wDueBtn',monthLabel,'정하지 않음');
+bindPick('svStart','svStartBtn',monthLabel,'이번 달부터');
 const picker=document.createElement('div');picker.className='picker';picker.hidden=true;picker.setAttribute('role','dialog');picker.setAttribute('aria-label','날짜 고르기');document.body.appendChild(picker);
 let pk=null;
 const ARW=d=>`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
@@ -1098,6 +1111,7 @@ function openPicker(anchor,mode,value,onPick,clearable){
   closePicker();
   const base=value?new Date(value+(mode==='date'?'T00:00':'-01T00:00')):new Date();
   pk={anchor,mode,value,onPick,clearable,y:base.getFullYear(),m:base.getMonth()};
+  (anchor.closest('dialog')||document.body).appendChild(picker);
   drawPicker();picker.hidden=false;placePicker();anchor.setAttribute('aria-expanded','true');
   (picker.querySelector('.sel')||picker.querySelector('.today,.now')||picker.querySelector('.pkGrid button,.pkMonths button')).focus({preventScroll:true});
 }
@@ -1106,6 +1120,7 @@ function closePicker(){if(!pk)return;pk.anchor.setAttribute('aria-expanded','fal
 function openPop(anchor,html,bind){
   if(pk&&pk.anchor===anchor){closePicker();return}
   closePicker();
+  (anchor.closest('dialog')||document.body).appendChild(picker);
   pk={anchor,mode:'pop'};picker.innerHTML=html;picker.classList.add('popBox');picker.hidden=false;
   anchor.setAttribute('aria-expanded','true');placePicker();bind(picker);
 }
@@ -1154,10 +1169,11 @@ picker.addEventListener('click',e=>{
   const {onPick,anchor}=pk;closePicker();onPick(v);anchor.focus();
 });
 document.addEventListener('pointerdown',e=>{if(pk&&!picker.contains(e.target)&&!pk.anchor.contains(e.target))closePicker()},true);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pk){e.stopImmediatePropagation();const a=pk.anchor;closePicker();a.focus()}},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pk){e.preventDefault();e.stopImmediatePropagation();const a=pk.anchor;closePicker();a.focus()}},true);
 addEventListener('resize',()=>{if(pk)placePicker()});
 addEventListener('scroll',e=>{if(pk&&!picker.contains(e.target))placePicker()},true);
 $('dateBtn').onclick=()=>openPicker($('dateBtn'),'date',$('date').value,v=>{$('date').value=v});
+$('svStartBtn').onclick=()=>openPicker($('svStartBtn'),'month',$('svStart').value||view,v=>{$('svStart').value=v});
 $('wDueBtn').onclick=()=>openPicker($('wDueBtn'),'month',$('wDue').value,v=>{$('wDue').value=v},true);
 
 function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):''})}
@@ -1311,12 +1327,23 @@ $('addSaving').onclick=()=>{
   let day=Math.round(Number($('svDay').value))||1;day=Math.max(1,Math.min(31,day));
   if(!name){toast('이름을 입력해 주세요.');$('svName').focus();return}
   if(!amount){toast('금액을 입력해 주세요.');$('svAmt').focus();return}
-  setFixedList(fixedList().concat({id:newId(),name,amount,day,start:view,save:true}));
-  save();$('svName').value='';$('svAmt').value='';$('svDay').value='';
+  setFixedList(fixedList().concat({id:newId(),name,amount,day,start:$('svStart').value||view,save:true}));
+  save();$('svName').value='';$('svAmt').value='';$('svDay').value='';$('svStart').value='';
   render();toast('저축을 추가했어요');
 };
 // 고정지출·저축 목록 공통: 그만두기, 서로 옮기기
 function onFixedClick(e){
+  const st=e.target.closest('[data-svstart]');
+  if(st){
+    const f=fixedList().find(x=>x.id===st.dataset.svstart);if(!f)return;
+    openPicker(st,'month',f.start||view,v=>{
+      if(!v||v===f.start)return;
+      if(f.end&&v>f.end){toast('그만둔 달보다 늦을 수 없어요');return}
+      f.start=v;save();render();
+      toast(`${f.name}: ${monthLabel(v)}부터, 지금까지 ${won(savedSoFar(f).sum)}`);
+    });
+    return;
+  }
   const mv=e.target.closest('[data-tosave]');
   if(mv){
     const f=fixedList().find(x=>x.id===mv.dataset.tosave);if(!f)return;
