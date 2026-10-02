@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-theme="light">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>엄마 가계부</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -1169,7 +1170,7 @@ function render(){
   fp.hidden=!filterCat||onlyUnknown;
   $('count').textContent=items.length?`${items.length}건`:'';
   const list=$('list');
-  if(!items.length&&!(APP.split&&carry&&!filterCat)){list.innerHTML=filterCat?`<div class="empty">이 기간에는 ${filterCat==='수입'?'수입이':filterCat==='저축'?'저축이':esc(filterCat==='?'?'출처 모르는':filterCat)+' 지출이'} 없어요.</div>`:'<div class="empty">아직 기록이 없어요.<br>위에서 첫 내역을 추가해 보세요.</div>'}
+  if(!items.length&&!(APP.split&&carry&&!filterCat)){list.innerHTML=filterCat?`<div class="empty">이 기간에는 ${filterCat==='수입'?'수입이':filterCat==='저축'?'저축이':esc(filterCat==='?'?'출처 모르는':filterCat)+' 지출이'} 없어요.</div>`:'<div class="empty">아직 기록이 없어요.<br>입력 칸에서 첫 내역을 추가해 보세요.</div>'}
   else{
     const wd=['일','월','화','수','목','금','토'];
     const rowHTML=(it,compact)=>{

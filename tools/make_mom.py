@@ -5,6 +5,7 @@
 
 엄마 가계부에서 다른 점
 - 데이터를 따로 저장 (같은 브라우저에서 열어도 섞이지 않음)
+- 다크 모드 없이 항상 밝은 화면
 - 휴대폰 위주: 글씨·버튼을 크게, 휴대폰에서는 수입 | 지출 표를 위로
 - 살림용 카테고리
 - 두 번째 가계부(아빠 카드) 탭과 위시리스트는 뺌
@@ -28,6 +29,9 @@ def rep(old, new, cnt=1):
 
 # ---------- 저장 위치·이름 ----------
 rep("<title>가계부</title>", "<title>엄마 가계부</title>")
+# 엄마는 밝은 화면이 좋다고 해서 휴대폰이 다크 모드여도 항상 밝게
+rep('<html lang="ko">', '<html lang="ko" data-theme="light">')
+rep('<meta name="viewport"', '<meta name="color-scheme" content="light">\n<meta name="viewport"')
 rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false};",
     "const APP={key:'gagyebu-mom-v1',books:false,wish:false,split:true,carry:true,donut:true};")
 rep("a.download=`가계부-백업-${todayStr()}.json`", "a.download=`엄마-가계부-백업-${todayStr()}.json`")
