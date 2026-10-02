@@ -1893,6 +1893,28 @@ if(!APP.books)$('bookSeg').hidden=true;
 if(!APP.wish)document.querySelector('.wishPanel').hidden=true;
 renderChips();render();
 const addBtn=$('add');addBtn.disabled=false;addBtn.textContent='추가';
+
+/* ---------- 새 버전 확인 ----------
+   아이폰 홈 화면 앱은 예전 파일을 오래 들고 있어서, 열 때·다시 볼 때마다 서버의 파일을 새로 받아
+   지난번과 달라졌으면 새로고침한다. 입력 중이면 새로고침하지 않고 알려만 준다. */
+const VER_KEY=LS+'-ver';
+function hashText(t){let h=5381;for(let i=0;i<t.length;i++)h=(h*33^t.charCodeAt(i))>>>0;return h.toString(36)+t.length.toString(36)}
+function busy(){return !!editingId||!!$('amt').value||!!$('memo').value||!!$('detail').value||document.querySelector('dialog[open]')||(typeof pk!=='undefined'&&pk)}
+async function checkUpdate(){
+  if(!/^https?:$/.test(location.protocol))return; // 파일로 열었을 때는 확인 안 함
+  try{
+    const r=await fetch(location.pathname+location.search,{cache:'reload'});if(!r.ok)return;
+    const h=hashText(await r.text());
+    let old=null;try{old=localStorage.getItem(VER_KEY)}catch(e){}
+    try{localStorage.setItem(VER_KEY,h)}catch(e){}
+    if(old&&old!==h){
+      if(busy()){toast('새 버전이 있어요. 입력을 마치고 다시 열면 바뀌어요');try{localStorage.setItem(VER_KEY,old)}catch(e){}return}
+      location.reload();
+    }
+  }catch(e){}
+}
+checkUpdate();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate()});
 </script>
 
 </body>
