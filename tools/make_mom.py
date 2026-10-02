@@ -8,6 +8,7 @@
 - 다크 모드 없이 항상 밝은 화면
 - 휴대폰 위주: 글씨·버튼을 크게, 휴대폰에서는 수입 | 지출 표를 위로
 - 살림용 카테고리
+- 신용카드: 쓴 날 지출로 기록, 결제일에 카드값으로 잔액에서 빠짐
 - 가계부 탭 두 개: 둘 다 같은 기능 (탭 이름은 설정에서 바꿈), 위시리스트는 뺌
 - 보여 주는 방식은 엄마가 쓰던 Numbers 가계부처럼:
   내역을 수입 | 지출 두 칸으로 나란히, 지난달 남은 돈은 전월이월로 잔액에 더함,
@@ -32,8 +33,8 @@ rep("<title>가계부</title>", "<title>엄마 가계부</title>")
 # 엄마는 밝은 화면이 좋다고 해서 휴대폰이 다크 모드여도 항상 밝게
 rep('<html lang="ko">', '<html lang="ko" data-theme="light">')
 rep('<meta name="viewport"', '<meta name="color-scheme" content="light">\n<meta name="viewport"')
-rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false,names:['내 돈','아빠 카드'],full2:false};",
-    "const APP={key:'gagyebu-mom-v1',books:true,wish:false,split:true,carry:true,donut:true,names:['가계부 1','가계부 2'],full2:true};")
+rep("const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false,donut:false,names:['내 돈','아빠 카드'],full2:false,card:false};",
+    "const APP={key:'gagyebu-mom-v1',books:true,wish:false,split:true,carry:true,donut:true,names:['가계부 1','가계부 2'],full2:true,card:true};")
 rep("a.download=`가계부-백업-${todayStr()}.json`", "a.download=`엄마-가계부-백업-${todayStr()}.json`")
 
 # ---------- 카테고리 ----------
@@ -120,6 +121,7 @@ rep("/* ---------- PDF 리포트 ---------- */\n#report{display:none}", """/* --
   .netTile .tLabel span:last-child{grid-column:1/-1;grid-row:2;justify-self:start;margin-top:3px;font-size:11.5px}
   .netTile #net{grid-column:2;grid-row:1;margin:0;text-align:right;font-size:clamp(24px,7.5vw,30px)}
   .netTile>div{display:none}
+  .netTile .cardNote{grid-column:1/-1;margin-top:4px;font-size:12.5px}
   .tx.c{padding:6px 7px}
   .tx.c .txText b{font-size:15px}
   .tx.c p{margin-top:0}
