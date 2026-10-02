@@ -524,6 +524,32 @@ button.cell:hover{filter:brightness(.94)}
   .spentTile{order:1}.netTile{order:2}.dailyRow{order:3}
   .ledgerPanel{order:4}.entryPanel{order:5}.side{order:6}.calTile{order:7}
   .ledgerPanel{padding:16px 12px}
+  /* 위 카드를 작게: 열자마자 수입 | 지출 표가 보이게 */
+  .wrap{gap:8px;padding-top:10px}
+  .top{flex-wrap:nowrap;gap:6px}
+  .month{padding:2px}.month h1{min-width:0;padding:0 4px;font-size:15px}
+  .undoGroup #redoBtn{display:none}
+  .settingsBtn{height:44px;padding:0 11px}
+  .spentTile{padding:12px 16px 10px;border-radius:20px}
+  .spentTile .tLabel{font-size:13px}
+  .big{font-size:34px;margin-top:2px}
+  .meter{height:6px;margin-top:8px}
+  .meterText{margin-top:5px;font-size:12.5px}
+  .mini{padding-top:2px}
+  .mini>div{margin-top:8px;padding-top:7px}
+  .mini dt{font-size:12px}
+  .mini dd{font-size:clamp(14px,4.2vw,16px)}
+  .mini small{display:none}
+  .netTile{padding:10px 16px 11px;border-radius:20px;display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:10px}
+  .netTile .tLabel{display:contents}
+  .netTile .tLabel #netLabel{font-size:14px;font-weight:700}
+  .netTile .tLabel span:last-child{grid-column:1/-1;grid-row:2;justify-self:start;margin-top:3px;font-size:11.5px}
+  .netTile #net{grid-column:2;grid-row:1;margin:0;text-align:right;font-size:clamp(24px,7.5vw,30px)}
+  .netTile>div{display:none}
+  .tx.c{padding:6px 7px}
+  .tx.c .txText b{font-size:15px}
+  .tx.c p{margin-top:0}
+  .sCol h3{padding:8px 10px 7px;font-size:15.5px}
   .split{gap:8px}
   .tx.c .txText b{font-size:15px}
   .tx.c .amt{font-size:15.5px}
