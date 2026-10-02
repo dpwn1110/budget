@@ -291,7 +291,11 @@ button.cell:hover{filter:brightness(.94)}
 .tx .badge,.tx .amt,.tx .del{align-self:center}
 .txText{min-width:0}
 .txText b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.txText span{font-size:12.5px;color:var(--sub)}
+.txText>span:not(.txTitle){font-size:12.5px;color:var(--sub)}
+.txTitle{display:flex;align-items:center;gap:6px;min-width:0}
+.txTitle b{min-width:0}
+.catTag{flex:none;font-size:11px;font-weight:600;line-height:18px;padding:0 7px;border-radius:999px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);color:var(--sub);white-space:nowrap}
+.tx.in .catTag{background:var(--inc-soft);box-shadow:none;color:var(--inc)}
 .txText p{margin:2px 0 0;font-size:13px;color:var(--sub);white-space:pre-line;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.45}
 .tx.editing .txText p{-webkit-line-clamp:unset}
 .amt{font-weight:700;letter-spacing:-.03em;text-align:right;white-space:nowrap}
@@ -1012,10 +1016,12 @@ function render(){
       const unknown=it.kind==='tx'&&isUnknown(it);
       const badge=unknown?'?':esc(it.cat.split('·')[0].slice(0,2));
       const title=esc(it.memo||(it.cat==='?'?'출처 모름':it.cat));
-      const sub=it.pending?(it.type==='in'?'들어올 예정':'나갈 예정'):it.kind==='fixed'?'매달 나가는 돈':it.kind==='save'?'매달 모으는 돈':it.kind==='allow'?'매달 들어오는 돈':(it.memo?esc(it.cat):'');
+      const sub=it.pending?(it.type==='in'?'들어올 예정':'나갈 예정'):it.kind==='fixed'?'매달 나가는 돈':it.kind==='save'?'매달 모으는 돈':it.kind==='allow'?'매달 들어오는 돈':'';
+      // 카테고리는 제목 옆 작은 태그로 (세부 사항과 구분)
+      const tag=it.kind==='tx'&&it.memo&&it.cat!=='?'?`<span class="catTag">${esc(it.cat)}</span>`:'';
       const delBtn=it.kind==='tx'?`<button class="del" data-del="${esc(it.id)}" aria-label="${title} 삭제">✕</button>`:'<span style="width:30px"></span>';
       const editAttrs=it.kind==='tx'?` data-id="${esc(it.id)}" tabindex="0" role="button" aria-label="${title} ${won(it.amount)} 수정"`:'';
-      html+=`<div class="tx${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.kind==='save'?' save':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><b>${title}</b>${sub?`<span>${sub}</span>`:''}${it.detail?`<p>${esc(it.detail)}</p>`:''}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
+      html+=`<div class="tx${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.kind==='save'?' save':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><span class="txTitle"><b>${title}</b>${tag}</span>${sub?`<span>${sub}</span>`:''}${it.detail?`<p>${esc(it.detail)}</p>`:''}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
     });
     list.innerHTML=html;
   }
