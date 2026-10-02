@@ -137,7 +137,9 @@ h2{font-size:17px;font-weight:700;margin:0 0 14px;letter-spacing:-.03em}
 .mini [data-filter="수입"] dd{color:var(--inc)}
 .mini [data-filter="고정지출"] dd{color:var(--fix)}
 .mini [data-filter][aria-pressed="true"] dd{color:var(--hl-ink)}
-.mini dd{margin:2px 0 0;font-weight:700;font-size:clamp(15px,5.2cqi,19px);letter-spacing:-.03em;white-space:nowrap}
+.mini>div{container-type:inline-size}
+/* 숫자 크기는 각 칸의 폭에 맞춰 (휴대폰에서 큰 금액이 칸을 넘지 않게) */
+.mini dd{margin:2px 0 0;font-weight:700;font-size:clamp(13px,15cqi,19px);letter-spacing:-.035em;white-space:nowrap}
 .mini small{display:block;font-size:11.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .netTile{grid-area:net;background:var(--hl);color:var(--hl-ink);box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:space-between}
@@ -200,7 +202,7 @@ button.cell:hover{filter:brightness(.94)}
 .main{display:grid;grid-template-columns:minmax(330px,1fr) minmax(0,1.2fr) minmax(260px,.85fr);gap:12px;align-items:start}
 .side{display:flex;flex-direction:column;gap:12px;min-width:0}
 @media (max-width:1100px){.main{grid-template-columns:1fr 1fr}.side{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;align-items:start}}
-@media (max-width:720px){.side{grid-template-columns:1fr}}
+@media (max-width:720px){.side{grid-template-columns:1fr}.mini>div:not(:first-child){padding-left:10px!important}.mini small{white-space:normal;line-height:1.35}}
 @media (max-width:720px){.main{grid-template-columns:1fr}}
 
 /* 한 화면 모드: 넓고 높은 화면에서는 스크롤 없이 */
