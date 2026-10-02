@@ -521,6 +521,7 @@ button.cell:hover{filter:brightness(.94)}
 #report{display:none}
 @media print{
   @page{size:A4;margin:10mm}
+  .rp{break-inside:avoid}
   html,body{height:auto!important;overflow:visible!important;background:#fff!important}
   body>*:not(#report){display:none!important}
   #report{display:block}
@@ -1937,9 +1938,10 @@ function buildReport(){
 function printReport(){
   const r=$('report');
   r.innerHTML=buildReport();
-  // 한 페이지(A4, 여백 10mm → 277mm 높이)에 맞게 축소
+  // 한 페이지에 맞게 축소. 아이폰·사파리는 A4 대신 레터 용지(세로가 더 짧음)로 인쇄할 때가 있어서
+  // A4와 레터 둘 다 한 장에 들어가는 높이(250mm)를 기준으로 맞춘다
   r.style.cssText='display:block;position:absolute;left:-10000px;top:0';
-  const sheet=r.firstElementChild,mm=96/25.4,pageW=190*mm,pageH=277*mm*0.97;
+  const sheet=r.firstElementChild,mm=96/25.4,pageW=190*mm,pageH=250*mm*0.97;
   // 넘치면 종이를 넓게 깔고(목록 단 수 증가) 그만큼 축소해서 A4 한 장에 맞춤
   let z=1;
   for(let k=0;k<8;k++){
