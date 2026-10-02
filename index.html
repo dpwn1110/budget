@@ -15,6 +15,7 @@
   --hl:#ECF46A; --hl-ink:#15160A; --accent:#121316; --accent-ink:#FFFFFF;
   --warn:#E5484D; --warn-soft:rgba(229,72,77,.12);
   --h1:rgba(236,244,106,.45); --h2:#ECF46A; --h3:#D3DD3E; --h4:#A9B518; --h4-ink:#15160A;
+  --pop:rgba(248,249,251,.97);
   --inc:#2F6FEB; --inc-soft:rgba(93,148,255,.2); --fix:#16975A; --fix-soft:rgba(46,191,120,.2);
   --shadow:0 8px 32px rgba(40,52,70,.08);
   box-sizing:border-box;
@@ -28,6 +29,7 @@
   --hl:#E3EE5C; --hl-ink:#15160A; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
   --h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;
+  --pop:rgba(30,32,38,.97);
   --inc:#7FAEFF; --inc-soft:rgba(127,174,255,.18); --fix:#5FD49A; --fix-soft:rgba(95,212,154,.16);
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }}
@@ -39,6 +41,7 @@
   --hl:#E3EE5C; --hl-ink:#15160A; --accent:#F2F3F5; --accent-ink:#121316;
   --warn:#FF6B6F; --warn-soft:rgba(255,107,111,.15);
   --h1:rgba(227,238,92,.18); --h2:rgba(227,238,92,.45); --h3:rgba(227,238,92,.75); --h4:#E3EE5C; --h4-ink:#15160A;
+  --pop:rgba(30,32,38,.97);
   --inc:#7FAEFF; --inc-soft:rgba(127,174,255,.18); --fix:#5FD49A; --fix-soft:rgba(95,212,154,.16);
   --shadow:0 8px 32px rgba(0,0,0,.3);
 }
@@ -326,6 +329,39 @@ button.cell:hover{filter:brightness(.94)}
 .bars button.bar[data-fcat="고정지출"]:not([aria-pressed="true"]) .lab b{color:var(--fix)}
 .bar.unknown .lab b{color:var(--warn)}
 
+/* ---------- 날짜 고르기 ---------- */
+.pickBtn{width:100%;border:0;background:var(--card);border-radius:14px;padding:9px 12px 9px 13px;min-height:44px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left}
+.pickBtn svg{width:16px;height:16px;color:var(--sub);flex:none}
+.pickBtn span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pickBtn span.ph{color:var(--sub)}
+.pickBtn:hover{box-shadow:inset 0 0 0 1px var(--line)}
+.pickBtn[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.wishForm .pickBtn{background:var(--soft);box-shadow:inset 0 0 0 1px var(--line)}
+.picker{position:fixed;z-index:30;width:300px;max-width:calc(100vw - 16px);padding:14px;border-radius:24px;background:var(--pop);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:0 18px 50px rgba(20,24,36,.22),inset 0 0 0 1px var(--glass-line);color:var(--ink)}
+.picker[hidden]{display:none}
+.pkHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.pkHead b{font-size:15px;font-weight:700;letter-spacing:-.02em}
+.pkHead .icon{border:1px solid var(--line)}
+.pkWeek,.pkGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.pkWeek span{text-align:center;font-size:11.5px;font-weight:600;color:var(--sub);padding:2px 0 4px}
+.pkWeek span:first-child,.pkGrid .sun{color:var(--warn)}
+.pkGrid button{aspect-ratio:1;border:0;background:transparent;border-radius:50%;font-size:13.5px;font-weight:600;padding:0;color:var(--ink)}
+.pkGrid button:hover{background:var(--card)}
+.pkGrid .inp{background:var(--h1)}
+.pkGrid .inp.pS{border-radius:50% 0 0 50%}
+.pkGrid .today{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pkGrid .sel,.pkGrid .sel:hover{background:var(--ink);color:var(--bg)}
+.pkGrid .fut{color:var(--sub)}
+.pkMonths{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pkMonths button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:9px 0;font-weight:600;font-size:13.5px}
+.pkMonths button:hover{background:var(--card)}
+.pkMonths .now{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pkMonths .sel,.pkMonths .sel:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pkFoot{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.pkFoot button{flex:1;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 0;font-size:13px;font-weight:600}
+.pkFoot button:hover{background:var(--hl);color:var(--hl-ink);border-color:var(--hl)}
+.pkFoot .pkClear{color:var(--sub)}
+
 /* ---------- 위시리스트 ---------- */
 .addMini{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;margin-bottom:12px;white-space:nowrap}
 .addMini:hover,.addMini[aria-expanded="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -541,7 +577,7 @@ button.cell:hover{filter:brightness(.94)}
       <div class="amountBox"><input id="amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0"><span>원</span></div>
       <div class="chips" id="chips" role="group" aria-label="카테고리"></div>
       <div class="row">
-        <div class="field"><label for="date">날짜</label><input id="date" type="date"></div>
+        <div class="field"><label for="dateBtn">날짜</label><input id="date" type="hidden"><button type="button" class="pickBtn" id="dateBtn" aria-haspopup="dialog" aria-expanded="false"><span></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2.5"/><path d="M2.5 7h11M5.5 2v3M10.5 2v3"/></svg></button></div>
         <div class="field" style="flex-grow:2"><label for="memo">제목</label><input id="memo" type="text" maxlength="60" placeholder="예: 점심 김밥"></div>
       </div>
       <div class="field" style="margin-top:8px"><label for="detail">세부 사항 (선택)</label><textarea id="detail" rows="1" maxlength="500" placeholder="예: 학교 앞 분식집, 친구랑 나눠 냄"></textarea></div>
@@ -570,7 +606,7 @@ button.cell:hover{filter:brightness(.94)}
           </div>
           <div class="row">
             <div class="field"><label for="wSaved">지금까지 모은 돈</label><input id="wSaved" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
-            <div class="field"><label for="wDue">언제 살까 (선택)</label><input id="wDue" type="month"></div>
+            <div class="field"><label for="wDueBtn">언제 살까 (선택)</label><input id="wDue" type="hidden"><button type="button" class="pickBtn" id="wDueBtn" aria-haspopup="dialog" aria-expanded="false"><span></span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><rect x="2.5" y="3.5" width="11" height="10" rx="2.5"/><path d="M2.5 7h11M5.5 2v3M10.5 2v3"/></svg></button></div>
           </div>
           <div class="formBtns" style="margin-top:10px"><button type="button" class="ghost" id="wCancel">취소</button><button type="button" class="ghost wSave" id="wSave">저장</button></div>
         </div>
@@ -1002,6 +1038,87 @@ function render(){
 }
 
 /* ---------- 입력 ---------- */
+/* ---------- 날짜 고르기 (브라우저 기본 달력 대신) ---------- */
+const WD=['일','월','화','수','목','금','토'];
+function dateLabel(v){
+  if(!v)return '';const d=new Date(v+'T00:00'),n=new Date();
+  const t=todayStr(),y=new Date();y.setDate(y.getDate()-1);
+  const md=`${d.getFullYear()!==n.getFullYear()?d.getFullYear()+'년 ':''}${d.getMonth()+1}월 ${d.getDate()}일`;
+  return v===t?`오늘 (${md})`:v===fmtDate(y)?`어제 (${md})`:`${md} (${WD[d.getDay()]})`;
+}
+function monthLabel(v){if(!v)return '';const [y,m]=v.split('-').map(Number);return `${y!==new Date().getFullYear()?y+'년 ':''}${m}월`}
+// 숨은 입력칸 값이 바뀌면 버튼 글자도 같이 바뀌게
+function bindPick(inputId,btnId,fmt,ph){
+  const el=$(inputId),btn=$(btnId),d=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  const show=()=>{const v=d.get.call(el),sp=btn.querySelector('span');sp.textContent=v?fmt(v):ph;sp.classList.toggle('ph',!v)};
+  Object.defineProperty(el,'value',{get(){return d.get.call(this)},set(v){d.set.call(this,v);show()}});
+  show();
+}
+bindPick('date','dateBtn',dateLabel,'날짜 고르기');
+bindPick('wDue','wDueBtn',monthLabel,'정하지 않음');
+const picker=document.createElement('div');picker.className='picker';picker.hidden=true;picker.setAttribute('role','dialog');picker.setAttribute('aria-label','날짜 고르기');document.body.appendChild(picker);
+let pk=null;
+const ARW=d=>`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`;
+function openPicker(anchor,mode,value,onPick,clearable){
+  if(pk&&pk.anchor===anchor){closePicker();return}
+  closePicker();
+  const base=value?new Date(value+(mode==='date'?'T00:00':'-01T00:00')):new Date();
+  pk={anchor,mode,value,onPick,clearable,y:base.getFullYear(),m:base.getMonth()};
+  drawPicker();picker.hidden=false;placePicker();anchor.setAttribute('aria-expanded','true');
+  (picker.querySelector('.sel')||picker.querySelector('.today,.now')||picker.querySelector('.pkGrid button,.pkMonths button')).focus({preventScroll:true});
+}
+function closePicker(){if(!pk)return;pk.anchor.setAttribute('aria-expanded','false');pk=null;picker.hidden=true}
+function placePicker(){
+  const r=pk.anchor.getBoundingClientRect(),w=picker.offsetWidth,h=picker.offsetHeight;
+  const x=Math.min(Math.max(8,r.left),innerWidth-w-8);let y=r.bottom+6;
+  if(y+h>innerHeight-8)y=Math.max(8,r.top-h-6);
+  picker.style.left=x+'px';picker.style.top=y+'px';
+}
+function drawPicker(){
+  const {mode,y,m}=pk;
+  const head=t=>`<div class="pkHead"><button type="button" class="icon" data-pk="prev" aria-label="이전">${ARW('M10 3 5 8l5 5')}</button><b>${t}</b><button type="button" class="icon" data-pk="next" aria-label="다음">${ARW('m6 3 5 5-5 5')}</button></div>`;
+  if(mode==='date'){
+    const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),ts=todayStr();
+    const {start,end}=periodRange(view),ps=fmtDate(start),pe=fmtDate(end);
+    let g='<span></span>'.repeat(first.getDay());
+    for(let d=1;d<=days;d++){
+      const dt=new Date(y,m,d),ds=fmtDate(dt);
+      let c='';
+      if(ds>=ps&&ds<=pe)c+=' inp';
+      if(ds===pk.value)c+=' sel';
+      if(ds===ts)c+=' today';
+      if(ds>ts)c+=' fut';
+      if(dt.getDay()===0)c+=' sun';
+      g+=`<button type="button" class="${c.trim()}" data-v="${ds}" aria-label="${dateLabel(ds)}">${d}</button>`;
+    }
+    picker.innerHTML=head(`${y}년 ${m+1}월`)+`<div class="pkWeek">${WD.map(w=>`<span>${w}</span>`).join('')}</div><div class="pkGrid">${g}</div><div class="pkFoot"><button type="button" data-pk="yest">어제</button><button type="button" data-pk="today">오늘</button></div>`;
+  }else{
+    const nowYm=ymOf(new Date());let g='';
+    for(let i=1;i<=12;i++){const v=`${y}-${pad(i)}`;g+=`<button type="button" class="${v===pk.value?'sel':''} ${v===nowYm?'now':''}" data-v="${v}">${i}월</button>`}
+    picker.innerHTML=head(`${y}년`)+`<div class="pkMonths">${g}</div><div class="pkFoot"><button type="button" data-pk="this">이번 달</button><button type="button" data-pk="nextm">다음 달</button>${pk.clearable?'<button type="button" class="pkClear" data-pk="clear">정하지 않음</button>':''}</div>`;
+  }
+}
+picker.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!pk)return;
+  const a=b.dataset.pk;
+  if(a==='prev'||a==='next'){const d=a==='prev'?-1:1;if(pk.mode==='date'){const t=new Date(pk.y,pk.m+d,1);pk.y=t.getFullYear();pk.m=t.getMonth()}else pk.y+=d;drawPicker();placePicker();return}
+  let v=b.dataset.v;
+  const n=new Date();
+  if(a==='today')v=todayStr();
+  if(a==='yest'){n.setDate(n.getDate()-1);v=fmtDate(n)}
+  if(a==='this')v=ymOf(new Date());
+  if(a==='nextm')v=ymOf(new Date(n.getFullYear(),n.getMonth()+1,1));
+  if(a==='clear')v='';
+  if(v===undefined)return;
+  const {onPick,anchor}=pk;closePicker();onPick(v);anchor.focus();
+});
+document.addEventListener('pointerdown',e=>{if(pk&&!picker.contains(e.target)&&!pk.anchor.contains(e.target))closePicker()},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&pk){e.stopImmediatePropagation();const a=pk.anchor;closePicker();a.focus()}},true);
+addEventListener('resize',()=>{if(pk)placePicker()});
+addEventListener('scroll',e=>{if(pk&&!picker.contains(e.target))placePicker()},true);
+$('dateBtn').onclick=()=>openPicker($('dateBtn'),'date',$('date').value,v=>{$('date').value=v});
+$('wDueBtn').onclick=()=>openPicker($('wDueBtn'),'month',$('wDue').value,v=>{$('wDue').value=v},true);
+
 function moneyInput(el){el.addEventListener('input',()=>{const n=num(el.value);el.value=n?n.toLocaleString('ko-KR'):''})}
 moneyInput($('amt'));moneyInput($('budget'));moneyInput($('fxAmt'));moneyInput($('svAmt'));
 
