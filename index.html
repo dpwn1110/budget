@@ -16,6 +16,7 @@
   --warn:#E5484D; --warn-soft:rgba(229,72,77,.12);
   --h1:rgba(236,244,106,.45); --h2:#ECF46A; --h3:#D3DD3E; --h4:#A9B518; --h4-ink:#15160A;
   --pop:rgba(248,249,251,.97);
+  --outc:var(--ink); --out-soft:var(--soft);
   --inc:#2F6FEB; --inc-soft:rgba(93,148,255,.2); --fix:#16975A; --fix-soft:rgba(46,191,120,.2);
   --shadow:0 8px 32px rgba(40,52,70,.08);
   box-sizing:border-box;
@@ -285,6 +286,27 @@ button.cell:hover{filter:brightness(.94)}
 .badge{width:40px;height:40px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:-.04em}
 .tx.in .badge,.tx.in.fixed .badge{background:var(--inc-soft);color:var(--inc);box-shadow:none}
 .tx.in .amt{color:var(--inc)!important}
+.bookSeg[hidden],.wishPanel[hidden]{display:none}
+/* 내역 두 칸 (split) */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.sCol{min-width:0;border-radius:18px;background:var(--soft);box-shadow:inset 0 0 0 1px var(--line);padding:0 4px 4px;overflow:hidden}
+.sCol h3{margin:0 -4px 2px;padding:10px 12px 9px;font-size:16px;font-weight:800;display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line)}
+.sCol h3::before{content:"";width:9px;height:9px;border-radius:3px;background:currentColor}
+.sCol h3 small{margin-left:auto;font-size:12px;font-weight:600;color:var(--sub)}
+.sIn h3{color:var(--inc)} .sOut h3{color:var(--outc)}
+.tx.c{grid-template-columns:minmax(0,1fr);gap:1px;padding:8px 8px;position:relative;border-radius:12px;border-bottom:1px solid var(--line)}
+.tx.c .txTitle b{padding-right:22px}
+.tx.c .amt{text-align:right;font-size:15px}
+.sOut .tx.c:not(.save) .amt{color:var(--outc)}
+.tx.c .del{position:absolute;top:4px;right:2px;width:26px;height:26px;font-size:12px}
+.cSub{display:flex;flex-wrap:wrap;align-items:center;gap:3px 5px;font-size:12px;color:var(--sub)}
+.cSub .catTag{font-size:10.5px;line-height:16px;padding:0 6px}
+.tx.c.carry .txTitle b::after{content:"이월";margin-left:5px;font-size:10.5px;font-weight:700;padding:0 6px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--line);color:var(--sub);vertical-align:1px}
+.sFoot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 6px;margin-top:6px;padding:10px;border-radius:12px;font-size:13px;font-weight:700}
+.sFoot b{margin-left:auto;font-size:16px;font-weight:800;letter-spacing:-.03em;white-space:nowrap}
+.sFoot small{flex-basis:100%;text-align:right;font-weight:500;color:var(--sub);font-size:11.5px}
+.sIn .sFoot{background:var(--inc-soft)} .sIn .sFoot b{color:var(--inc)}
+.sOut .sFoot{background:var(--out-soft)} .sOut .sFoot b{color:var(--outc)}
 .tx.fixed .badge{background:var(--fix-soft);color:var(--fix)}
 .tx.save .badge{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink);color:var(--ink)}
 .tx.save .amt{color:var(--sub)}
@@ -739,14 +761,18 @@ button.cell:hover{filter:brightness(.94)}
 <script>
 const EXP_CATS=['식비','카페·간식','교통','의류','쇼핑','생활','주거·통신','문화·여가','의료','교육','기타','?'];
 const INC_CATS=['용돈','월급','장학금','부수입','명절·선물','기타'];
-const LS='gagyebu-local-v2';
+// 가계부 설정. 엄마 가계부(mom.html)는 tools/make_mom.py가 이 값을 바꿔서 만든다.
+//  books: 두 번째 가계부(아빠 카드) 탭, wish: 위시리스트,
+//  split: 내역을 수입 | 지출 두 칸으로 나란히, carry: 지난달 남은 돈을 전월이월로 잔액에 더하기
+const APP={key:'gagyebu-local-v2',books:true,wish:true,split:false,carry:false};
+const LS=APP.key;
 const $=id=>document.getElementById(id);
 const pad=n=>String(n).padStart(2,'0');
 
 const DEF_SETTINGS=()=>({budget:0,startDay:1,fixed:[],incomes:[],lastBackup:0,dad:{budget:0,fixed:[]},wish:[]});
 let state={tx:[],settings:DEF_SETTINGS()};
 // 가계부 두 개: main = 내 돈(현금·통장·체크카드), dad = 아빠 카드
-let book=(()=>{try{return localStorage.getItem('gagyebu-book')==='dad'?'dad':'main'}catch(e){return 'main'}})();
+let book=!APP.books?'main':(()=>{try{return localStorage.getItem('gagyebu-book')==='dad'?'dad':'main'}catch(e){return 'main'}})();
 const isDad=()=>book==='dad';
 function dadSet(){const s=state.settings;if(!s.dad||typeof s.dad!=='object')s.dad={budget:0,fixed:[]};if(!Array.isArray(s.dad.fixed))s.dad.fixed=[];return s.dad}
 function bookTx(){return state.tx.filter(t=>isDad()?t.book==='dad':t.book!=='dad')}
@@ -847,6 +873,23 @@ function savedSoFar(f){
   let n=0;for(let k=f.start||last;k<=last;k=shiftYm(k,1))if(fixedDate(f,k)<=today)n++;
   return {n,sum:n*f.amount};
 }
+// 한 기간에 실제로 남은 돈 (수입 − 지출 − 저축, 고정 항목은 날짜 지난 것만)
+function periodNet(key){
+  const ts=todayStr(),txs=bookTx().filter(t=>periodOf(t.date)===key);
+  let n=0;
+  txs.forEach(t=>{n+=t.type==='in'?t.amount:-t.amount});
+  activeIncomes(key).filter(i=>!(i.skipCat&&txs.some(t=>t.type==='in'&&t.cat===i.skipCat))).forEach(i=>{if(incomeDate(i,key)<=ts)n+=i.amount});
+  activeAll(key).forEach(f=>{if(fixedDate(f,key)<=ts)n-=f.amount});
+  return n;
+}
+// 가장 처음 기록한 기간부터 key 직전 기간까지 남은 돈을 모두 더한 것 = 전월이월
+function carryBefore(key){
+  const ks=[...bookTx().map(t=>periodOf(t.date)),...activeIncomes(key).map(i=>i.start),...fixedList().map(f=>f.start)].filter(Boolean).sort();
+  if(!ks.length)return 0;
+  let s=0,k=ks[0];
+  for(let i=0;k<key&&i<600;k=shiftYm(k,1),i++)s+=periodNet(k);
+  return s;
+}
 function activeSavings(key){return isDad()?[]:activeAll(key).filter(f=>f.save)}
 function fixedDate(f,key){
   const {start}=periodRange(key);
@@ -904,6 +947,7 @@ function render(){
   });
   const budget=curBudget();
   const net=income-out-saveOut, netEl=$('net'),gb=$('goal'),gf=$('goalFill'),gt=$('goalText');
+  const carry=APP.carry&&!isDad()?carryBefore(view):0;
   if(isDad()){
     // 아빠 카드는 수입이 없으니 남은 예산을 강조
     const left=budget-out;
@@ -912,6 +956,14 @@ function render(){
     $('netNote').textContent=budget?`예산 ${won(budget)}`:'';
     gb.hidden=!budget;gf.style.width=budget?Math.max(0,Math.min(100,left/budget*100))+'%':'0';
     gt.textContent=budget?(left<0?`${won(-left)} 넘게 썼어요`:`예산의 ${Math.round(left/budget*100)}%가 남았어요`):'설정에서 아빠 카드 예산을 정해 보세요';
+  }else if(APP.carry){
+    // 엄마 가계부: Numbers처럼 전월이월을 더한 잔액
+    const bal=carry+net;
+    $('netLabel').textContent='잔액';
+    netEl.textContent=won(bal);netEl.className=bal<0?'neg':'';
+    $('netNote').textContent=carry?`전월이월 ${carry>0?'+':''}${won(carry)}`:'';
+    gb.hidden=true;
+    gt.textContent=`이번 달 수입 ${won(income)} − 지출 ${won(out)}${saveOut?` − 저축 ${won(saveOut)}`:''}`;
   }else{
     $('netLabel').textContent='남는 돈';
     netEl.textContent=(net>0?'+':'')+won(net);
@@ -1015,15 +1067,10 @@ function render(){
   fp.hidden=!filterCat||onlyUnknown;
   $('count').textContent=items.length?`${items.length}건`:'';
   const list=$('list');
-  if(!items.length){list.innerHTML=filterCat?`<div class="empty">이 기간에는 ${filterCat==='수입'?'수입이':filterCat==='저축'?'저축이':esc(filterCat==='?'?'출처 모르는':filterCat)+' 지출이'} 없어요.</div>`:'<div class="empty">아직 기록이 없어요.<br>위에서 첫 내역을 추가해 보세요.</div>'}
+  if(!items.length&&!(APP.split&&carry&&!filterCat)){list.innerHTML=filterCat?`<div class="empty">이 기간에는 ${filterCat==='수입'?'수입이':filterCat==='저축'?'저축이':esc(filterCat==='?'?'출처 모르는':filterCat)+' 지출이'} 없어요.</div>`:'<div class="empty">아직 기록이 없어요.<br>위에서 첫 내역을 추가해 보세요.</div>'}
   else{
     const wd=['일','월','화','수','목','금','토'];
-    const dayTotals={};
-    items.forEach(it=>{if(it.type==='out'&&it.kind!=='save'&&!it.pending)dayTotals[it.date]=(dayTotals[it.date]||0)+it.amount});
-    let html='',cur='';
-    items.forEach(it=>{
-      if(it.date!==cur){cur=it.date;const dt=new Date(it.date+'T00:00');
-        html+=`<div class="day"><span>${dt.getMonth()+1}월 ${dt.getDate()}일 ${wd[dt.getDay()]}요일</span><span>${dayTotals[cur]?won(dayTotals[cur]):''}</span></div>`}
+    const rowHTML=(it,compact)=>{
       const sign=it.type==='in'?'+':it.kind==='save'?'→':'−';
       const unknown=it.kind==='tx'&&isUnknown(it);
       const badge=unknown?'?':esc(it.cat.split('·')[0].slice(0,2));
@@ -1033,9 +1080,39 @@ function render(){
       const tag=it.kind==='tx'&&it.memo&&it.cat!=='?'?`<span class="catTag">${esc(it.cat)}</span>`:'';
       const delBtn=it.kind==='tx'?`<button class="del" data-del="${esc(it.id)}" aria-label="${title} 삭제">✕</button>`:'<span style="width:30px"></span>';
       const editAttrs=it.kind==='tx'?` data-id="${esc(it.id)}" tabindex="0" role="button" aria-label="${title} ${won(it.amount)} 수정"`:'';
-      html+=`<div class="tx${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.kind==='save'?' save':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><span class="txTitle"><b>${title}</b>${tag}</span>${sub?`<span>${sub}</span>`:''}${it.detail?`<p>${esc(it.detail)}</p>`:''}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
+      const cls=`tx${compact?' c':''}${it.type==='in'?' in':''}${it.kind!=='tx'?' fixed':''}${it.kind==='save'?' save':''}${it.id===editingId?' editing':''}${unknown?' unknown':''}${it.pending?' pending':''}`;
+      const detail=it.detail?`<p>${esc(it.detail)}</p>`:'';
+      if(compact){
+        const dt=new Date(it.date+'T00:00');
+        const kind=it.pending?(it.type==='in'?'들어올 예정':'나갈 예정'):it.kind==='fixed'?'고정':it.kind==='save'?'저축':it.kind==='allow'?'고정수입':'';
+        return `<div class="${cls}"${editAttrs}><span class="txText"><span class="txTitle"><b>${title}</b></span><span class="cSub">${dt.getMonth()+1}.${dt.getDate()} (${wd[dt.getDay()]})${kind?` · ${kind}`:''}${tag}</span>${detail}</span><span class="amt">${sign}${won(it.amount)}</span>${it.kind==='tx'?delBtn:''}</div>`;
+      }
+      return `<div class="${cls}"${editAttrs}><span class="badge" aria-hidden="true">${badge}</span><span class="txText"><span class="txTitle"><b>${title}</b>${tag}</span>${sub?`<span>${sub}</span>`:''}${detail}</span><span class="amt">${sign}${won(it.amount)}</span>${delBtn}</div>`;
+    };
+    if(APP.split){
+      // 수입 | 지출 나란히, Numbers처럼 날짜순 + 칸마다 합계
+      const asc=[...items].sort((a,b)=>a.date.localeCompare(b.date)||(a.at||0)-(b.at||0));
+      const sum=a=>a.filter(t=>!t.pending&&t.kind!=='save').reduce((s,t)=>s+t.amount,0);
+      const carryRow=v=>`<div class="tx c carry"><span class="txText"><span class="txTitle"><b>전월이월</b></span><span class="cSub">지난달까지 ${v<0?'모자란':'남은'} 돈</span></span><span class="amt">${won(Math.abs(v))}</span></div>`;
+      const col=type=>{
+        const rows=asc.filter(it=>type==='in'?it.type==='in':it.type!=='in');
+        const cIn=!filterCat&&carry&&(type==='in'?carry>0:carry<0)?Math.abs(carry):0;
+        const body=(cIn?carryRow(type==='in'?carry:-carry):'')+rows.map(it=>rowHTML(it,true)).join('');
+        const sv=type==='out'?rows.filter(t=>t.kind==='save'&&!t.pending).reduce((s,t)=>s+t.amount,0):0;
+        return `<section class="sCol ${type==='in'?'sIn':'sOut'}"><h3>${type==='in'?'수입':'지출'}<small>${rows.length}건</small></h3>${body||'<div class="empty" style="padding:16px 6px">없어요</div>'}<div class="sFoot"><span>${type==='in'?'수입':'지출'} 합계${cIn?' (이월 포함)':''}</span><b>${won(sum(rows)+cIn)}</b>${sv?`<small>저축 ${won(sv)}은 따로</small>`:''}</div></section>`;
+      };
+      list.innerHTML=`<div class="split">${col('in')}${col('out')}</div>`;
+    }else{
+    const dayTotals={};
+    items.forEach(it=>{if(it.type==='out'&&it.kind!=='save'&&!it.pending)dayTotals[it.date]=(dayTotals[it.date]||0)+it.amount});
+    let html='',cur='';
+    items.forEach(it=>{
+      if(it.date!==cur){cur=it.date;const dt=new Date(it.date+'T00:00');
+        html+=`<div class="day"><span>${dt.getMonth()+1}월 ${dt.getDate()}일 ${wd[dt.getDay()]}요일</span><span>${dayTotals[cur]?won(dayTotals[cur]):''}</span></div>`}
+      html+=rowHTML(it,false);
     });
     list.innerHTML=html;
+    }
   }
 
   // 카테고리
@@ -1645,6 +1722,8 @@ view=periodOf(todayStr());
 $('date').value=todayStr();syncDate();
 if(isDad())setType('out');
 document.querySelector('.entryPanel .seg').hidden=isDad();
+if(!APP.books)$('bookSeg').hidden=true;
+if(!APP.wish)document.querySelector('.wishPanel').hidden=true;
 renderChips();render();
 const addBtn=$('add');addBtn.disabled=false;addBtn.textContent='추가';
 </script>
