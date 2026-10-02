@@ -563,6 +563,13 @@ button.cell:hover{filter:brightness(.94)}
 .rp .legend em{display:inline-block;width:7px;height:7px;vertical-align:-.5px;margin-right:4px}
 .rp .list{margin-top:6px}
 .rp .rows{column-width:300px;column-gap:20px;column-rule:1px solid var(--l)}
+.rp .splitR{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.rp .sc h3{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 3px;padding-bottom:4px;border-bottom:1.5px solid #111;font-size:12px;font-weight:800}
+.rp .sc h3 span{font-size:9.5px;font-weight:500;color:var(--s)}
+.rp .r.cr .t{font-weight:700}
+.rp .scTot{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;padding:6px 8px;background:#fff;border-radius:6px;font-weight:700}
+.rp .scTot b{font-size:13px;font-weight:800;letter-spacing:-.03em}
+.rp .none{margin:4px 0;color:var(--s);font-size:9.5px}
 .rp .r{display:grid;grid-template-columns:30px 1fr auto;gap:6px;padding:3px 0;border-bottom:1px solid var(--l);break-inside:avoid;align-items:baseline}
 .rp .r .d{color:var(--s);font-size:9.5px}
 .rp .r .t{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -1686,12 +1693,26 @@ function buildReport(){
   saveDue.forEach(f=>items.push({kind:'save',type:'out',amount:f.amount,cat:'저축',memo:f.name,date:fixedDate(f,key)}));
   incDue.forEach(i=>items.push({kind:'allow',type:'in',amount:i.amount,cat:'고정수입',memo:i.name,date:incomeDate(i,key)}));
   items.sort((a,b)=>a.date.localeCompare(b.date)||(a.at||0)-(b.at||0));
-  const listHTML=items.map(it=>{
+  const rowR=it=>{
     const unk=it.kind==='tx'&&isUnknown(it);
     const title=esc(it.memo||(it.cat==='?'?'출처 모름':it.cat));
     const cat=it.kind==='fixed'?'':it.kind==='save'?'저축':it.kind==='allow'?'고정수입':(it.memo&&it.cat!=='?'?esc(it.cat):'');
     return `<div class="r${it.type==='in'?' in':''}${unk?' unk':''}${it.kind==='fixed'?' fx':''}${it.kind==='save'?' sv':''}"><span class="d">${md(it.date)}</span><span class="t">${unk&&!title.startsWith('?')?'? ':''}${title}${cat||it.kind==='fixed'?`<small>${cat}</small>`:''}</span><span class="m">${it.type==='in'?'+':it.kind==='save'?'→':'−'}${won(it.amount)}</span></div>`;
-  }).join('');
+  };
+  const listHTML=items.map(rowR).join('');
+  // 엄마 가계부(split): 수입 | 지출 나란히, 전월이월 포함
+  const carry=APP.carry&&!dad?carryBefore(key):0;
+  let splitHTML='';
+  if(APP.split){
+    const carryR=`<div class="r cr"><span class="d"></span><span class="t">전월이월<small>지난달까지 ${carry<0?'모자란':'남은'} 돈</small></span><span class="m">${won(Math.abs(carry))}</span></div>`;
+    const ins=items.filter(it=>it.type==='in'),outs=items.filter(it=>it.type!=='in');
+    const cIn=carry>0?carry:0,cOut=carry<0?-carry:0;
+    const sv=outs.filter(it=>it.kind==='save').reduce((s,t)=>s+t.amount,0);
+    splitHTML=`<div class="splitR">
+      <div class="sc"><h3>수입<span>${ins.length}건</span></h3>${cIn?carryR:''}${ins.map(rowR).join('')||(cIn?'':'<p class="none">없음</p>')}<div class="scTot"><span>수입 합계${cIn?' (이월 포함)':''}</span><b>${won(income+cIn)}</b></div></div>
+      <div class="sc"><h3>지출<span>${outs.length}건</span></h3>${cOut?carryR:''}${outs.map(rowR).join('')||(cOut?'':'<p class="none">없음</p>')}<div class="scTot"><span>지출 합계${cOut?' (이월 포함)':''}</span><b>${won(out+cOut)}</b></div>${sv?`<p class="none" style="text-align:right">저축 ${won(sv)}은 따로</p>`:''}</div>
+    </div>`;
+  }
 
   const pct=budget?out/budget:0;
   const unkSum=items.filter(it=>it.kind==='tx'&&isUnknown(it)&&it.type==='out').reduce((s,t)=>s+t.amount,0);
@@ -1709,7 +1730,7 @@ function buildReport(){
     :`<div><dt>수입</dt><dd>${won(income)}</dd><small>들어온 돈</small></div>
       <div><dt>그중 고정지출</dt><dd>${won(fixedOut)}</dd><small>쓴 돈에 포함</small></div>
       <div class="sky"><dt>저축</dt><dd>${won(saveOut)}</dd><small>쓴 돈과 따로</small></div>
-      <div class="hl"><dt>남는 돈</dt><dd class="${net<0?'neg':''}">${sgn(net)}</dd><small>수입 − 쓴 돈${saveOut?' − 저축':''}</small></div>`;
+      ${APP.carry?`<div class="hl"><dt>잔액</dt><dd class="${carry+net<0?'neg':''}">${won(carry+net)}</dd><small>${carry?`전월이월 ${sgn(carry)} 포함`:`수입 − 쓴 돈${saveOut?' − 저축':''}`}</small></div>`:`<div class="hl"><dt>남는 돈</dt><dd class="${net<0?'neg':''}">${sgn(net)}</dd><small>수입 − 쓴 돈${saveOut?' − 저축':''}</small></div>`}`;
 
   return `<div class="rp${dad?' dad':''}">
   <div class="rTop"><b><i>₩</i>가계부${dad?' · 아빠 카드':''}</b><span>${d2(start)} – ${d2(end)}</span></div>
@@ -1728,8 +1749,8 @@ function buildReport(){
   </div>
   <div class="card list">
     <h2><span style="font-size:15px;font-weight:800;color:inherit;letter-spacing:-.04em">내역</span><span>${items.length}건</span></h2>
-    <div class="rows">${listHTML||'<p style="color:var(--s)">기록 없음</p>'}</div>
-    <div class="grand"><span>지출 합계</span><b>${won(out)}</b></div>
+    ${APP.split?splitHTML:`<div class="rows">${listHTML||'<p style="color:var(--s)">기록 없음</p>'}</div>`}
+    <div class="grand">${APP.carry?`<span>잔액${carry?' (전월이월 포함)':''}</span><b>${won(carry+net)}</b>`:`<span>지출 합계</span><b>${won(out)}</b>`}</div>
   </div>
   <div class="foot"><span>발행 ${d2(now)} ${pad(now.getHours())}:${pad(now.getMinutes())}</span><span class="dots" title="쓴 날">${dots}</span></div>
 </div>`;
