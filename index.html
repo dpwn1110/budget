@@ -510,8 +510,8 @@ button.cell:hover{filter:brightness(.94)}
 .rp h2{font-size:15px;font-weight:800;margin:0 0 9px;letter-spacing:-.04em;display:flex;justify-content:space-between;align-items:baseline}
 .rp h2 span{font-size:9.5px;font-weight:500;color:var(--s);letter-spacing:-.01em}
 .rp .cat{display:grid;grid-template-columns:58px 1fr 62px 26px;gap:6px;align-items:center;margin-bottom:5px}
-.rp .cat .tr{height:9px;background:#fff;border-radius:5px;overflow:hidden}
-.rp .cat .tr i{display:block;height:100%;background:var(--dp);opacity:.55;border-radius:5px}
+.rp .cat .tr{height:9px;background:#fff;overflow:hidden}
+.rp .cat .tr i{display:block;height:100%;background:var(--dp);opacity:.55}
 .rp .cat.lead .tr i{background:var(--dp);opacity:1}
 .rp .cat.lead span:first-child{font-weight:800}
 .rp .cat.unk .tr i{background:repeating-linear-gradient(45deg,#111 0 2px,#fff 2px 4px);opacity:1} .rp .cat.unk span:first-child{font-weight:700}
@@ -522,7 +522,7 @@ button.cell:hover{filter:brightness(.94)}
 .rp svg{display:block;width:100%;height:auto}
 .rp .legend{display:flex;gap:12px;color:var(--s);font-size:8.5px;margin-top:5px}
 .rp .legend i{display:inline-block;width:12px;height:0;border-top:1.5px dashed #111;vertical-align:middle;margin-right:4px}
-.rp .legend em{display:inline-block;width:7px;height:7px;border-radius:2px;vertical-align:-.5px;margin-right:4px}
+.rp .legend em{display:inline-block;width:7px;height:7px;vertical-align:-.5px;margin-right:4px}
 .rp .list{margin-top:6px}
 .rp .rows{column-width:300px;column-gap:20px;column-rule:1px solid var(--l)}
 .rp .r{display:grid;grid-template-columns:30px 1fr auto;gap:6px;padding:3px 0;border-bottom:1px solid var(--l);break-inside:avoid;align-items:baseline}
@@ -539,7 +539,7 @@ button.cell:hover{filter:brightness(.94)}
 .rp .grand b{font-size:20px;font-weight:800;letter-spacing:-.045em;color:#fff}
 .rp .foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--s);font-size:8.5px}
 .rp .dots{display:flex;gap:2.5px}
-.rp .dots i{width:5px;height:5px;border-radius:50%;background:var(--l)}
+.rp .dots i{width:5px;height:5px;background:var(--l)}
 .rp .dots i.hl{background:#999}
 .rp .dots i.on{background:#111}
 </style>
@@ -1554,8 +1554,8 @@ function buildReport(){
   let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
   days.forEach((x,i)=>{
     const cx=i*bw+bw/2,xx=cx-bwi/2;
-    svg+=`<rect x="${xx.toFixed(2)}" y="${top}" width="${bwi.toFixed(2)}" height="${H-top-bot}" rx="${(bwi/2).toFixed(2)}" fill="#fff"/>`;
-    if(x.v){const h=Math.max(bwi,(x.v/dmax)*(H-top-bot));svg+=`<rect x="${xx.toFixed(2)}" y="${(H-bot-h).toFixed(2)}" width="${bwi.toFixed(2)}" height="${h.toFixed(2)}" rx="${(bwi/2).toFixed(2)}" fill="${perDay&&x.v>perDay?C.w:C.dp}"/>`}
+    svg+=`<rect x="${xx.toFixed(2)}" y="${top}" width="${bwi.toFixed(2)}" height="${H-top-bot}" fill="#fff"/>`;
+    if(x.v){const h=Math.max(1.5,(x.v/dmax)*(H-top-bot));svg+=`<rect x="${xx.toFixed(2)}" y="${(H-bot-h).toFixed(2)}" width="${bwi.toFixed(2)}" height="${h.toFixed(2)}" fill="${perDay&&x.v>perDay?C.w:C.dp}"/>`}
     if(i===0||x.n===1||(x.n%5===0&&x.n<=25))svg+=`<text x="${cx.toFixed(2)}" y="${H-3}" font-size="6.2" fill="${C.s}" text-anchor="middle">${x.n===1||i===0?x.m+'/':''}${x.n}</text>`;
   });
   if(perDay){const y=H-bot-(perDay/dmax)*(H-top-bot);svg+=`<line x1="0" y1="${y.toFixed(2)}" x2="${W}" y2="${y.toFixed(2)}" stroke="${C.w}" stroke-width=".7" stroke-dasharray="3 2"/>`}
