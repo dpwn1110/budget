@@ -1,0 +1,509 @@
+{
+ "song": {
+  "file": "Marry Me (feat.)",
+  "duration": 206.97,
+  "bpm": 86.219,
+  "beat": 0.6959,
+  "bar0": 0.6107
+ },
+ "fps": 30,
+ "width": 1920,
+ "height": 1080,
+ "scenes": [
+  {
+   "id": "s00-opening",
+   "name": "오프닝",
+   "start": 0.0,
+   "end": 11.745,
+   "note": "봉투가 열리고 아기 사진 두 장이 나온다. 신랑 신부 이름이 크게",
+   "folders": [
+    "00-opening"
+   ],
+   "lyrics": []
+  },
+  {
+   "id": "s01-verse-card",
+   "name": "말씀",
+   "start": 11.745,
+   "end": 21.488,
+   "note": "고린도전서 13:4 카드. 엔딩의 13:13과 짝",
+   "folders": [],
+   "lyrics": []
+  },
+  {
+   "id": "s02-baby",
+   "name": "어린 시절",
+   "start": 21.488,
+   "end": 45.148,
+   "note": "분홍 앨범 양면에 두 사람의 아기 사진. 가사 1–5",
+   "folders": [
+    "02-baby-yechan",
+    "02-baby-hyein",
+    "handwriting"
+   ],
+   "lyrics": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "id": "s03-meet",
+   "name": "만남",
+   "start": 45.148,
+   "end": 67.417,
+   "note": "양쪽 사진 더미가 'That you are really mine'에서 하나로. 2021. 가사 6–11",
+   "folders": [
+    "03-yechan",
+    "03-hyein",
+    "03-us"
+   ],
+   "lyrics": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  {
+   "id": "s04-stack",
+   "name": "사진 더미",
+   "start": 67.417,
+   "end": 89.686,
+   "note": "첫 후렴. 갈색 종이 위로 두 박마다 사진이 쌓인다. 가사 12–15",
+   "folders": [
+    "04-stack"
+   ],
+   "lyrics": [
+    12,
+    13,
+    14,
+    15
+   ]
+  },
+  {
+   "id": "s05-postcard",
+   "name": "엽서",
+   "start": 89.686,
+   "end": 111.955,
+   "note": "메인 레퍼런스. 엽서는 고정, 뒤 사진이 마디마다 바뀐다. 가사 16–21",
+   "folders": [
+    "05-postcard"
+   ],
+   "lyrics": [
+    16,
+    17,
+    18,
+    19,
+    20,
+    21
+   ]
+  },
+  {
+   "id": "s06-stamp",
+   "name": "우표",
+   "start": 111.955,
+   "end": 134.224,
+   "note": "짧은 가사 줄마다 우표 속 사진이 빠르게 바뀐다. 가사 22–31",
+   "folders": [
+    "06-stamp"
+   ],
+   "lyrics": [
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
+   ]
+  },
+  {
+   "id": "s07-photobooth",
+   "name": "포토부스",
+   "start": 134.224,
+   "end": 156.492,
+   "note": "두 번째 후렴. 바다 위 레이스 포토부스, 마디마다 플래시. 가사 32–36",
+   "folders": [
+    "07-photobooth"
+   ],
+   "lyrics": [
+    32,
+    33,
+    34,
+    35,
+    36
+   ]
+  },
+  {
+   "id": "s08-vows",
+   "name": "약속",
+   "start": 156.492,
+   "end": 178.761,
+   "note": "브리지. 가사 한 줄에 웨딩 사진 한 장. 가사 37–41",
+   "folders": [
+    "08-vows"
+   ],
+   "lyrics": [
+    37,
+    38,
+    39,
+    40,
+    41
+   ]
+  },
+  {
+   "id": "s09-finale",
+   "name": "피날레",
+   "start": 178.761,
+   "end": 198.246,
+   "note": "마지막 후렴. 박마다 사진이 날아와 콜라주가 된다. 가사 42–47",
+   "folders": [
+    "09-finale"
+   ],
+   "lyrics": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47
+   ]
+  },
+  {
+   "id": "s10-end",
+   "name": "엔딩",
+   "start": 198.246,
+   "end": 206.97,
+   "note": "믿음 · 소망 · 사랑, 신랑 신부 이름, 날짜, 장소",
+   "folders": [],
+   "lyrics": [
+    48
+   ]
+  }
+ ],
+ "lyrics": [
+  {
+   "n": 1,
+   "t": 22.02,
+   "text": "Girl I wanna know",
+   "bg": false
+  },
+  {
+   "n": 2,
+   "t": 23.58,
+   "text": "How did you get so pretty?",
+   "bg": false
+  },
+  {
+   "n": 3,
+   "t": 27.71,
+   "text": "I don't even mean when you're dressin' up",
+   "bg": false
+  },
+  {
+   "n": 4,
+   "t": 34.33,
+   "text": "I mean when you do what is special to you",
+   "bg": false
+  },
+  {
+   "n": 5,
+   "t": 39.31,
+   "text": "Your smile is my favorite make up",
+   "bg": false
+  },
+  {
+   "n": 6,
+   "t": 45.43,
+   "text": "I cannot believe that I get to be",
+   "bg": false
+  },
+  {
+   "n": 7,
+   "t": 48.25,
+   "text": "Makin' memories with you in my life",
+   "bg": false
+  },
+  {
+   "n": 8,
+   "t": 51.81,
+   "text": "Tastes sweeter every time",
+   "bg": false
+  },
+  {
+   "n": 9,
+   "t": 56.7,
+   "text": "I'm a better me 'cause I'm feelin' free",
+   "bg": false
+  },
+  {
+   "n": 10,
+   "t": 59.47,
+   "text": "Like a reverie but it's really true",
+   "bg": false
+  },
+  {
+   "n": 11,
+   "t": 62.95,
+   "text": "That you are really mine",
+   "bg": false
+  },
+  {
+   "n": 12,
+   "t": 67.51,
+   "text": "Will you be mine forever?",
+   "bg": false
+  },
+  {
+   "n": 13,
+   "t": 73.08,
+   "text": "Will you be my only girl?",
+   "bg": false
+  },
+  {
+   "n": 14,
+   "t": 78.64,
+   "text": "I will be yours through the thick and the thin",
+   "bg": false
+  },
+  {
+   "n": 15,
+   "t": 83.91,
+   "text": "Our love will make a beautiful world",
+   "bg": false
+  },
+  {
+   "n": 16,
+   "t": 90.17,
+   "text": "I'm workin' hard to be a man",
+   "bg": false
+  },
+  {
+   "n": 17,
+   "t": 92.92,
+   "text": "Who truly knows and understands",
+   "bg": false
+  },
+  {
+   "n": 18,
+   "t": 95.74,
+   "text": "That there is more to love than feelings",
+   "bg": false
+  },
+  {
+   "n": 19,
+   "t": 101.3,
+   "text": "I'm taking time to study you",
+   "bg": false
+  },
+  {
+   "n": 20,
+   "t": 104.02,
+   "text": "To see your colors and your hues",
+   "bg": false
+  },
+  {
+   "n": 21,
+   "t": 106.92,
+   "text": "I know there's beauty I'm not seeing",
+   "bg": false
+  },
+  {
+   "n": 22,
+   "t": 112.51,
+   "text": "I cannot believe",
+   "bg": false
+  },
+  {
+   "n": 23,
+   "t": 113.96,
+   "text": "That I get to be",
+   "bg": false
+  },
+  {
+   "n": 24,
+   "t": 115.28,
+   "text": "Makin' memories",
+   "bg": false
+  },
+  {
+   "n": 25,
+   "t": 116.37,
+   "text": "With you in my life",
+   "bg": false
+  },
+  {
+   "n": 26,
+   "t": 118.81,
+   "text": "And that is worth the grind",
+   "bg": false
+  },
+  {
+   "n": 27,
+   "t": 123.65,
+   "text": "I'm a better me",
+   "bg": false
+  },
+  {
+   "n": 28,
+   "t": 125.03,
+   "text": "'Cause I'm feelin' free",
+   "bg": false
+  },
+  {
+   "n": 29,
+   "t": 126.47,
+   "text": "Like a reverie",
+   "bg": false
+  },
+  {
+   "n": 30,
+   "t": 127.53,
+   "text": "But it's really true",
+   "bg": false
+  },
+  {
+   "n": 31,
+   "t": 129.96,
+   "text": "That you are really mine",
+   "bg": false
+  },
+  {
+   "n": 32,
+   "t": 134.52,
+   "text": "Will you be mine forever?",
+   "bg": false
+  },
+  {
+   "n": 33,
+   "t": 138.37,
+   "text": "(Forever you be mine)",
+   "bg": true
+  },
+  {
+   "n": 34,
+   "t": 140.0,
+   "text": "Will you be my only girl?",
+   "bg": false
+  },
+  {
+   "n": 35,
+   "t": 145.66,
+   "text": "I will be yours through the thick and the thin",
+   "bg": false
+  },
+  {
+   "n": 36,
+   "t": 150.87,
+   "text": "Our love will make a beautiful world",
+   "bg": false
+  },
+  {
+   "n": 37,
+   "t": 156.83,
+   "text": "I will be yours forever",
+   "bg": false
+  },
+  {
+   "n": 38,
+   "t": 162.45,
+   "text": "I will be your only man",
+   "bg": false
+  },
+  {
+   "n": 39,
+   "t": 167.97,
+   "text": "Can you be mine through the thick",
+   "bg": false
+  },
+  {
+   "n": 40,
+   "t": 171.09,
+   "text": "And the thin",
+   "bg": false
+  },
+  {
+   "n": 41,
+   "t": 173.2,
+   "text": "And I can be your number one fan",
+   "bg": false
+  },
+  {
+   "n": 42,
+   "t": 179.14,
+   "text": "Will you be mine forever?",
+   "bg": false
+  },
+  {
+   "n": 43,
+   "t": 183.0,
+   "text": "(Forever you and me)",
+   "bg": true
+  },
+  {
+   "n": 44,
+   "t": 184.68,
+   "text": "Will you be my only girl?",
+   "bg": false
+  },
+  {
+   "n": 45,
+   "t": 188.16,
+   "text": "(Will you be my only girl?)",
+   "bg": true
+  },
+  {
+   "n": 46,
+   "t": 190.28,
+   "text": "I will be yours through the thick and the thin",
+   "bg": false
+  },
+  {
+   "n": 47,
+   "t": 195.48,
+   "text": "Our love will make a beautiful world",
+   "bg": false
+  },
+  {
+   "n": 48,
+   "t": 198.73,
+   "text": "(Our love will make a beautiful world)",
+   "bg": true
+  }
+ ],
+ "text": {
+  "names_en": "Yechan & Hyein",
+  "names_kr": "예찬 & 혜인",
+  "groom": "신랑  ○예찬",
+  "bride": "신부  ○혜인",
+  "years": "1996 – 2026",
+  "opening_sub": "그동안의 우리를, 잠시 펼쳐봅니다",
+  "baby_left": "예찬, 1997",
+  "baby_right": "혜인, 1996",
+  "met": "2021",
+  "verse_kr": "사랑은 오래 참고 사랑은 온유하며",
+  "verse_en": "Love is patient, love is kind.",
+  "verse_ref": "고린도전서 13:4  ·  1 Corinthians 13:4",
+  "end_top": "믿음  ·  소망  ·  사랑",
+  "end_ref": "고린도전서 13:13",
+  "date": "2026. 10. 24. SAT",
+  "venue": "그랜드 머큐어 앰배서더 창원",
+  "end_sub": "곧 예식이 시작됩니다",
+  "postcard_marks": [
+   "2021 · 봄",
+   "2021 · 여름",
+   "2022 · 가을",
+   "2023 · 겨울",
+   "2024 · 봄",
+   "2025 · 여름"
+  ]
+ }
+}
