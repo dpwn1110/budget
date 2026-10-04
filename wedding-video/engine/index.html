@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>예찬 & 혜인 식전 영상</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root { --bg:#1d1a17; --panel:#2a2622; --ink:#f3ece2; --muted:#a99d8f; --accent:#d9a77e; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 "Inter", system-ui, sans-serif; }
+  main { max-width:1280px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font:400 26px "Cormorant Garamond", serif; margin:0 0 14px; }
+  canvas { width:100%; aspect-ratio:16/9; display:block; background:#000; border-radius:6px; }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:12px 0; }
+  .panel { background:var(--panel); border-radius:8px; padding:14px 16px; margin-top:14px; }
+  label.file, button, select { background:#3a342e; color:var(--ink); border:1px solid #4a433b; border-radius:6px;
+    padding:8px 14px; font:inherit; cursor:pointer; }
+  button.primary { background:var(--accent); color:#2a1d12; border-color:var(--accent); font-weight:500; }
+  button:disabled { opacity:.5; cursor:default; }
+  input[type=file] { display:none; }
+  input[type=range] { flex:1; min-width:200px; }
+  .muted { color:var(--muted); font-size:13px; }
+  #status { white-space:pre-line; }
+  progress { width:100%; height:10px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>예찬 &amp; 혜인 · 식전 영상</h1>
+  <canvas id="c" width="1920" height="1080"></canvas>
+  <div class="row">
+    <button id="play">▶ 재생</button>
+    <span id="time" class="muted">0:00.0</span>
+    <input id="seek" type="range" min="0" max="1" step="0.01" value="0">
+    <select id="jump"></select>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <label class="file">① 노래 파일<input id="audio" type="file" accept="audio/*"></label>
+      <label class="file">② 사진 폴더<input id="folder" type="file" webkitdirectory multiple></label>
+      <span id="loaded" class="muted">노래와 사진 폴더를 고르세요. 사진은 이 컴퓨터를 떠나지 않습니다.</span>
+    </div>
+    <div class="muted">
+      사진 폴더 안에 장면별 폴더를 만드세요: 00-opening, 01-baby-yechan, 01-baby-hyein, 02-meet, 03-dating, 05-wedding, handwriting, assets.
+      파일 이름 순서가 화면 순서입니다. assets 폴더의 이미지는 소품(예: lace-frame.png, bg-sea.jpg)으로 쓰입니다.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <select id="range"></select>
+      <button id="render" class="primary">③ MP4로 저장</button>
+    </div>
+    <progress id="prog" value="0" max="1" hidden></progress>
+    <div id="status" class="muted"></div>
+  </div>
+</main>
+<script src="vendor/mp4-muxer.js"></script>
+<script src="song.js"></script>
+<script src="core.js"></script>
+<script src="props.js"></script>
+<script src="scenes/s5-wedding.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
