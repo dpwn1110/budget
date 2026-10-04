@@ -381,39 +381,7 @@
   // ---------- 장면 ----------
   var BUILD = {};
 
-  BUILD["s00-opening"] = function (S) {
-    var c = S.comp, r = new Rand(11);
-    background(c, C.cream, "paper-cream");
-    // 봉투 뒤에 숨은 아기 사진 두 장이 둘째 마디에 올라온다
-    var up = S.rel(barT(2));
-    for (var k = 0; k < 2; k++) {
-      var it = photo("00-opening", k);
-      var p = printPhoto(c, it, { x: 870 + k * 180, y: 700, w: 300, h: 380, rot: k ? 6 : -7, t0: 0, t1: S.dur });
-      keys(tr(p.paper, "ADBE Position"), [[up + k * 0.25, [870 + k * 180, 700]], [up + k * 0.25 + 1.6, [870 + k * 180, 430]]]);
-    }
-    assetOr(c, "envelope", 960, 760, 820, 560, function () {
-      var body = rectShape(c, "봉투", 760, 470, C.kraft);
-      pos(body, 960, 790);
-      var flap = pathShape(c, "봉투 뚜껑", [[-380, -235], [380, -235], [0, 20]], true, C.kraftDark);
-      pos(flap.layer, 960, 790);
-      return body;
-    });
-    var a1 = S.rel(barT(1));
-    var n1 = text(c, T.names_en, FONT.script, 120, C.ink, 960, 200);
-    span(n1, a1, S.dur); fade(n1, a1, S.dur, 1.2, 0);
-    // 클라이언트 요청: 신랑 신부 이름이 또렷하게 보이는 구간
-    var a15 = S.rel(barT(1.5));
-    var gb = text(c, T.groom + "      " + T.bride, FONT.kr, 46, C.ink, 960, 300, { tracking: 80 });
-    span(gb, a15, S.dur); fade(gb, a15, S.dur, 0.9, 0);
-    var a2 = S.rel(barT(3));
-    var y1 = text(c, T.years, FONT.serif, 34, C.muted, 960, 360, { tracking: 200 });
-    span(y1, a2, S.dur); fade(y1, a2, S.dur, 0.8, 0);
-    var s1 = text(c, T.opening_sub, FONT.kr, 32, C.muted, 960, 1030);
-    span(s1, a2 + BEAT * 2, S.dur); fade(s1, a2 + BEAT * 2, S.dur, 0.8, 0);
-    fadeOutScene(S, C.cream, 0.6);
-  };
-
-  BUILD["s01-verse-card"] = function (S) {
+  BUILD["s00-verse-card"] = function (S) {
     var c = S.comp;
     background(c, C.cream, "paper-cream");
     assetOr(c, "border-card", 960, 540, 1560, 860, function () {
@@ -433,6 +401,56 @@
     fadeOutScene(S, C.cream, 0.6);
   };
 
+  // 어린 시절 장면의 첫 사진 자리. 오프닝 끝에서 사진이 정확히 이 자리로 가서 컷이 이어진다.
+  var BABY = [{ folder: "02-baby-yechan", x: 500, y: 470, rot: -3 }, { folder: "02-baby-hyein", x: 1420, y: 470, rot: 3 }];
+  var BABY_W = 440, BABY_H = 540;
+
+  BUILD["s01-opening"] = function (S) {
+    var c = S.comp, end = S.dur;
+    background(c, C.cream, "paper-cream");
+    // 끝 1.4초 동안 배경이 어린 시절 장면의 분홍 앨범으로 바뀐다
+    var tPink = end - 1.4;
+    var pk = [[C.pink1, W / 4], [C.pink2, W * 3 / 4]];
+    for (var q = 0; q < 2; q++) {
+      var half = solid(c, pk[q][0], "분홍 면 (다음 장면으로)", W / 2, H);
+      pos(half, pk[q][1], H / 2);
+      span(half, tPink, end);
+      keys(tr(half, "ADBE Opacity"), [[tPink, 0], [end - 0.2, 100]]);
+    }
+    // 봉투 뒤에 숨은 아기 사진 두 장: 올라왔다가, 끝에서 앨범 자리로 커지며 이동
+    var up = S.rel(barT(5));
+    for (var k = 0; k < 2; k++) {
+      var B = BABY[k], sx = 880 + k * 160;
+      var p = printPhoto(c, photo(B.folder, 0), { x: sx, y: 720, w: BABY_W, h: BABY_H, rot: k ? 6 : -7, t0: 0, t1: end });
+      keys(tr(p.paper, "ADBE Position"), [[up + k * 0.3, [sx, 720]], [up + k * 0.3 + 1.6, [sx, 540]], [end - 1.3, [sx, 540]], [end - 0.15, [B.x, B.y]]]);
+      keys(tr(p.paper, "ADBE Scale"), [[end - 1.3, [68, 68, 100]], [end - 0.15, [100, 100, 100]]]);
+      tr(p.paper, "ADBE Scale").setValueAtTime(0, [68, 68, 100]);
+      keys(tr(p.paper, "ADBE Rotate Z"), [[end - 1.3, k ? 6 : -7], [end - 0.15, B.rot]]);
+    }
+    var outT = end - 1.6;
+    var env = assetOr(c, "envelope", 960, 760, 820, 560, function () {
+      var body = rectShape(c, "봉투", 760, 470, C.kraft);
+      pos(body, 960, 790);
+      var flap = pathShape(c, "봉투 뚜껑", [[-380, -235], [380, -235], [0, 20]], true, C.kraftDark);
+      pos(flap.layer, 960, 790);
+      keys(tr(flap.layer, "ADBE Opacity"), [[outT, 100], [outT + 0.6, 0]]);
+      return body;
+    });
+    keys(tr(env, "ADBE Opacity"), [[outT, 100], [outT + 0.6, 0]]);
+    // 클라이언트 요청: 신랑 신부 이름이 또렷하게 보이는 구간
+    var lines = [
+      [T.names_en, FONT.script, 120, C.ink, 200, {}, S.rel(barT(3)) + 0.3],
+      [T.groom + "      " + T.bride, FONT.kr, 46, C.ink, 300, { tracking: 80 }, S.rel(barT(3.5))],
+      [T.years, FONT.serif, 34, C.muted, 360, { tracking: 200 }, S.rel(barT(4.5))],
+      [T.opening_sub, FONT.kr, 32, C.muted, 1030, {}, S.rel(barT(5))]
+    ];
+    for (var n = 0; n < lines.length; n++) {
+      var ln = lines[n], L = text(c, ln[0], ln[1], ln[2], ln[3], 960, ln[4], ln[5]);
+      span(L, ln[6], end);
+      keys(tr(L, "ADBE Opacity"), [[ln[6], 0], [ln[6] + 1.0, 100], [outT, 100], [outT + 0.6, 0]]);
+    }
+  };
+
   BUILD["s02-baby"] = function (S) {
     var c = S.comp, r = new Rand(23);
     var bgA = asset("paper-pink");
@@ -441,14 +459,14 @@
       var lft = solid(c, C.pink1, "왼쪽 면", W / 2, H); pos(lft, W / 4, H / 2);
       var rgt = solid(c, C.pink2, "오른쪽 면", W / 2, H); pos(rgt, W * 3 / 4, H / 2);
     }
-    // 왼쪽 예찬, 오른쪽 혜인. 각자 두 장, 가사 4·5번에서 두 번째 사진으로
-    var sides = [["02-baby-yechan", 500, -3, 4, T.baby_left], ["02-baby-hyein", 1420, 3, 5, T.baby_right]];
+    // 왼쪽 예찬, 오른쪽 혜인. 첫 사진은 오프닝에서 이어지므로 같은 자리에 그대로 있고, 가사 4·5번에서 두 번째 사진으로
+    var sides = [[BABY[0], 4, T.baby_left], [BABY[1], 5, T.baby_right]];
     for (var k = 0; k < 2; k++) {
-      var sd = sides[k], swap = S.rel(LY[sd[3]].t);
-      var p0 = printPhoto(c, photo(sd[0], 0), { x: sd[1], y: 470, w: 440, h: 540, rot: sd[2], t0: 0, t1: swap + 0.4 });
-      popPrint(p0, 0.2 + k * BEAT, 0.5);
-      var p1 = printPhoto(c, photo(sd[0], 1), { x: sd[1] + 10, y: 465, w: 440, h: 540, rot: -sd[2] * 0.7, t0: swap, t1: S.dur });
+      var B = sides[k][0], swap = S.rel(LY[sides[k][1]].t);
+      printPhoto(c, photo(B.folder, 0), { x: B.x, y: B.y, w: BABY_W, h: BABY_H, rot: B.rot, t0: 0, t1: swap + 0.4 });
+      var p1 = printPhoto(c, photo(B.folder, 1), { x: B.x + 10, y: B.y - 5, w: BABY_W, h: BABY_H, rot: -B.rot * 0.7, t0: swap, t1: S.dur });
       popPrint(p1, swap, 0.45, 1.05);
+      var sd = [B.folder, B.x, B.rot, 0, sides[k][2]];
       // 마스킹테이프
       assetOr(c, "tape", sd[1], 190, 220, 80, function () {
         var tp = solid(c, [0.96, 0.93, 0.84], "테이프", 190, 50);

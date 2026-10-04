@@ -11,23 +11,24 @@
  "height": 1080,
  "scenes": [
   {
-   "id": "s00-opening",
-   "name": "오프닝",
+   "id": "s00-verse-card",
+   "name": "말씀",
    "start": 0.0,
-   "end": 11.745,
-   "note": "봉투가 열리고 아기 사진 두 장이 나온다. 신랑 신부 이름이 크게",
-   "folders": [
-    "00-opening"
-   ],
+   "end": 8.961,
+   "note": "고린도전서 13:4 카드로 조용히 연다. 엔딩의 13:13과 짝",
+   "folders": [],
    "lyrics": []
   },
   {
-   "id": "s01-verse-card",
-   "name": "말씀",
-   "start": 11.745,
+   "id": "s01-opening",
+   "name": "오프닝",
+   "start": 8.961,
    "end": 21.488,
-   "note": "고린도전서 13:4 카드. 엔딩의 13:13과 짝",
-   "folders": [],
+   "note": "신랑 신부 이름. 봉투에서 아기 사진 두 장이 올라와 어린 시절 앨범 자리로 그대로 이어진다",
+   "folders": [
+    "02-baby-yechan",
+    "02-baby-hyein"
+   ],
    "lyrics": []
   },
   {

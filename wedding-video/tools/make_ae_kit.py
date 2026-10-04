@@ -26,8 +26,8 @@ for line in (ROOT / "research/lyrics-timing.tsv").read_text().splitlines():
 
 # 장면: 컷은 마디 첫 박에 둔다. 가사 구간과 맞춘 이유는 STORYBOARD.md에 있다.
 SCENES = [
-    ("s00-opening", "오프닝", 0.0, bar(4), "봉투가 열리고 아기 사진 두 장이 나온다. 신랑 신부 이름이 크게"),
-    ("s01-verse-card", "말씀", bar(4), bar(7.5), "고린도전서 13:4 카드. 엔딩의 13:13과 짝"),
+    ("s00-verse-card", "말씀", 0.0, bar(3), "고린도전서 13:4 카드로 조용히 연다. 엔딩의 13:13과 짝"),
+    ("s01-opening", "오프닝", bar(3), bar(7.5), "신랑 신부 이름. 봉투에서 아기 사진 두 장이 올라와 어린 시절 앨범 자리로 그대로 이어진다"),
     ("s02-baby", "어린 시절", bar(7.5), bar(16), "분홍 앨범 양면에 두 사람의 아기 사진. 가사 1–5"),
     ("s03-meet", "만남", bar(16), bar(24), "양쪽 사진 더미가 'That you are really mine'에서 하나로. 2021. 가사 6–11"),
     ("s04-stack", "사진 더미", bar(24), bar(32), "첫 후렴. 갈색 종이 위로 두 박마다 사진이 쌓인다. 가사 12–15"),
@@ -39,7 +39,7 @@ SCENES = [
     ("s10-end", "엔딩", bar(71), DUR, "믿음 · 소망 · 사랑, 신랑 신부 이름, 날짜, 장소"),
 ]
 FOLDERS = {
-    "s00-opening": ["00-opening"],
+    "s01-opening": ["02-baby-yechan", "02-baby-hyein"],
     "s02-baby": ["02-baby-yechan", "02-baby-hyein", "handwriting"],
     "s03-meet": ["03-yechan", "03-hyein", "03-us"],
     "s04-stack": ["04-stack"],
