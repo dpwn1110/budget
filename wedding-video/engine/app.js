@@ -112,8 +112,14 @@
   async function render(a, b, onProgress) {
     if (!window.VideoEncoder) throw new Error("이 브라우저는 영상 저장을 지원하지 않습니다. 최신 크롬을 쓰세요.");
     const fps = W.FPS;
-    const vcfg = { codec: "avc1.640028", width: 1920, height: 1080, bitrate: 16e6, framerate: fps };
-    if (!(await VideoEncoder.isConfigSupported(vcfg)).supported) throw new Error("H.264 인코딩을 지원하지 않는 브라우저입니다.");
+    // H.264가 기본. 지원하지 않는 브라우저(일부 리눅스 크로미움)에서만 VP9로 대신 저장한다.
+    let vcfg = { codec: "avc1.640028", width: 1920, height: 1080, bitrate: 16e6, framerate: fps };
+    let vcodec = "avc";
+    if (!(await VideoEncoder.isConfigSupported(vcfg)).supported) {
+      vcfg = { codec: "vp09.00.40.08", width: 1920, height: 1080, bitrate: 16e6, framerate: fps };
+      vcodec = "vp9";
+      if (!(await VideoEncoder.isConfigSupported(vcfg)).supported) throw new Error("이 브라우저는 영상 인코딩을 지원하지 않습니다. 최신 크롬을 쓰세요.");
+    }
 
     let abuf = null, acfg = null, acodec = null;
     if (audioFile) {
@@ -128,7 +134,7 @@
     }
     const muxer = new Mp4Muxer.Muxer({
       target: new Mp4Muxer.ArrayBufferTarget(),
-      video: { codec: "avc", width: 1920, height: 1080, frameRate: fps },
+      video: { codec: vcodec, width: 1920, height: 1080, frameRate: fps },
       audio: abuf ? { codec: acodec, sampleRate: 48000, numberOfChannels: 2 } : undefined,
       fastStart: "in-memory",
     });
@@ -178,7 +184,7 @@
     await venc.flush();
     muxer.finalize();
     if (err) throw err;
-    return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), acodec };
+    return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), acodec, vcodec };
   }
 
   $("render").onclick = async () => {
@@ -187,7 +193,7 @@
     $("prog").hidden = false;
     const started = performance.now();
     try {
-      const { blob, acodec } = await render(a, b, (k) => {
+      const { blob, acodec, vcodec } = await render(a, b, (k) => {
         $("prog").value = k;
         const el = (performance.now() - started) / 1000;
         $("status").textContent = `저장 중 ${(k * 100).toFixed(0)}% · 남은 시간 약 ${k > 0.02 ? Math.round((el / k) * (1 - k)) : "…"}초`;
@@ -199,6 +205,7 @@
       link.click();
       $("status").textContent =
         `완료 (${(blob.size / 1e6).toFixed(1)} MB, ${Math.round((performance.now() - started) / 1000)}초).` +
+        (vcodec === "vp9" ? "\n주의: 이 브라우저가 H.264를 지원하지 않아 VP9로 저장했습니다. 식장 제출용은 윈도우나 맥의 크롬에서 다시 저장하세요." : "") +
         (acodec === "opus" ? "\n주의: 이 브라우저가 AAC를 지원하지 않아 소리를 Opus로 넣었습니다. 식장 재생기에서 소리가 안 나면 알려 주세요." : "") +
         (!audioFile ? "\n노래 파일을 고르지 않아 소리 없이 저장했습니다." : "");
     } catch (e) {
