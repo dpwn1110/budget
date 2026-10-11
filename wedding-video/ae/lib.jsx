@@ -401,54 +401,62 @@
     fadeOutScene(S, C.cream, 0.6);
   };
 
-  // 어린 시절 장면의 첫 사진 자리. 오프닝 끝에서 사진이 정확히 이 자리로 가서 컷이 이어진다.
+  // 어린 시절 장면의 사진 자리
   var BABY = [{ folder: "02-baby-yechan", x: 500, y: 470, rot: -3 }, { folder: "02-baby-hyein", x: 1420, y: 470, rot: 3 }];
   var BABY_W = 440, BABY_H = 540;
 
   BUILD["s01-opening"] = function (S) {
     var c = S.comp, end = S.dur;
     background(c, C.cream, "paper-cream");
-    // 끝 1.4초 동안 배경이 어린 시절 장면의 분홍 앨범으로 바뀐다
-    var tPink = end - 1.4;
-    var pk = [[C.pink1, W / 4], [C.pink2, W * 3 / 4]];
-    for (var q = 0; q < 2; q++) {
-      var half = solid(c, pk[q][0], "분홍 면 (다음 장면으로)", W / 2, H);
-      pos(half, pk[q][1], H / 2);
-      span(half, tPink, end);
-      keys(tr(half, "ADBE Opacity"), [[tPink, 0], [end - 0.2, 100]]);
-    }
-    // 봉투 뒤에 숨은 아기 사진 두 장: 올라왔다가, 끝에서 앨범 자리로 커지며 이동
-    var up = S.rel(barT(5));
-    for (var k = 0; k < 2; k++) {
-      var B = BABY[k], sx = 880 + k * 160;
-      var p = printPhoto(c, photo(B.folder, 0), { x: sx, y: 720, w: BABY_W, h: BABY_H, rot: k ? 6 : -7, t0: 0, t1: end });
-      keys(tr(p.paper, "ADBE Position"), [[up + k * 0.3, [sx, 720]], [up + k * 0.3 + 1.6, [sx, 540]], [end - 1.3, [sx, 540]], [end - 0.15, [B.x, B.y]]]);
-      keys(tr(p.paper, "ADBE Scale"), [[end - 1.3, [68, 68, 100]], [end - 0.15, [100, 100, 100]]]);
-      tr(p.paper, "ADBE Scale").setValueAtTime(0, [68, 68, 100]);
-      keys(tr(p.paper, "ADBE Rotate Z"), [[end - 1.3, k ? 6 : -7], [end - 0.15, B.rot]]);
-    }
-    var outT = end - 1.6;
-    var env = assetOr(c, "envelope", 960, 760, 820, 560, function () {
-      var body = rectShape(c, "봉투", 760, 470, C.kraft);
-      pos(body, 960, 790);
-      var flap = pathShape(c, "봉투 뚜껑", [[-380, -235], [380, -235], [0, 20]], true, C.kraftDark);
-      pos(flap.layer, 960, 790);
-      keys(tr(flap.layer, "ADBE Opacity"), [[outT, 100], [outT + 0.6, 0]]);
-      return body;
-    });
-    keys(tr(env, "ADBE Opacity"), [[outT, 100], [outT + 0.6, 0]]);
-    // 클라이언트 요청: 신랑 신부 이름이 또렷하게 보이는 구간
-    var lines = [
-      [T.names_en, FONT.script, 120, C.ink, 200, {}, S.rel(barT(3)) + 0.3],
-      [T.groom + "      " + T.bride, FONT.kr, 46, C.ink, 300, { tracking: 80 }, S.rel(barT(3.5))],
-      [T.years, FONT.serif, 34, C.muted, 360, { tracking: 200 }, S.rel(barT(4.5))],
-      [T.opening_sub, FONT.kr, 32, C.muted, 1030, {}, S.rel(barT(5))]
+    // 클라이언트 요청: 신랑 신부 이름이 또렷하게 보이는 구간 (되감기 전까지)
+    var tRew = S.rel(barT(5)), tLand = S.rel(barT(7));
+    var names = [
+      [T.names_en, FONT.script, 110, 150, {}, 0.4],
+      [T.groom + "      " + T.bride, FONT.kr, 44, 240, { tracking: 80 }, 0.4 + BEAT * 2]
     ];
-    for (var n = 0; n < lines.length; n++) {
-      var ln = lines[n], L = text(c, ln[0], ln[1], ln[2], ln[3], 960, ln[4], ln[5]);
-      span(L, ln[6], end);
-      keys(tr(L, "ADBE Opacity"), [[ln[6], 0], [ln[6] + 1.0, 100], [outT, 100], [outT + 0.6, 0]]);
+    for (var n = 0; n < names.length; n++) {
+      var nm = names[n], NL = text(c, nm[0], nm[1], nm[2], C.ink, 960, nm[3], nm[4]);
+      span(NL, nm[5], tRew + 0.8);
+      keys(tr(NL, "ADBE Opacity"), [[nm[5], 0], [nm[5] + 1.0, 100], [tRew - 0.2, 100], [tRew + 0.8, 0]]);
     }
+    // 달력: 결혼식 날(2026. 10. 24.)에서 시작해 태어난 해(1996)로 되감긴다
+    var cx = 960, cy = 640, pw = 620, ph = 660;
+    var stack = [[14, 16, [0.90, 0.87, 0.82]], [7, 8, [0.95, 0.93, 0.89]]];
+    for (var q = 0; q < stack.length; q++) {
+      var under = solid(c, stack[q][2], "달력 아래 장", pw, ph);
+      pos(under, cx + stack[q][0], cy + stack[q][1]);
+    }
+    var page = solid(c, C.paper, "달력 장", pw, ph); pos(page, cx, cy);
+    var band = solid(c, C.red, "달력 띠", pw, 110); pos(band, cx, cy - ph / 2 + 55);
+    for (var rg = 0; rg < 6; rg++) {
+      var ring = rectShape(c, "고리", 14, 36, [0.25, 0.22, 0.2]);
+      pos(ring, cx - 225 + rg * 90, cy - ph / 2 - 6);
+    }
+    var mon = text(c, "OCTOBER", FONT.sans, 30, C.white, cx, cy - ph / 2 + 66, { tracking: 600 });
+    keys(tr(mon, "ADBE Opacity"), [[tRew, 100], [tRew + 0.4, 0]]);
+    var day = text(c, "24  ·  SATURDAY", FONT.serif, 40, C.ink, cx, cy + 210, { tracking: 200 });
+    keys(tr(day, "ADBE Opacity"), [[tRew, 100], [tRew + 0.4, 0]]);
+    // 연도: 소스 텍스트 키프레임(홀드). 천천히 시작해 빨라졌다가 1996에서 멈춘다.
+    var yr = text(c, "2026", FONT.serif, 250, C.ink, cx, cy + 90);
+    var sp = yr.property("ADBE Text Properties").property("ADBE Text Document");
+    var td = sp.value, from = 2026, to = 1996, last = from, steps = 400;
+    for (var i = 1; i <= steps; i++) {
+      var u = i / steps;
+      var e = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      var y = from - Math.round((from - to) * e);
+      if (y !== last) {
+        td.text = String(y);
+        sp.setValueAtTime(tRew + (tLand - tRew) * u, td);
+        last = y;
+      }
+    }
+    // 장이 넘어갈 때마다 달력이 살짝 흔들리는 느낌: 되감는 동안만 약하게 위로 튄다
+    keys(tr(page, "ADBE Position"), [[tRew, [cx, cy]], [tRew + 0.3, [cx, cy - 6]], [tLand - 0.3, [cx, cy - 6]], [tLand, [cx, cy]]]);
+    // 1996에 멈추면 한 줄
+    var sub = text(c, T.opening_sub, FONT.kr, 34, C.muted, 960, 1040);
+    span(sub, tLand + 0.2, end);
+    fade(sub, tLand + 0.2, end, 0.8, 0);
+    fadeOutScene(S, C.pink1, 0.5);
   };
 
   BUILD["s02-baby"] = function (S) {
@@ -459,11 +467,12 @@
       var lft = solid(c, C.pink1, "왼쪽 면", W / 2, H); pos(lft, W / 4, H / 2);
       var rgt = solid(c, C.pink2, "오른쪽 면", W / 2, H); pos(rgt, W * 3 / 4, H / 2);
     }
-    // 왼쪽 예찬, 오른쪽 혜인. 첫 사진은 오프닝에서 이어지므로 같은 자리에 그대로 있고, 가사 4·5번에서 두 번째 사진으로
+    // 왼쪽 예찬, 오른쪽 혜인. 각자 두 장, 가사 4·5번에서 두 번째 사진으로
     var sides = [[BABY[0], 4, T.baby_left], [BABY[1], 5, T.baby_right]];
     for (var k = 0; k < 2; k++) {
       var B = sides[k][0], swap = S.rel(LY[sides[k][1]].t);
-      printPhoto(c, photo(B.folder, 0), { x: B.x, y: B.y, w: BABY_W, h: BABY_H, rot: B.rot, t0: 0, t1: swap + 0.4 });
+      var p0 = printPhoto(c, photo(B.folder, 0), { x: B.x, y: B.y, w: BABY_W, h: BABY_H, rot: B.rot, t0: 0, t1: swap + 0.4 });
+      popPrint(p0, 0.15 + k * BEAT, 0.5);
       var p1 = printPhoto(c, photo(B.folder, 1), { x: B.x + 10, y: B.y - 5, w: BABY_W, h: BABY_H, rot: -B.rot * 0.7, t0: swap, t1: S.dur });
       popPrint(p1, swap, 0.45, 1.05);
       var sd = [B.folder, B.x, B.rot, 0, sides[k][2]];

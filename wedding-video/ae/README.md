@@ -19,8 +19,8 @@
 
 | 폴더 | 장면 | 권장 장수 | 들어가는 사진 |
 |---|---|---|---|
-| `02-baby-yechan` | 오프닝, 어린 시절 | 2 | 신랑 아기 사진. 첫 장은 오프닝 봉투에서 올라와 앨범으로 이어진다 |
-| `02-baby-hyein` | 오프닝, 어린 시절 | 2 | 신부 아기 사진. 첫 장은 오프닝 봉투에서 올라와 앨범으로 이어진다 |
+| `02-baby-yechan` | 어린 시절 | 2 | 신랑 아기 사진 |
+| `02-baby-hyein` | 어린 시절 | 2 | 신부 아기 사진 |
 | `handwriting` | 어린 시절 | 최대 4 | 손글씨. **흰 글씨, 투명 배경 PNG**로 정리해서 |
 | `03-yechan` | 만남 | 5 | 만나기 전 신랑 사진 (성인 독사진이나 연애 초기 사진) |
 | `03-hyein` | 만남 | 5 | 만나기 전 신부 사진 |
@@ -31,7 +31,7 @@
 | `07-photobooth` | 포토부스 | 8–16 | 웨딩 사진 (마디마다 두 칸) |
 | `08-vows` | 약속 | 4 | 웨딩 사진, 가장 좋은 컷 |
 | `09-finale` | 피날레 | 20–28 | 전체에서 고른 사진 (박마다 한 장이 날아와 콜라주) |
-| `assets` | 소품 | — | `lace-frame.png`, `bg-sea.jpg`, `envelope.png`, `postcard.png`, `stamp-frame.png`, `paper-cream.jpg`, `paper-pink.jpg`, `paper-brown.jpg`, `border-card.png`, `doodles.png`, `tape.png` (`../ASSETS.md`) |
+| `assets` | 소품 | — | `lace-frame.png`, `bg-sea.jpg`, `postcard.png`, `stamp-frame.png`, `paper-cream.jpg`, `paper-pink.jpg`, `paper-brown.jpg`, `border-card.png`, `doodles.png`, `tape.png` (`../ASSETS.md`) |
 
 - 사진은 JPG나 PNG로. HEIC는 AE가 못 읽는다.
 - 휴대폰 사진은 회전 정보만 있고 실제로는 누워 있을 수 있다. 사진 앱에서 한 번 저장하거나 JPG로 내보내면 바로 선다.
