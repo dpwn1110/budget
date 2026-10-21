@@ -6,3 +6,6 @@
 !map/countries-50m.json
 !map/places.json
 !fonts/faces.json
+# commercial fonts (e.g. Neue Sammlung) — install locally, never commit
+*.ttf
+*.otf
