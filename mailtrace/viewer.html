@@ -120,11 +120,17 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .mapfig { margin: 0 0 56px; }
 .globe { display: block; width: 100%; touch-action: pan-y; cursor: grab; }
 .mapstage { position: relative; }
-.zoomctl { position: absolute; top: 12px; right: 0; display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); }
+.geooverlay { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.geooverlay .gnode, .geooverlay .ghit { pointer-events: auto; }
+.gedge.faint { stroke: rgba(255,255,255,.18); }
+.gnode.nolabel .glabel, .gnode.nolabel .gsub { display: none; }
+.gnode.nolabel:hover .glabel, .gnode.nolabel:hover .gsub, .gnode.nolabel:focus .glabel, .gnode.nolabel:focus .gsub { display: inline; }
+.graphwrap.geo .mapfig { margin-bottom: 0; }
+.zoomctl { position: absolute; z-index: 2; top: 12px; right: 0; display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); }
 .zoomctl button { width: 32px; height: 32px; font: 15px/1 var(--mono); color: var(--dim); }
 .zoomctl button + button { border-top: 1px solid var(--line); }
 .zoomctl button:hover { color: var(--fg); }
-.zoomhint { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); font-size: 12.5px; padding: 6px 12px;
+.zoomhint { position: absolute; z-index: 2; left: 50%; bottom: 20px; transform: translateX(-50%); font-size: 12.5px; padding: 6px 12px;
   background: rgba(0,0,0,.85); border: 1px solid var(--line); opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .zoomhint.show { opacity: 1; }
 .globe:active { cursor: grabbing; }
@@ -743,7 +749,9 @@ function niceKm(km) { const e = Math.pow(10, Math.floor(Math.log10(km))), m = km
 
 // points: [{lon, lat, kind, label, r}], routes: [{line: Float64Array, alpha}]
 // remember: 마지막으로 고른 모드(지구본/평면)를 기억할지. 목록 위 지구본은 늘 지구본으로 시작한다.
-function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember }) {
+// overlay: { mount(stageEl, invalidate), draw(P, W, H) → 계속 그려야 하면 true } — 지구본 위에 겹쳐 그리는 것
+// paused(): true를 돌려주면 자전을 멈춘다 (무언가 선택해 둔 동안 등)
+function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, overlay, paused }) {
   const G = geo();
   const canvas = h("canvas", { class: "globe", role: "img", "aria-label": ariaLabel });
   let mode = remember ? loadMode() : "globe";
@@ -754,7 +762,8 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember })
     h("button", { "aria-label": "확대", title: "확대", on: { click: () => zoomAt(2, W / 2, H / 2) } }, "+"),
     h("button", { "aria-label": "축소", title: "축소", on: { click: () => zoomAt(.5, W / 2, H / 2) } }, "−"),
     h("button", { "aria-label": "처음 보기", title: "처음 보기", on: { click: reset } }, "○"));
-  const fig = h("figure", { class: "mapfig" }, h("div", { class: "mapstage" }, canvas, zoomCtl, zoomHint),
+  const mapstage = h("div", { class: "mapstage" }, canvas, zoomCtl, zoomHint);
+  const fig = h("figure", { class: "mapfig" }, mapstage,
     h("figcaption", null, h("span", { class: "label" }, caption, hint), h("span", { class: "mapmodes" }, modeBtns)));
 
   const c = centerOf(points);
@@ -853,6 +862,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember })
     ctx.font = "11.5px " + mono; ctx.textBaseline = "middle";
     const drawn = [];
     for (const p of points) {
+      if (p.hidden) continue;
       const [x, y, k] = P.p(p.lon, p.lat);
       if (!onScreen(x, y, k)) continue;
       const r = p.r || 4.5;
@@ -872,7 +882,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember })
       return spot;
     };
     for (const p of points) {
-      if (!p.label) continue;
+      if (!p.label || p.hidden) continue;
       const [x, y, k] = P.p(p.lon, p.lat);
       if (!onScreen(x, y, k)) continue;
       const spot = placeLabel(p.label, x, y, p.r || 4.5, 15);
@@ -923,12 +933,12 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember })
       const f = Math.min(1, (t - anim.t0) / anim.dur), e = 1 - Math.pow(1 - f, 3);
       lam0 = anim.from + (anim.to - anim.from) * e; dirty = true;
       if (f >= 1) anim = null;
-    } else if (mode === "globe" && spin && !REDUCE && !dragging && !pinch && zoom < 1.05 && t > resumeAt) {
+    } else if (mode === "globe" && spin && !REDUCE && !dragging && !pinch && !hovering && !(paused && paused()) && zoom < 1.05 && t > resumeAt) {
       lam0 -= 0.035; dirty = true;   // 서쪽에서 동쪽으로 자전하는 것처럼 보이게
     }
     if (dirty) {
       dirty = false;
-      try { draw(); }
+      try { draw(); if (overlay && overlay.draw(proj(), W, H)) dirty = true; }
       catch (e) {   // 그리다 실패하면 멈추고 이유를 보여준다
         console.error(e);
         fig.replaceChildren(h("p", { class: "drawerr" }, "지도를 그리지 못했습니다: " + e.message));
@@ -981,6 +991,11 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember })
     zoomAt(Math.exp(-e.deltaY * (Math.abs(e.deltaY) < 20 ? 0.012 : 0.002)), x, y);
   }, { passive: false });
 
+  // 마우스를 올려 두면 자전을 멈춰 기호를 누르기 쉽게
+  let hovering = false;
+  mapstage.addEventListener("mouseenter", () => { hovering = true; });
+  mapstage.addEventListener("mouseleave", () => { hovering = false; resumeAt = performance.now() + 1500; });
+  if (overlay) overlay.mount(mapstage, () => { dirty = true; });
   sync();
   requestAnimationFrame(frame);
   return fig;
@@ -1170,7 +1185,6 @@ const GTYPES = [
   { type: "tracker", name: "추적 도메인", desc: "추적 픽셀이 신호를 보내는 곳 · 상위 30곳" },
 ];
 const GLIMIT = { sender: 60, tracker: 30 };
-const gstate = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null, pos: new Map() };
 
 function symbol(type, n, size) {
   // n: 노드(없으면 범례용). size: 반지름
@@ -1234,20 +1248,17 @@ function graphModel() {
   return { nodes, paths, me, top };
 }
 
-function graphView() {
-  const M = graphModel();
-  const wrap = h("div", { class: "graphwrap" });
-  const stage = h("div", { class: "graphstage" });
+// 범례·정보 창·선택은 지구본 위 관계도와 따로 보는 관계도가 함께 쓴다.
+// renderer: { rebuild(), emphasize(mailsSet|null) }
+function relCtl(M, st, renderer) {
   const legend = h("div", { class: "gbox legendbox" });
   const info = h("div", { class: "gbox infobox", hidden: true });
-  wrap.append(stage, h("div", { class: "gside" }, legend, info));
-
-  let G = null;   // 지금 그려진 것: { nodes, edges, els }
 
   function visible(n) {
-    if (!n || !gstate.show[n.type]) return false;
+    if (!n || !st.show[n.type]) return false;
     return !M.top[n.type] || M.top[n.type].has(n.id);
   }
+  // 지금 펼쳐진 종류만으로 기호와 선을 만든다
   function build() {
     const vis = new Map(), edges = new Map();
     const touch = n => vis.set(n.id, n);
@@ -1267,9 +1278,138 @@ function graphView() {
     return { nodes: [...vis.values()], edges: [...edges.values()] };
   }
 
+  const selMails = () => {
+    const sl = st.sel;
+    if (!sl) return null;
+    if (sl.kind === "mail") return new Set([sl.i]);
+    return new Set(sl.kind === "node" ? sl.n.mails : sl.e.mails);
+  };
+  function hover(mails) { renderer.emphasize(mails || selMails()); }
+  function select(sel, keepBack) {
+    if (!keepBack) st.back = sel && sel.kind === "mail" ? st.sel : null;
+    if (sel && sel.kind === "node") sel = { kind: "node", n: M.nodes.get(sel.n.id) };
+    st.sel = sel;
+    hover(null);
+    renderInfo();
+  }
+
+  function mailRow(i) {
+    const r = DATA[i], d = dateOf(r.received);
+    return h("button", { class: "imail", on: { click: () => select({ kind: "mail", i }) } },
+      h("span", { class: "mono dim" }, d ? fmtDate.format(d) : ""),
+      h("span", { class: "iname" }, (r.sender && (r.sender.name || r.sender.address)) || "(이름 없음)"),
+      h("span", { class: "isub faint" }, r.subject || "(제목 없음)"));
+  }
+
+  function renderInfo() {
+    const sl = st.sel;
+    info.hidden = !sl;
+    if (!sl) { info.replaceChildren(); return; }
+    const close = h("button", { class: "iclose", "aria-label": "닫기", on: { click: () => { st.back = null; select(null); } } }, "×");
+    if (sl.kind === "mail") {
+      const r = DATA[sl.i], s = r.sender || {}, o = originOf(r);
+      const p = M.paths[sl.i];
+      const trackers = p.trackers.map(t => t.label);
+      const steps = [
+        ["보낸 회사", p.sender.label + (s.address ? "  <" + s.address + ">" : "")],
+        ["발송 서비스", r._svc],
+        ["출발 위치", o ? place(o) + (o.kind === "datacenter" ? "  · 데이터센터 (" + (o.operator || "운영 주체 미상") + ")" : o.operator ? "  · " + o.operator : "") : "알 수 없음"],
+        ["경유 구간", (r.hops || []).length + "곳 · " + dur(r.transit_seconds)],
+        ["추적 픽셀", r._pixels + "개" + (trackers.length ? "  →  " + trackers.join(", ") : "")],
+        ["제3자 도메인", r._third + "곳"],
+      ];
+      if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(x => x.form))].join(", ") + ")"]);
+      info.replaceChildren(close,
+        st.back ? h("button", { class: "iback", on: { click: () => { const b = st.back; st.back = null; select(b, true); } } }, "← 목록") : null,
+        h("div", { class: "mono dim" }, dateOf(r.received) ? fmtFull.format(dateOf(r.received)) : ""),
+        h("h4", { class: "ititle" }, r.subject || "(제목 없음)"),
+        h("dl", { class: "ikv" }, steps.map(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
+        h("button", { class: "btn imore", on: { click: () => open(sl.i) } }, "상세 보기 →"));
+      return;
+    }
+    const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
+    const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
+    const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
+    const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
+    const ids = new Set(list);
+    info.replaceChildren(close,
+      h("div", { class: "label" }, kind),
+      h("h4", { class: "ititle" }, title),
+      h("div", { class: "mono dim" }, list.length + "통"),
+      h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
+      list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
+      h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "아래 목록에서 이 메일만 보기"));
+  }
+
+  function renderLegend() {
+    legend.replaceChildren(
+      ...GTYPES.map(t => {
+        const total = [...M.nodes.values()].filter(n => n.type === t.type).length;
+        const on = st.show[t.type];
+        return h("div", { class: "lrow" },
+          legendSym(t.type),
+          h("span", null, h("span", { class: "lname" }, t.name), h("span", { class: "ldesc faint" }, t.desc)),
+          h("span", { class: "mono dim" }, total + "곳"),
+          t.type === "me" ? h("span") : h("button", { class: "ltoggle", "aria-pressed": String(on), "aria-label": t.name + (on ? " 접기" : " 펼치기"),
+            on: { click: () => { st.show[t.type] = !on; renderLegend(); renderer.rebuild(); } } }, on ? "−" : "+"));
+      }),
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음")), h("span"), h("span")),
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"), h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")));
+  }
+  renderLegend();
+
+  // 기호·선 요소에 마우스·키보드 동작을 단다
+  function bindNode(el, n) {
+    el.addEventListener("click", () => select({ kind: "node", n }));
+    el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select({ kind: "node", n }); } });
+    el.addEventListener("mouseenter", () => hover(new Set(n.mails)));
+    el.addEventListener("mouseleave", () => hover(null));
+  }
+  function bindEdge(el, e) {
+    el.addEventListener("click", () => select({ kind: "edge", e }));
+    el.addEventListener("mouseenter", () => hover(new Set(e.mails)));
+    el.addEventListener("mouseleave", () => hover(null));
+  }
+  // 강조 표시: 주어진 메일이 지나간 것만 밝게
+  function applyEmphasis(nodeEls, edgeEls, mails) {
+    for (const { el, n } of nodeEls) el.classList.toggle("dim", !!mails && n.type !== "me" && !n.mails.some(i => mails.has(i)));
+    for (const { el, e } of edgeEls) {
+      const on = mails && e.mails.some(i => mails.has(i));
+      el.classList.toggle("dim", !!mails && !on);
+      el.classList.toggle("on", !!on);
+    }
+  }
+  const side = h("div", { class: "gside" }, legend, info);
+  return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, current: selMails, reselect: () => { if (st.sel) select(st.sel, true); } };
+}
+
+function nodeEl(n, sizeScale = 1) {
+  const g = s("g", { class: "gnode", tabindex: "0", role: "button",
+    "aria-label": GTYPES.find(t => t.type === n.type).name + " " + n.label + ", 메일 " + n.mails.length + "통" });
+  g.append(symbol(n.type, n, (n.type === "me" ? 13 : 10) * sizeScale));
+  g.append(s("text", { y: n.type === "me" ? 30 : 26, "text-anchor": "middle", class: "glabel" }, n.label));
+  g.append(s("text", { y: n.type === "me" ? 45 : 40, "text-anchor": "middle", class: "gsub" }, n.mails.length + "통"));
+  return g;
+}
+
+// ---- 따로 보는 관계도
+const gstate = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null, pos: new Map() };
+
+function graphView() {
+  const M = graphModel();
+  const stage = h("div", { class: "graphstage" });
+  let G = null;
+  const ctl = relCtl(M, gstate, {
+    rebuild: () => draw(),
+    emphasize: mails => { if (G) ctl.applyEmphasis(G.els.nodes.values(), G.els.edges.values(), mails); },
+  });
+  const wrap = h("div", { class: "graphwrap" }, stage, ctl.side);
+
   // 고정된 씨앗으로 늘 같은 배치가 나오게 한다
-  const hash = s => { let x = 2166136261; for (const c of s) x = Math.imul(x ^ c.charCodeAt(0), 16777619); return (x >>> 0) / 4294967296; };
-  const textW = s => [...s].reduce((w, c) => w + (/[ᄀ-￿]/.test(c) ? 12.5 : 7.2), 0);
+  const hash = str => { let x = 2166136261; for (const c of str) x = Math.imul(x ^ c.charCodeAt(0), 16777619); return (x >>> 0) / 4294967296; };
+  const textW = str => [...str].reduce((w, c) => w + (/[ᄀ-￿]/.test(c) ? 12.5 : 7.2), 0);
   const RING = { me: 0, city: 170, service: 320, sender: 480, tracker: 230 };
 
   function layout(nodes, edges) {
@@ -1292,7 +1432,7 @@ function graphView() {
       let a = ang.get(n.id);
       if (a == null) {
         const ns = nbr.get(n.id).filter(m => ang.has(m.id));
-        a = ns.length ? Math.atan2(ns.reduce((s, m) => s + Math.sin(ang.get(m.id)), 0), ns.reduce((s, m) => s + Math.cos(ang.get(m.id)), 0)) : hash(n.id) * 2 * Math.PI;
+        a = ns.length ? Math.atan2(ns.reduce((t, m) => t + Math.sin(ang.get(m.id)), 0), ns.reduce((t, m) => t + Math.cos(ang.get(m.id)), 0)) : hash(n.id) * 2 * Math.PI;
         a += (hash(n.id) - .5) * .5;
         ang.set(n.id, a);
       }
@@ -1329,12 +1469,12 @@ function graphView() {
   }
 
   function draw() {
-    const { nodes, edges } = build();
+    const { nodes, edges } = ctl.build();
     layout(nodes, edges);
     const pad = 40;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const n of nodes) { x0 = Math.min(x0, n.x - n.cr); x1 = Math.max(x1, n.x + n.cr); y0 = Math.min(y0, n.y - 20); y1 = Math.max(y1, n.y + 44); }
-    // 글자 크기를 지키기 위해 1:1로 그리고, 화면보다 크면 끌어서 둘러본다
+    // 화면에 맞춰 줄이되 글자가 읽히는 크기(72%) 밑으로는 줄이지 않는다. 그보다 크면 끌어서 둘러본다.
     const vw = x1 - x0 + 2 * pad, vh = y1 - y0 + 2 * pad;
     const svg = s("svg", { viewBox: `${x0 - pad} ${y0 - pad} ${vw} ${vh}`, width: vw.toFixed(0), height: vh.toFixed(0), class: "graph", role: "img",
       "aria-label": "메일 관계도: " + nodes.length + "개 기호, " + edges.length + "개 선" });
@@ -1346,30 +1486,20 @@ function graphView() {
       const line = s("line", { x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, class: "gedge" + (e.dashed ? " dash" : ""), "stroke-width": w.toFixed(2) });
       gE.append(line);
       const hit = s("line", { x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, class: "ghit" });
-      hit.addEventListener("click", () => select({ kind: "edge", e }));
-      hit.addEventListener("mouseenter", () => hover(new Set(e.mails)));
-      hit.addEventListener("mouseleave", () => hover(null));
+      ctl.bindEdge(hit, e);
       gH.append(hit);
       els.edges.set(e.id, { el: line, e });
     }
     for (const n of nodes) {
-      const g = s("g", { class: "gnode", transform: `translate(${n.x.toFixed(1)},${n.y.toFixed(1)})`, tabindex: "0", role: "button",
-        "aria-label": GTYPES.find(t => t.type === n.type).name + " " + n.label + ", 메일 " + n.mails.length + "통" });
-      g.append(symbol(n.type, n, n.type === "me" ? 13 : 10));
-      g.append(s("text", { y: n.type === "me" ? 30 : 26, "text-anchor": "middle", class: "glabel" }, n.label));
-      g.append(s("text", { y: n.type === "me" ? 45 : 40, "text-anchor": "middle", class: "gsub" }, n.mails.length + "통"));
-      g.addEventListener("click", () => select({ kind: "node", n }));
-      g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select({ kind: "node", n }); } });
-      g.addEventListener("mouseenter", () => hover(new Set(n.mails)));
-      g.addEventListener("mouseleave", () => hover(null));
+      const g = nodeEl(n);
+      g.setAttribute("transform", `translate(${n.x.toFixed(1)},${n.y.toFixed(1)})`);
+      ctl.bindNode(g, n);
       gN.append(g);
       els.nodes.set(n.id, { el: g, n });
     }
     svg.append(gE, gH, gN);
     stage.replaceChildren(svg);
-    G = { nodes, edges, els };
-    // 화면 폭에 맞춰 줄이되 글자가 읽히는 크기(72%) 밑으로는 줄이지 않는다. 그보다 크면 끌어서 둘러본다.
-    // 그리고 '나'가 가운데 오도록.
+    G = { els };
     requestAnimationFrame(() => {
       const maxH = Math.min(innerHeight * .78, 860);
       const k = Math.min(1, Math.max(.72, Math.min((stage.clientWidth - 2) / vw, (maxH - 2) / vh)));
@@ -1377,102 +1507,7 @@ function graphView() {
       stage.scrollLeft = (0 - (x0 - pad)) * k - stage.clientWidth / 2;
       stage.scrollTop = (0 - (y0 - pad)) * k - stage.clientHeight / 2;
     });
-    renderLegend();
-    if (gstate.sel) select(gstate.sel, true); else hover(null);
-  }
-
-  // 강조: 주어진 메일들이 지나간 기호·선만 밝게
-  function emphasize(mails) {
-    if (!G) return;
-    for (const { el, n } of G.els.nodes.values()) el.classList.toggle("dim", !!mails && n.type !== "me" && !n.mails.some(i => mails.has(i)));
-    for (const { el, e } of G.els.edges.values()) {
-      const on = mails && e.mails.some(i => mails.has(i));
-      el.classList.toggle("dim", !!mails && !on);
-      el.classList.toggle("on", !!on);
-    }
-  }
-  const selMails = () => {
-    const sl = gstate.sel;
-    if (!sl) return null;
-    if (sl.kind === "mail") return new Set([sl.i]);
-    return new Set(sl.kind === "node" ? sl.n.mails : sl.e.mails);
-  };
-  function hover(mails) { emphasize(mails || selMails()); }
-
-  function select(sel, keepBack) {
-    if (!keepBack) gstate.back = sel && sel.kind === "mail" ? gstate.sel : null;
-    // 다시 그린 뒤에도 같은 대상을 가리키도록 id로 다시 찾는다
-    if (sel && sel.kind === "node") sel = { kind: "node", n: M.nodes.get(sel.n.id) };
-    if (sel && sel.kind === "edge" && G) { const e = G.edges.find(x => x.id === sel.e.id); sel = e ? { kind: "edge", e } : null; }
-    gstate.sel = sel;
-    hover(null);
-    renderInfo();
-  }
-
-  function mailRow(i) {
-    const r = DATA[i], d = dateOf(r.received);
-    return h("button", { class: "imail", on: { click: () => select({ kind: "mail", i }) } },
-      h("span", { class: "mono dim" }, d ? fmtDate.format(d) : ""),
-      h("span", { class: "iname" }, (r.sender && (r.sender.name || r.sender.address)) || "(이름 없음)"),
-      h("span", { class: "isub faint" }, r.subject || "(제목 없음)"));
-  }
-
-  function renderInfo() {
-    const sl = gstate.sel;
-    info.hidden = !sl;
-    if (!sl) { info.replaceChildren(); return; }
-    const close = h("button", { class: "iclose", "aria-label": "닫기", on: { click: () => { gstate.back = null; select(null); } } }, "×");
-    if (sl.kind === "mail") {
-      const r = DATA[sl.i], s = r.sender || {}, o = originOf(r);
-      const p = M.paths[sl.i];
-      const trackers = p.trackers.map(t => t.label);
-      const steps = [
-        ["보낸 회사", p.sender.label + (s.address ? "  <" + s.address + ">" : "")],
-        ["발송 서비스", r._svc],
-        ["출발 위치", o ? place(o) + (o.kind === "datacenter" ? "  · 데이터센터 (" + (o.operator || "운영 주체 미상") + ")" : o.operator ? "  · " + o.operator : "") : "알 수 없음"],
-        ["경유 구간", (r.hops || []).length + "곳 · " + dur(r.transit_seconds)],
-        ["추적 픽셀", r._pixels + "개" + (trackers.length ? "  →  " + trackers.join(", ") : "")],
-        ["제3자 도메인", r._third + "곳"],
-      ];
-      if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(x => x.form))].join(", ") + ")"]);
-      info.replaceChildren(close,
-        gstate.back ? h("button", { class: "iback", on: { click: () => { const b = gstate.back; gstate.back = null; select(b, true); } } }, "← 목록") : null,
-        h("div", { class: "mono dim" }, dateOf(r.received) ? fmtFull.format(dateOf(r.received)) : ""),
-        h("h4", { class: "ititle" }, r.subject || "(제목 없음)"),
-        h("dl", { class: "ikv" }, steps.map(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
-        h("button", { class: "btn imore", on: { click: () => open(sl.i) } }, "상세 보기 →"));
-      return;
-    }
-    const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
-    const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
-    const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
-    const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
-    const ids = new Set(list);
-    info.replaceChildren(close,
-      h("div", { class: "label" }, kind),
-      h("h4", { class: "ititle" }, title),
-      h("div", { class: "mono dim" }, list.length + "통"),
-      h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
-      list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
-      h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "아래 목록에서 이 메일만 보기"));
-  }
-
-  function renderLegend() {
-    legend.replaceChildren(
-      ...GTYPES.map(t => {
-        const total = [...M.nodes.values()].filter(n => n.type === t.type).length;
-        const on = gstate.show[t.type];
-        return h("div", { class: "lrow" },
-          legendSym(t.type),
-          h("span", null, h("span", { class: "lname" }, t.name), h("span", { class: "ldesc faint" }, t.desc)),
-          h("span", { class: "mono dim" }, total + "곳"),
-          t.type === "me" ? h("span") : h("button", { class: "ltoggle", "aria-pressed": String(on), "aria-label": t.name + (on ? " 접기" : " 펼치기"),
-            on: { click: () => { gstate.show[t.type] = !on; draw(); } } }, on ? "−" : "+"));
-      }),
-      h("div", { class: "lrow lines" },
-        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음")), h("span"), h("span")),
-      h("div", { class: "lrow lines" },
-        h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"), h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")));
+    ctl.hover(null);
   }
 
   // 빈 곳을 끌어서 둘러보기
@@ -1490,7 +1525,163 @@ function graphView() {
   stage.addEventListener("pointerup", stop); stage.addEventListener("pointercancel", stop);
 
   draw();
+  ctl.reselect();
   return wrap;
+}
+
+// ---- 지구본 위 관계도
+// 출발 위치(▲△)는 실제 자리에 고정하고, 위치가 없는 발송 서비스·보낸 회사·추적 도메인은
+// 이어진 곳 근처에 매달려 지구본을 돌리면 따라 움직인다. 나(받은편지함)는 위치를 알 수 없어 오른쪽 아래에 둔다.
+const geoState = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null };
+
+function geoRelView() {
+  if (!WORLD) return null;
+  const M = graphModel();
+  let built = null;           // { nodes, edges, els, svg }
+  let invalidate = () => {};
+  const ctl = relCtl(M, geoState, {
+    rebuild: () => { built = null; invalidate(); },
+    emphasize: mails => { if (built) ctl.applyEmphasis(built.els.nodes.values(), built.els.edges.values(), mails); },
+  });
+  const svg = s("svg", { class: "geooverlay" });
+  const textW = str => [...str].reduce((w, c) => w + (/[ᄀ-￿]/.test(c) ? 12.5 : 7.2), 0);
+
+  function rebuild() {
+    const { nodes, edges } = ctl.build();
+    const maxE = Math.max(1, ...edges.map(e => e.mails.length));
+    const gE = s("g"), gH = s("g"), gN = s("g");
+    const els = { nodes: new Map(), edges: new Map() };
+    for (const e of edges) {
+      // 출발 위치 → 나 선은 많아서 옅게
+      const toMe = e.b.type === "me" && !e.dashed;
+      const w = .75 + 2 * Math.sqrt(e.mails.length / maxE);
+      const line = s("line", { class: "gedge" + (e.dashed ? " dash" : "") + (toMe ? " faint" : ""), "stroke-width": w.toFixed(2) });
+      const hit = s("line", { class: "ghit" });
+      ctl.bindEdge(hit, e);
+      gE.append(line); gH.append(hit);
+      els.edges.set(e.id, { el: line, hit, e });
+    }
+    for (const n of nodes) {
+      const g = nodeEl(n, .9);
+      ctl.bindNode(g, n);
+      gN.append(g);
+      n.cr = Math.max(22, textW(n.label) / 2 + 4);
+      els.nodes.set(n.id, { el: g, n });
+    }
+    svg.replaceChildren(gE, gH, gN);
+    built = { nodes, edges, els, pos: new Map() };
+    ctl.hover(null);
+  }
+
+  // 매 프레임: 고정점(출발 위치·나)을 투영하고, 나머지는 몇 번씩 힘을 주어 따라오게 한다
+  function overlayDraw(P, W, H) {
+    if (!built) rebuild();
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    const pos = built.pos, nodes = built.nodes, byId = new Map(nodes.map(n => [n.id, n]));
+    // 나(받은편지함)는 위치를 모르므로 지구본 옆 빈 곳에 (넓으면 오른쪽 가운데, 좁으면 오른쪽 아래)
+    const me = W - H > 220 ? [W - (W - H) / 4, H / 2] : [W - 70, H - 64];
+    const shown = new Set();
+    for (const n of nodes) {
+      if (n.type === "me") { pos.set(n.id, me.slice()); shown.add(n.id); continue; }
+      if (n.type !== "city") continue;
+      const g = cityAt.get(n.id);
+      if (!g) continue;
+      const [x, y, k] = P.p(g.lon, g.lat);
+      if (P.kind === "globe" && k <= 0) continue;
+      pos.set(n.id, [x, y]); shown.add(n.id);
+    }
+    // 매달린 기호: 이어진 고정점이 하나라도 보이면 보인다
+    const nbr = new Map(nodes.map(n => [n.id, []]));
+    for (const e of built.edges) { nbr.get(e.a.id).push(e.b.id); nbr.get(e.b.id).push(e.a.id); }
+    const free = nodes.filter(n => n.type !== "me" && n.type !== "city");
+    for (let pass = 0; pass < 2; pass++) for (const n of free) {
+      if (shown.has(n.id)) continue;
+      const anchors = nbr.get(n.id).filter(id => shown.has(id) && (n.type === "tracker" || byId.get(id).type !== "me"));
+      if (!anchors.length) continue;
+      shown.add(n.id);
+      if (!pos.has(n.id) && n.type === "tracker") {
+        // 추적 도메인은 나를 중심으로 부채꼴로 펼쳐 놓고 시작
+        const trk = free.filter(m => m.type === "tracker"), k = trk.indexOf(n), cnt = trk.length;
+        const a = Math.PI * (.5 + (k + .5) / cnt);
+        pos.set(n.id, [me[0] + Math.cos(a) * (90 + 40 * (k % 3)), me[1] + Math.sin(a) * (90 + 40 * (k % 3))]);
+      }
+      if (!pos.has(n.id)) {
+        // 처음 자리: 이웃의 평균에서 지구본 바깥쪽으로 조금
+        const ax = anchors.reduce((t, id) => t + pos.get(id)[0], 0) / anchors.length;
+        const ay = anchors.reduce((t, id) => t + pos.get(id)[1], 0) / anchors.length;
+        const cx = W / 2, cy = H / 2, dx = ax - cx, dy = ay - cy, d = Math.hypot(dx, dy) || 1;
+        const h0 = (n.id.length * 37 % 100) / 100 - .5;
+        pos.set(n.id, [ax + dx / d * 70 + h0 * 30, ay + dy / d * 70 + h0 * 30]);
+      }
+    }
+    let moved = 0;
+    const live = nodes.filter(n => shown.has(n.id));
+    for (let it = 0; it < 6; it++) {
+      const f = new Map(live.map(n => [n.id, [0, 0]]));
+      for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
+        const a = live[i], b = live[j], pa = pos.get(a.id), pb = pos.get(b.id);
+        let dx = pb[0] - pa[0], dy = pb[1] - pa[1], d = Math.hypot(dx, dy) || .01;
+        const min = (a.cr + b.cr) * .85;
+        if (d >= min) continue;
+        const push = (min - d) / d * .5;
+        f.get(a.id)[0] -= dx * push; f.get(a.id)[1] -= dy * push;
+        f.get(b.id)[0] += dx * push; f.get(b.id)[1] += dy * push;
+      }
+      for (const e of built.edges) {
+        if (!shown.has(e.a.id) || !shown.has(e.b.id)) continue;
+        if (e.b.type === "me" && !e.dashed) continue;   // 출발 위치 → 나 선은 당기지 않는다
+        const pa = pos.get(e.a.id), pb = pos.get(e.b.id);
+        const dx = pb[0] - pa[0], dy = pb[1] - pa[1], d = Math.hypot(dx, dy) || .01;
+        const k = (d - (e.dashed ? 90 : 70)) / d * .12;
+        f.get(e.a.id)[0] += dx * k; f.get(e.a.id)[1] += dy * k;
+        f.get(e.b.id)[0] -= dx * k; f.get(e.b.id)[1] -= dy * k;
+      }
+      for (const n of live) {
+        if (n.type === "me" || n.type === "city") continue;
+        const p = pos.get(n.id), [fx, fy] = f.get(n.id);
+        p[0] = Math.max(16, Math.min(W - 16, p[0] + fx)); p[1] = Math.max(16, Math.min(H - 30, p[1] + fy));
+        moved = Math.max(moved, Math.abs(fx) + Math.abs(fy));
+      }
+    }
+    // 라벨이 겹치면 메일이 많은 쪽만 남긴다 (나 → 출발 위치 → 발송 서비스 → 보낸 회사 → 추적 도메인 순)
+    const ORDER = { me: 0, city: 1, service: 2, sender: 3, tracker: 4 };
+    const boxes = [];
+    const ranked = [...built.els.nodes.values()].filter(({ n }) => shown.has(n.id))
+      .sort((a, b) => ORDER[a.n.type] - ORDER[b.n.type] || b.n.mails.length - a.n.mails.length);
+    for (const { el, n } of built.els.nodes.values()) if (!shown.has(n.id)) el.style.display = "none";
+    for (const { el, n } of ranked) {
+      const p = pos.get(n.id);
+      el.style.display = "";
+      el.setAttribute("transform", `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`);
+      const w = n.cr * 2 - 8, box = [p[0] - w / 2, p[1] + 12, p[0] + w / 2, p[1] + 46];
+      const hit = boxes.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]);
+      el.classList.toggle("nolabel", hit);
+      if (!hit) boxes.push(box);
+    }
+    for (const { el, hit, e } of built.els.edges.values()) {
+      const on = shown.has(e.a.id) && shown.has(e.b.id);
+      el.style.display = hit.style.display = on ? "" : "none";
+      if (!on) continue;
+      const a = pos.get(e.a.id), b = pos.get(e.b.id);
+      for (const l of [el, hit]) { l.setAttribute("x1", a[0]); l.setAttribute("y1", a[1]); l.setAttribute("x2", b[0]); l.setAttribute("y2", b[1]); }
+    }
+    return moved > .3;   // 아직 자리를 잡는 중이면 다음 프레임도 그린다
+  }
+
+  // 출발 위치 기호의 경도·위도
+  const cityAt = new Map();
+  for (const p of M.paths) if (p.city && !cityAt.has(p.city.id)) { const o = originOf(DATA[p.i]); if (o && o.lat != null) cityAt.set(p.city.id, o); }
+  const pts = [...cityAt.entries()].map(([id, o]) => ({ lat: o.lat, lon: o.lon, weight: M.nodes.get(id).mails.length }));
+  if (!pts.length) return null;
+  const fig = worldView({
+    points: pts.map(p => Object.assign({}, p, { hidden: true })), routes: [], spin: true, maxH: 680,
+    ariaLabel: "지구본 위 관계도", remember: false, paused: () => !!geoState.sel,
+    caption: "출발 위치는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다",
+    overlay: { mount: (stage, inv) => { stage.append(svg); invalidate = inv; }, draw: overlayDraw },
+  });
+  ctl.reselect();
+  return h("div", { class: "graphwrap geo" }, fig, ctl.side);
 }
 
 // 목록 위: 지구본 / 관계도
@@ -1505,7 +1696,7 @@ function overviewTabs() {
     cur = k;
     try { localStorage.setItem("mailtrace.overview", k); } catch {}
     btns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === k)));
-    body.replaceChildren((k === "graph" ? graphView() : overviewView()) || "");
+    body.replaceChildren((k === "graph" ? graphView() : geoRelView()) || "");
   }
   show(cur);
   return box;
