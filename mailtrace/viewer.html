@@ -34,13 +34,88 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .faint { color: var(--faint); }
 .label { font-size: 11px; letter-spacing: .08em; color: var(--dim); }
 
-header.top { padding: 28px 0 18px; border-bottom: 1px solid var(--line); }
-.brand { display: flex; justify-content: flex-end; }
+/* 메뉴: 화면 왼쪽 위에 떠 있는 칸 */
+header.top { position: fixed; z-index: 20; top: 16px; left: 16px; padding: 0; border: 0; }
+.brand { display: flex; }
+main { padding-top: 76px; }
+body.globe-mode { overflow: hidden; }
+body.globe-mode footer { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-#nav { display: flex; gap: 28px; }
-#nav a { color: var(--dim); text-decoration: none; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid transparent; }
+#nav { display: flex; border: 1px solid var(--line); background: var(--bg); }
+#nav a { color: var(--dim); text-decoration: none; font: 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; padding: 9px 14px; }
+#nav a + a { border-left: 1px solid var(--line); }
 #nav a:hover { color: var(--fg); }
-#nav a[aria-current] { color: var(--fg); border-bottom-color: var(--fg); }
+#nav a[aria-current] { color: var(--bg); background: var(--fg); }
+
+/* ---- 첫 화면: 화면을 가득 채운 지구본 + 계기판 */
+#page-globe { position: fixed; inset: 0; z-index: 1; }
+#page-globe #overview, #page-globe .mapfig { height: 100%; margin: 0; padding: 0; }
+#page-globe .mapstage { height: 100vh; overflow: hidden; }
+#page-globe figcaption { display: none; }
+.hud { position: absolute; z-index: 3; font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
+.hud .rk { color: var(--dim); font-size: 10.5px; letter-spacing: .1em; }
+.hero { left: 16px; top: 72px; border: 1px solid var(--fg); background: var(--bg); min-width: 200px; }
+.hnum { font: 200 54px/1 var(--mono); padding: 14px 20px 12px; letter-spacing: -.02em; }
+.hcap { border-top: 1px solid var(--fg); padding: 8px 20px; font-size: 12px; font-style: italic; text-transform: none; letter-spacing: .02em; }
+.readout { right: 72px; top: 72px; text-align: right; font-size: 13px; line-height: 1.55; max-width: 220px; }
+.readout .rh { font-weight: 600; letter-spacing: .08em; }
+.readout .rv2 { color: var(--fg); }
+.readout .rit { font-style: italic; text-transform: none; color: var(--dim); font-size: 11.5px; line-height: 1.45; }
+.rsep, .infocard .rsep { border-top: 1px dashed var(--line); margin: 10px 0; }
+.rail { position: absolute; z-index: 3; left: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; }
+.rbtn { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 14px var(--mono); }
+.rbtn:hover { border-color: var(--fg); }
+.rbtn[aria-pressed="false"] { opacity: .35; }
+.rbtn .rtip { position: absolute; left: 50px; white-space: nowrap; font: 11px var(--mono); letter-spacing: .06em; background: var(--bg); border: 1px solid var(--line); padding: 4px 8px; opacity: 0; pointer-events: none; transition: opacity .12s; }
+.rbtn:hover .rtip, .rbtn:focus-visible .rtip { opacity: 1; }
+.rbtn.info { margin-top: 10px; }
+.infocard { left: 68px; top: 50%; transform: translateY(-50%); width: 280px; border: 1px solid var(--line); background: var(--bg); padding: 12px 16px; text-transform: none; font-size: 12px; line-height: 1.55; }
+.infocard p { margin: 0 0 8px; font-family: var(--sans); }
+.infocard .rh { font-weight: 600; letter-spacing: .08em; margin-bottom: 8px; }
+.lgl { display: flex; align-items: center; gap: 10px; font-family: var(--sans); padding: 3px 0; }
+.tline { top: 16px; left: 340px; right: 16px; height: 38px; display: flex; align-items: stretch; border: 1px solid var(--line); background: var(--bg); }
+.tplay { width: 40px; border-right: 1px solid var(--line); color: var(--fg); font-size: 11px; }
+.ticks { position: relative; flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 14px; cursor: ew-resize; touch-action: none; }
+.ticks i { width: 1px; height: 8px; background: rgba(255,255,255,.35); }
+.ticks i.major { height: 14px; background: rgba(255,255,255,.7); }
+.tmark { position: absolute; top: 4px; bottom: 4px; width: 2px; margin-left: 13px; background: var(--fg); pointer-events: none; }
+.tlabel { display: flex; align-items: center; justify-content: flex-end; min-width: 9.5em; padding: 0 14px; border-left: 1px solid var(--line); font-size: 12px; white-space: nowrap; }   /* 폭을 고정해 눈금이 밀리지 않게 */
+.bbar { position: absolute; z-index: 3; left: 16px; bottom: 16px; right: 200px; display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.stats { position: static; display: flex; border: 1px solid var(--line); background: var(--bg); }
+.stats .rd { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 16px; }
+.stats .rd + .rd { border-left: 1px dashed var(--line); }
+.stats .rv { font-size: 17px; font-weight: 300; }
+.search { position: static; display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); background: var(--bg); padding-left: 14px; flex: 1; min-width: 240px; max-width: 460px; }
+.sinput { flex: 1; width: 100%; min-width: 0; -webkit-appearance: none; appearance: none; background: none; border: 0; border-radius: 0;
+  color: var(--fg); font: 13px var(--mono); padding: 12px 0; outline: none; }
+.sinput::-webkit-search-cancel-button { display: none; }
+.sinput::placeholder { color: var(--faint); text-transform: none; }
+.sgo { align-self: stretch; padding: 0 18px; background: var(--fg); color: var(--bg); font: 600 12px var(--mono); letter-spacing: .1em; }
+.circles { position: absolute; z-index: 3; right: 16px; bottom: 16px; display: flex; gap: 10px; }
+.circ { width: 92px; height: 92px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px var(--mono); letter-spacing: .1em; }
+.circ:hover { border-color: var(--fg); }
+.circ.inv { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+#page-globe .zoomctl { bottom: auto; top: 50%; right: 16px; transform: translateY(-50%); }
+@media (max-width: 760px) {
+  .tline { left: 16px; top: 62px; }
+  .hero { top: 112px; min-width: 0; }
+  .hnum { font-size: 34px; padding: 10px 14px 8px; }
+  .hcap { padding: 6px 14px; font-size: 11px; }
+  .readout { display: none; }
+  .rail { top: 236px; transform: none; gap: 6px; }
+  .rbtn { width: 36px; height: 36px; }
+  .infocard { left: 16px; right: 16px; width: auto; top: auto; bottom: 150px; transform: none; }
+  .bbar { right: 16px; bottom: 112px; }
+  .stats { width: 100%; flex-wrap: nowrap; }
+  .stats .rd { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
+  .stats .rk { font-size: 9px; letter-spacing: .06em; white-space: nowrap; }
+  .stats .rv { font-size: 15px; }
+  .search { max-width: none; min-width: 0; width: 100%; }
+  .circles { right: 16px; left: 16px; bottom: 16px; justify-content: flex-end; }
+  .circ { width: 76px; height: 76px; border-radius: 0; height: 44px; width: auto; padding: 0 18px; }
+  #page-globe .zoomctl { top: 236px; transform: none; }
+  .infocard { top: 236px; bottom: auto; left: 60px; right: 16px; }
+}
 #page-analysis .stats { padding: 40px 0 8px; }
 .graphsec { padding: 56px 0 24px; border-top: 1px solid var(--line); }
 .graphsec .fnote { margin-bottom: 24px; }
@@ -266,7 +341,6 @@ footer p { margin: 0 0 8px; }
   .twocol { grid-template-columns: 1fr; }
   .kv { grid-template-columns: 1fr; gap: 2px; }
   .kv > div:nth-child(even) { margin-bottom: 10px; }
-  header.top { padding-top: 48px; }
 }
 </style>
 </head>
@@ -588,6 +662,7 @@ function route() {
   const hs = location.hash, m = /^#m(\d+)$/.exec(hs);
   const page = m ? null : hs === "#/analysis" ? "analysis" : hs === "#/archive" ? "archive" : "globe";
   for (const k of ["globe", "analysis", "archive"]) document.getElementById("page-" + k).hidden = page !== k;
+  document.body.classList.toggle("globe-mode", page === "globe");
   for (const a of document.querySelectorAll("#nav a")) a.toggleAttribute("aria-current", a.dataset.page === page);
   const det = document.getElementById("detail");
   if (m && DATA[+m[1]]) {
@@ -799,7 +874,9 @@ function niceKm(km) { const e = Math.pow(10, Math.floor(Math.log10(km))), m = km
 // points: [{lon, lat, kind, label, r}], routes: [{line: Float64Array, alpha}]
 // remember: 마지막으로 고른 모드(지구본/평면)를 기억할지. 목록 위 지구본은 늘 지구본으로 시작한다.
 // overlay: { mount(stageEl, invalidate), draw(P, W, H) → 계속 그려야 하면 true } — 지구본 위에 겹쳐 그리는 것
-function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, overlay }) {
+// hud: { cross: {lat, lon} } — 계기판 느낌의 점선 고리·방위 눈금·조준선
+// fill: 지구본 모드에서 캔버스를 maxH 높이로 꽉 채운다 (지구본은 가운데)
+function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, overlay, hud, fill }) {
   const G = geo();
   const canvas = h("canvas", { class: "globe", role: "img", "aria-label": ariaLabel });
   let mode = remember ? loadMode() : "globe";
@@ -833,7 +910,8 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   }
   function size() {
     const w = fig.clientWidth || 600;
-    const hh = mode === "globe" ? Math.min(w, maxH) : Math.round(w * G.aspect);
+    const mh = typeof maxH === "function" ? maxH() : maxH;
+    const hh = mode === "globe" ? (fill ? mh : Math.min(w, mh)) : Math.round(w * G.aspect);
     if (w === W && hh === H && !dirty) return;
     W = w; H = hh;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -894,6 +972,31 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     if (P.kind === "globe") {
       ctx.lineWidth = .75; ctx.strokeStyle = "rgba(255,255,255,.5)";
       ctx.beginPath(); ctx.arc(P.cx, P.cy, P.R, 0, 2 * Math.PI); ctx.stroke();
+      if (hud && zoom < 1.4) {
+        // 거리 고리: 점선 하나, 점 하나, 그리고 10° 방위 눈금
+        const r1 = P.R * 1.06, r2 = P.R * 1.14;
+        ctx.setLineDash([6, 7]); ctx.strokeStyle = "rgba(255,255,255,.35)";
+        ctx.beginPath(); ctx.arc(P.cx, P.cy, r1, 0, 2 * Math.PI); ctx.stroke();
+        ctx.setLineDash([1, 5]); ctx.strokeStyle = "rgba(255,255,255,.4)";
+        ctx.beginPath(); ctx.arc(P.cx, P.cy, r2, -Math.PI * .85, Math.PI * .15); ctx.stroke();
+        ctx.setLineDash([]); ctx.strokeStyle = "rgba(255,255,255,.4)";
+        ctx.font = "10px " + mono; ctx.fillStyle = "rgba(255,255,255,.45)"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        for (let a = 0; a < 360; a += 10) {
+          const t = (a - 90) * RAD, c = Math.cos(t), sn = Math.sin(t), len = a % 30 ? 4 : 9;
+          ctx.beginPath(); ctx.moveTo(P.cx + c * r1, P.cy + sn * r1); ctx.lineTo(P.cx + c * (r1 + len), P.cy + sn * (r1 + len)); ctx.stroke();
+          if (!(a % 30)) ctx.fillText(String(a).padStart(3, "0"), P.cx + c * (r1 + 20), P.cy + sn * (r1 + 20));
+        }
+        ctx.textAlign = "start";
+      }
+      if (hud && hud.cross) {
+        const [x, y, k] = P.p(hud.cross.lon, hud.cross.lat);
+        if (k > 0) {
+          ctx.strokeStyle = "rgba(255,255,255,.75)"; ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { ctx.moveTo(x + dx * 9, y + dy * 9); ctx.lineTo(x + dx * 30, y + dy * 30); }
+          ctx.stroke();
+        }
+      }
     }
 
     for (const r of routes) {
@@ -1046,6 +1149,8 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   if (overlay) overlay.mount(mapstage, () => { dirty = true; });
   sync();
   requestAnimationFrame(frame);
+  // 바깥(첫 화면의 버튼들)에서 쓰는 조작
+  fig.api = { mode: () => mode, setMode: m => { mode = m; sync(); }, zoom: f => zoomAt(f, W / 2, H / 2), reset };
   return fig;
 }
 
@@ -1279,9 +1384,11 @@ function relCtl(M, st, renderer, popupIn) {
     return !M.top[n.type] || M.top[n.type].has(n.id);
   }
   // 지금 펼쳐진 종류만으로 기호와 선을 만든다
+  const inTime = i => st.until == null || DATA[i]._t <= st.until;
   function build() {
     const vis = new Map(), edges = new Map();
-    const touch = n => vis.set(n.id, n);
+    for (const n of M.nodes.values()) n.count = 0;
+    const touch = n => { vis.set(n.id, n); };
     touch(M.me);
     const link = (a, b, i, dashed) => {
       const k = a.id + ">" + b.id;
@@ -1289,20 +1396,22 @@ function relCtl(M, st, renderer, popupIn) {
       edges.get(k).mails.push(i);
     };
     for (const p of M.paths) {
+      if (!inTime(p.i)) continue;
       const seq = [p.sender, p.svc, p.city].filter(visible);
       seq.push(M.me);
-      seq.forEach(touch);
+      seq.forEach(n => { touch(n); n.count++; });
       for (let k = 1; k < seq.length; k++) link(seq[k - 1], seq[k], p.i, false);
-      for (const t of p.trackers) if (visible(t)) { touch(t); link(M.me, t, p.i, true); }
+      for (const t of p.trackers) if (visible(t)) { touch(t); t.count++; link(M.me, t, p.i, true); }
     }
     return { nodes: [...vis.values()], edges: [...edges.values()] };
   }
 
+  const listOf = sl => (sl.kind === "node" ? sl.n.mails : sl.kind === "edge" ? sl.e.mails : sl.mails).filter(inTime);
   const selMails = () => {
     const sl = st.sel;
     if (!sl) return null;
     if (sl.kind === "mail") return new Set([sl.i]);
-    return new Set(sl.kind === "node" ? sl.n.mails : sl.e.mails);
+    return new Set(listOf(sl));
   };
   function hover(mails) { renderer.emphasize(mails || selMails()); }
   function select(sel, keepBack) {
@@ -1322,6 +1431,7 @@ function relCtl(M, st, renderer, popupIn) {
       h("span", { class: "isub faint" }, r.subject || "(제목 없음)"));
   }
 
+  const fill = (...kids) => info.replaceChildren(...kids.filter(k => k != null && k !== false));
   function renderInfo() {
     const sl = st.sel;
     info.hidden = !sl;
@@ -1340,23 +1450,24 @@ function relCtl(M, st, renderer, popupIn) {
         ["제3자 도메인", r._third + "곳"],
       ];
       if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(q => q.form))].join(", ") + ")"]);
-      info.replaceChildren(x,
+      fill(x,
         st.back ? h("button", { class: "iback", on: { click: () => { const b = st.back; st.back = null; select(b, true); } } }, "← 목록") : null,
         h("div", { class: "mono dim" }, dateOf(r.received) ? fmtFull.format(dateOf(r.received)) : ""),
         h("h4", { class: "ititle" }, r.subject || "(제목 없음)"),
         h("dl", { class: "ikv" }, steps.map(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
         h("button", { class: "btn imore", on: { click: () => open(sl.i) } }, "상세 보기 →"));
     } else {
-      const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
-      const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
-      const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
+      const mails = listOf(sl);
+      const title = sl.kind === "node" ? sl.n.label : sl.kind === "search" ? "‘" + sl.q + "’" : sl.e.a.label + "  →  " + sl.e.b.label;
+      const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.kind === "search" ? "검색"
+        : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
       const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
       const ids = new Set(list);
-      info.replaceChildren(x,
+      fill(x,
         h("div", { class: "label" }, kind),
         h("h4", { class: "ititle" }, title),
         h("div", { class: "mono dim" }, list.length + "통"),
-        h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
+        list.length ? h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)) : h("p", { class: "dim", style: "font-size:13px" }, "맞는 메일이 없습니다."),
         list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
         h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "Archive에서 이 메일만 보기"));
     }
@@ -1437,7 +1548,7 @@ function relCtl(M, st, renderer, popupIn) {
     }
   }
   const side = popupIn ? null : h("div", { class: "gside" }, legend, info);
-  return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, legend, legendBtn, info,
+  return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, legend, legendBtn, info, inTime,
            reselect: () => { if (st.sel) select(st.sel, true); } };
 }
 
@@ -1446,7 +1557,7 @@ function nodeEl(n, sizeScale = 1) {
     "aria-label": GTYPES.find(t => t.type === n.type).name + " " + n.label + ", 메일 " + n.mails.length + "통" });
   g.append(symbol(n.type, n, (n.type === "me" ? 13 : 10) * sizeScale));
   g.append(s("text", { y: n.type === "me" ? 30 : 26, "text-anchor": "middle", class: "glabel" }, n.label));
-  g.append(s("text", { y: n.type === "me" ? 45 : 40, "text-anchor": "middle", class: "gsub" }, n.mails.length + "통"));
+  g.append(s("text", { y: n.type === "me" ? 45 : 40, "text-anchor": "middle", class: "gsub" }, (n.count ?? n.mails.length) + "통"));
   return g;
 }
 
@@ -1752,14 +1863,138 @@ function geoRelView() {
   const pts = [...cityAt.entries()].map(([id, o]) => ({ lat: o.lat, lon: o.lon, weight: M.nodes.get(id).mails.length, hidden: true }));
   if (!pts.length) return null;
   pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, DATA.length / 3), hidden: true });
-  const fig = worldView({
-    // 지구본이 한 화면(머리말 아래)에 들어오게
-    points: pts, routes: [], spin: true,
-    maxH: Math.round(Math.max(420, Math.min(900, innerHeight - (document.querySelector("header.top") || { offsetHeight: 200 }).offsetHeight - 80))),
-    ariaLabel: "지구본 위 관계도", remember: false,
-    caption: "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리 · 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다",
-    overlay: { mount: (stage, inv) => { stage.append(svg, ctl.legendBtn, ctl.legend, ctl.info); invalidate = inv; host.el = stage; }, draw: overlayDraw },
+
+  // ---- 첫 화면 계기판: 위 타임라인, 왼쪽 기호 버튼, 아래 숫자·검색, 오른쪽 아래 큰 버튼, 왼쪽 위 큰 숫자, 오른쪽 판독 칸
+  const DAY = 864e5;
+  const times = DATA.map(r => r._t).filter(Boolean);
+  const tMin = Math.min(...times), tMax = Math.max(...times);
+  const d0 = new Date(tMin); d0.setHours(0, 0, 0, 0);
+  const days = Math.max(1, Math.ceil((tMax - d0.getTime()) / DAY));
+  const dayEnd = k => Math.min(tMax, d0.getTime() + (k + 1) * DAY - 1);
+  const fmtMD = new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit" });
+  const dms = (v, pos, neg) => { const a = Math.abs(v), d = Math.floor(a), m = (a - d) * 60; return (v >= 0 ? pos : neg) + " " + d + "°" + m.toFixed(2).padStart(5, "0"); };
+
+  const visibleMails = () => DATA.filter(r => ctl.inTime(r._i));
+  const read = (k, v) => h("div", { class: "rd" }, h("span", { class: "rk" }, k), h("span", { class: "rv" }, v));
+
+  // 큰 숫자 상자 (왼쪽 위)
+  const heroNum = h("div", { class: "hnum" }), heroCap = h("div", { class: "hcap" });
+  const heroBox = h("div", { class: "hud hero" }, heroNum, heroCap);
+
+  // 오른쪽 판독 칸
+  const readout = h("div", { class: "hud readout" });
+
+  // 아래 숫자 칸
+  const statsBox = h("div", { class: "hud stats" });
+
+  function refreshNumbers() {
+    const vm = visibleMails();
+    const dc = vm.filter(r => r.route && r.route.via_datacenter).length;
+    const pix = vm.reduce((a, r) => a + r._pixels, 0);
+    const third = new Set(vm.flatMap(r => (r.domains && r.domains.third_party) || [])).size;
+    heroNum.textContent = vm.length ? (dc / vm.length).toFixed(2) : "0.00";
+    heroCap.textContent = "via data centre · " + dc + " / " + vm.length;
+    statsBox.replaceChildren(
+      read("MAIL", vm.length), read("PIXEL", pix), read("VIA DC", dc), read("3RD PARTY", third));
+    const until = geoState.until == null ? tMax : geoState.until;
+    readout.replaceChildren(
+      h("div", { class: "rh" }, "[나 · " + ME_PLACE.name.toUpperCase() + "]"),
+      h("div", { class: "rv2" }, dms(ME_PLACE.lat, "N", "S")),
+      h("div", { class: "rv2" }, dms(ME_PLACE.lon, "E", "W")),
+      h("div", { class: "rsep" }),
+      h("div", { class: "rh" }, "UNTIL"),
+      h("div", { class: "rv2" }, fmtMD.format(until).replace(/\s/g, "").replace(/\.$/, "")),
+      h("div", { class: "rsep" }),
+      h("div", { class: "rh" }, "CENTRE FIX"),
+      h("div", { class: "rv2 rit" }, "메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열림"));
+  }
+
+  // 왼쪽 기호 버튼
+  const railBtns = GTYPES.map(t => h("button", {
+    class: "rbtn", "data-type": t.type, title: t.name + " — " + t.desc,
+    "aria-label": t.name + (t.type === "me" ? "" : " 보이기"),
+    on: { click: () => { if (t.type === "me") return; geoState.show[t.type] = !geoState.show[t.type]; syncRail(); built = null; invalidate(); } },
+  }, legendSym(t.type), h("span", { class: "rtip" }, t.name)));
+  const infoCard = h("div", { class: "hud infocard", hidden: true },
+    h("div", { class: "rh" }, "[LEGEND]"),
+    h("div", { class: "lgl" }, h("span", { class: "lline" }), "메일이 온 길 · 굵을수록 많음"),
+    h("div", { class: "lgl" }, h("span", { class: "lline dash" }), "열면 신호가 가는 길 · 나 → 추적 도메인"),
+    h("div", { class: "rsep" }),
+    h("p", null, "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다. 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다."),
+    h("p", null, "끌어서 돌리기 · " + (IS_MAC ? "⌘" : "Ctrl") + " + 스크롤, 두 손가락, 더블클릭으로 확대 · 기호나 선을 누르면 메일 목록."),
+    h("p", { class: "faint" }, "이 페이지는 메일 속 어떤 것도 불러오지 않습니다. 위치: IP Geolocation by DB-IP (CC BY 4.0) · 지도: Natural Earth."));
+  const infoBtn = h("button", { class: "rbtn info", "aria-label": "설명", "aria-expanded": "false",
+    on: { click: () => { infoCard.hidden = !infoCard.hidden; infoBtn.setAttribute("aria-expanded", String(!infoCard.hidden)); } } }, "?");
+  const rail = h("div", { class: "rail" }, railBtns, infoBtn);
+  function syncRail() { railBtns.forEach(b => b.setAttribute("aria-pressed", String(geoState.show[b.dataset.type]))); }
+
+  // 위 타임라인
+  const marker = h("div", { class: "tmark" }), tlabel = h("span", { class: "tlabel mono" });
+  const ticks = h("div", { class: "ticks" }, Array.from({ length: days + 1 }, (_, k) => h("i", { class: k % 7 === 0 ? "major" : "" })), marker);
+  const playBtn = h("button", { class: "tplay", "aria-label": "재생" }, "▶");
+  const tline = h("div", { class: "hud tline" }, playBtn, ticks, tlabel);
+  let timer = 0;
+  function setUntil(t) {
+    geoState.until = t == null || t >= tMax ? null : t;
+    const f = ((geoState.until == null ? tMax : geoState.until) - d0.getTime()) / (tMax - d0.getTime() || 1);
+    marker.style.left = (Math.max(0, Math.min(1, f)) * 100).toFixed(2) + "%";
+    tlabel.textContent = (geoState.until == null ? "ALL · " : "~" + fmtMD.format(geoState.until).replace(/\s/g, "").replace(/\.$/, "") + " · ") + visibleMails().length;
+    built = null; invalidate(); refreshNumbers();
+    if (geoState.sel) ctl.reselect();
+  }
+  function stop() { clearInterval(timer); timer = 0; playBtn.textContent = "▶"; playBtn.setAttribute("aria-label", "재생"); }
+  playBtn.addEventListener("click", () => {
+    if (timer) return stop();
+    let k = geoState.until == null ? 0 : Math.floor((geoState.until - d0.getTime()) / DAY) + 1;
+    if (k > days) k = 0;
+    playBtn.textContent = "❚❚"; playBtn.setAttribute("aria-label", "멈춤");
+    setUntil(dayEnd(k));
+    timer = setInterval(() => {
+      if (!ticks.isConnected) return stop();
+      k++;
+      if (k > days) { stop(); setUntil(null); return; }
+      setUntil(dayEnd(k));
+    }, 650);
   });
+  const fromX = x => { const b = ticks.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (x - b.left) / b.width)); return Math.round(f * days); };
+  let scrub = false;
+  ticks.addEventListener("pointerdown", e => { stop(); scrub = true; ticks.setPointerCapture(e.pointerId); const k = fromX(e.clientX); setUntil(k >= days ? null : dayEnd(k)); });
+  ticks.addEventListener("pointermove", e => { if (!scrub) return; const k = fromX(e.clientX); setUntil(k >= days ? null : dayEnd(k)); });
+  ticks.addEventListener("pointerup", () => { scrub = false; });
+
+  // 아래 검색
+  const q = h("input", { class: "sinput", type: "search", placeholder: "보낸 사람 · 도메인 · 서비스", "aria-label": "메일 검색" });
+  const go = h("button", { class: "sgo" }, "GO");
+  const search = h("form", { class: "hud search", on: { submit: e => {
+    e.preventDefault();
+    const v = q.value.trim().toLowerCase();
+    if (!v) return;
+    const mails = DATA.filter(r => [r.sender && r.sender.name, r.sender && r.sender.address, r.sender && r.sender.domain, r._svc, r.subject,
+      ...((r.pixels || []).map(p => p.domain))].some(x => x && String(x).toLowerCase().includes(v))).map(r => r._i);
+    const b = search.getBoundingClientRect();
+    geoState.at = [b.left + 40, b.top - 12];
+    ctl.select({ kind: "search", q: q.value.trim(), mails });
+  } } }, h("span", { class: "rk" }, "SEARCH"), q, go);
+
+  // 오른쪽 아래 큰 버튼
+  const modeBtn = h("button", { class: "circ" }, "평면");
+  const archBtn = h("button", { class: "circ inv", on: { click: () => { location.hash = "#/archive"; } } }, "ARCHIVE");
+
+  const fig = worldView({
+    points: pts, routes: [], spin: true, maxH: () => innerHeight, fill: true,
+    ariaLabel: "지구본 위 관계도", remember: false, caption: "",
+    hud: { cross: ME_PLACE },
+    overlay: { mount: (stage, inv) => {
+      stage.append(svg, ctl.info, heroBox, readout, rail, infoCard, tline,
+        h("div", { class: "bbar" }, statsBox, search), h("div", { class: "circles" }, modeBtn, archBtn));
+      invalidate = inv; host.el = stage;
+    }, draw: overlayDraw },
+  });
+  modeBtn.addEventListener("click", () => {
+    const next = fig.api.mode() === "globe" ? "flat" : "globe";
+    fig.api.setMode(next); modeBtn.textContent = next === "globe" ? "평면" : "지구본";
+  });
+  syncRail(); setUntil(null);
   ctl.reselect();
   return fig;
 }
