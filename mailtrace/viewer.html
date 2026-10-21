@@ -136,6 +136,54 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .mapmodes button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--fg); }
 #overview { padding-top: 48px; }
 #overview .mapfig { margin-bottom: 8px; }
+
+/* 관계도 */
+.ovswitch { align-items: baseline; margin-bottom: 20px; }
+.graphwrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start; padding-bottom: 24px; }
+.graphstage { min-width: 0; overflow: auto; max-height: min(78vh, 860px); cursor: grab;
+  border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.graphstage.panning { cursor: grabbing; }
+.graph { display: block; margin: 0 auto; }   /* 작으면 가운데, 크면 왼쪽부터 끝까지 둘러볼 수 있게 */
+.gedge { stroke: rgba(255,255,255,.5); fill: none; transition: opacity .15s; }
+.gedge.dash { stroke-dasharray: 3 4; }
+.gedge.on { stroke: var(--fg); }
+.ghit { stroke: transparent; stroke-width: 12px; cursor: pointer; }
+.gnode { cursor: pointer; transition: opacity .15s; }
+.gnode:focus-visible { outline: none; }
+.gnode:focus-visible .sym { stroke-width: 2.5; }
+.sym { fill: var(--bg); stroke: var(--fg); stroke-width: 1.2; }
+.sym.fill { fill: var(--fg); }
+.symnum { fill: var(--fg); font: 9.5px var(--mono); }
+.glabel { fill: var(--fg); font: 12.5px var(--sans); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
+.gsub { fill: var(--dim); font: 10.5px var(--mono); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+.dim { opacity: .13; }
+.gbox { border: 1px solid var(--line); padding: 6px 20px 14px; background: var(--bg); }
+.infobox { margin-top: 16px; padding-top: 16px; position: relative; max-height: 640px; overflow: auto; }
+.lrow { display: grid; grid-template-columns: 18px 1fr auto 20px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.lrow:last-child { border-bottom: 0; }
+.lsym { overflow: visible; }
+.lname { display: block; font-size: 12px; letter-spacing: .08em; }
+.ldesc { display: block; font-size: 11px; }
+.ltoggle { font: 16px/1 var(--mono); color: var(--dim); }
+.ltoggle:hover { color: var(--fg); }
+.lline { display: block; width: 18px; border-top: 1.5px solid var(--fg); }
+.lline.dash { border-top-style: dashed; }
+.iclose { position: absolute; top: 10px; right: 14px; font-size: 18px; color: var(--dim); }
+.iclose:hover, .iback:hover { color: var(--fg); }
+.iback { color: var(--dim); font-size: 12.5px; margin-bottom: 10px; display: block; }
+.ititle { font: 400 17px/1.4 var(--sans); margin: 4px 24px 6px 0; }
+.ilist { margin-top: 12px; }
+.imail { display: grid; grid-template-columns: 1fr; width: 100%; text-align: left; padding: 9px 0; border-top: 1px solid var(--hair); }
+.imail:hover { background: rgba(255,255,255,.04); }
+.imail .iname { font-size: 13.5px; }
+.imail .isub { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ikv { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px 12px; margin: 16px 0; font-size: 13px; }
+.ikv dt { color: var(--dim); font-size: 12px; }
+.ikv dd { margin: 0; word-break: break-word; }
+.imore { margin-top: 12px; }
+@media (max-width: 960px) {
+  .graphwrap { grid-template-columns: 1fr; }
+}
 .nogeo { color: var(--dim); font-size: 13.5px; max-width: 42em; padding: 40px 0 8px; margin: 0; }
 .drawerr { color: var(--track); font-family: var(--mono); font-size: 12.5px; padding: 24px 0; }
 
@@ -372,7 +420,7 @@ function load(text) {
     ? h("p", { class: "nogeo" },
         "이 파일에는 위치 정보가 없어서 지구본과 ‘어디서 출발했나’를 그릴 수 없습니다. ",
         "파서를 --geo-city와 --geo-asn 옵션과 함께 실행해 만든 messages.json을 넣어 주세요.")
-    : safe(overviewView, "지구본"));
+    : safe(overviewTabs, "지구본·관계도"));
   state.filter = null;
   document.getElementById("findings").replaceChildren(safe(findingsView, "'어디서 출발했나'"));
   renderList();
@@ -1109,6 +1157,358 @@ function findingsView() {
         unitRows("출발 나라", "위치를 알 수 있는 첫 구간 기준 · 위치 없음 " + (n - located.length) + "통", countries, fromDC),
         unitRows("거쳐 간 데이터센터의 운영 주체", "한 통이 여러 곳을 거치면 각각 셉니다", ops, () => true)),
       unitRows("출발 도시 (상위 12곳)", "작은 글씨: 그 출발 지점의 네트워크를 운영하는 곳 중 가장 많은 것 · 해당 메일 수/그 도시 전체", cities, fromDC)));
+}
+
+// ---------------------------------------------------------------- 관계도
+// ✳ 나(받은편지함)를 가운데 두고, 메일이 온 길(보낸 회사 → 발송 서비스 → 출발 위치 → 나)을 실선으로,
+// 열면 신호가 가는 곳(나 → 추적 도메인)을 점선으로 잇는다. 기호를 누르면 정보 창에 그 메일들이 뜬다.
+const GTYPES = [
+  { type: "me", name: "나", desc: "받은편지함" },
+  { type: "service", name: "발송 서비스", desc: "메일을 실제로 보낸 곳 · 번호는 메일 수 순위" },
+  { type: "city", name: "출발 위치", desc: "▲ 데이터센터  △ 그 밖의 곳" },
+  { type: "sender", name: "보낸 회사", desc: "메일 수 상위 60곳" },
+  { type: "tracker", name: "추적 도메인", desc: "추적 픽셀이 신호를 보내는 곳 · 상위 30곳" },
+];
+const GLIMIT = { sender: 60, tracker: 30 };
+const gstate = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null, pos: new Map() };
+
+function symbol(type, n, size) {
+  // n: 노드(없으면 범례용). size: 반지름
+  const s = size, g = document.createElementNS(SVG, "g");
+  const add = (tag, attrs) => { const e = document.createElementNS(SVG, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); g.append(e); return e; };
+  if (type === "me") {
+    const pts = [];
+    for (let i = 0; i < 16; i++) { const r = i % 2 ? s * .55 : s, a = i * Math.PI / 8; pts.push((r * Math.cos(a)).toFixed(2) + "," + (r * Math.sin(a)).toFixed(2)); }
+    add("polygon", { points: pts.join(" "), class: "sym fill" });
+  } else if (type === "service") {
+    const pts = [];
+    for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; pts.push((s * Math.cos(a)).toFixed(2) + "," + (s * Math.sin(a)).toFixed(2)); }
+    add("polygon", { points: pts.join(" "), class: "sym" });
+    if (n && n.rank) { const t = add("text", { class: "symnum", "text-anchor": "middle", y: 3.5 }); t.textContent = n.rank; }
+  } else if (type === "city") {
+    const dc = n ? n.dc * 2 >= n.mails.length : true;
+    add("polygon", { points: `0,${-s} ${s * .9},${s * .65} ${-s * .9},${s * .65}`, class: "sym" + (dc ? " fill" : "") });
+  } else if (type === "sender") {
+    add("rect", { x: -s * .8, y: -s * .8, width: s * 1.6, height: s * 1.6, class: "sym" });
+  } else if (type === "tracker") {
+    add("circle", { r: s * .85, class: "sym" });
+    add("circle", { r: s * .22, class: "sym fill" });
+  }
+  return g;
+}
+function legendSym(type) {
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("viewBox", "-9 -9 18 18"); svg.setAttribute("width", "16"); svg.setAttribute("height", "16"); svg.setAttribute("class", "lsym");
+  svg.append(symbol(type, null, 7));
+  return svg;
+}
+
+function graphModel() {
+  const nodes = new Map();
+  const add = (type, key, label) => {
+    const id = type + ":" + key;
+    if (!nodes.has(id)) nodes.set(id, { id, type, key, label, mails: [], names: new Map(), dc: 0 });
+    return nodes.get(id);
+  };
+  const me = add("me", "me", "나");
+  const paths = [];
+  for (const r of DATA) {
+    const s = r.sender || {};
+    const sKey = regDomain(s.domain || "") || s.address || "알 수 없음";
+    const sender = add("sender", sKey, sKey);
+    sender.names.set(s.name || sKey, (sender.names.get(s.name || sKey) || 0) + 1);
+    const svc = add("service", r._svc, r._svc);
+    const o = originOf(r);
+    const city = o ? add("city", o.country + "|" + cityName(o), [region(o.country), cityName(o)].filter(Boolean).join(" ")) : null;
+    if (city && o.kind === "datacenter") city.dc++;
+    const trackers = [...new Set((r.pixels || []).map(p => regDomain(p.domain)).filter(Boolean))].map(d => add("tracker", d, d));
+    for (const n of [me, sender, svc, city, ...trackers]) if (n) n.mails.push(r._i);
+    paths.push({ i: r._i, sender, svc, city, trackers });
+  }
+  for (const n of nodes.values()) if (n.type === "sender") n.label = [...n.names.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  [...nodes.values()].filter(n => n.type === "service").sort((a, b) => b.mails.length - a.mails.length).forEach((n, k) => n.rank = k + 1);
+  // 많은 순 상위만
+  const top = {};
+  for (const t of ["sender", "tracker"])
+    top[t] = new Set([...nodes.values()].filter(n => n.type === t).sort((a, b) => b.mails.length - a.mails.length).slice(0, GLIMIT[t]).map(n => n.id));
+  return { nodes, paths, me, top };
+}
+
+function graphView() {
+  const M = graphModel();
+  const wrap = h("div", { class: "graphwrap" });
+  const stage = h("div", { class: "graphstage" });
+  const legend = h("div", { class: "gbox legendbox" });
+  const info = h("div", { class: "gbox infobox", hidden: true });
+  wrap.append(stage, h("div", { class: "gside" }, legend, info));
+
+  let G = null;   // 지금 그려진 것: { nodes, edges, els }
+
+  function visible(n) {
+    if (!n || !gstate.show[n.type]) return false;
+    return !M.top[n.type] || M.top[n.type].has(n.id);
+  }
+  function build() {
+    const vis = new Map(), edges = new Map();
+    const touch = n => vis.set(n.id, n);
+    touch(M.me);
+    const link = (a, b, i, dashed) => {
+      const k = a.id + ">" + b.id;
+      if (!edges.has(k)) edges.set(k, { id: k, a, b, mails: [], dashed });
+      edges.get(k).mails.push(i);
+    };
+    for (const p of M.paths) {
+      const seq = [p.sender, p.svc, p.city].filter(visible);
+      seq.push(M.me);
+      seq.forEach(touch);
+      for (let k = 1; k < seq.length; k++) link(seq[k - 1], seq[k], p.i, false);
+      for (const t of p.trackers) if (visible(t)) { touch(t); link(M.me, t, p.i, true); }
+    }
+    return { nodes: [...vis.values()], edges: [...edges.values()] };
+  }
+
+  // 고정된 씨앗으로 늘 같은 배치가 나오게 한다
+  const hash = s => { let x = 2166136261; for (const c of s) x = Math.imul(x ^ c.charCodeAt(0), 16777619); return (x >>> 0) / 4294967296; };
+  const textW = s => [...s].reduce((w, c) => w + (/[ᄀ-￿]/.test(c) ? 12.5 : 7.2), 0);
+  const RING = { me: 0, city: 170, service: 320, sender: 480, tracker: 230 };
+
+  function layout(nodes, edges) {
+    // 기호가 적으면 원을 좁혀 한 화면에 들어오게
+    const shrink = Math.max(.62, Math.min(1, Math.sqrt(nodes.length / 70)));
+    const RING_ = Object.fromEntries(Object.entries(RING).map(([k, v]) => [k, v * shrink]));
+    const byId = new Map(nodes.map(n => [n.id, n]));
+    const nbr = new Map(nodes.map(n => [n.id, []]));
+    for (const e of edges) { nbr.get(e.a.id).push(e.b); nbr.get(e.b.id).push(e.a); }
+    // 처음 자리: 발송 서비스는 메일 수 순서대로 고르게, 나머지는 이웃 쪽에
+    const svcs = nodes.filter(n => n.type === "service").sort((a, b) => a.rank - b.rank);
+    const ang = new Map();
+    svcs.forEach((n, k) => ang.set(n.id, (k / Math.max(1, svcs.length)) * 2 * Math.PI + (k % 2) * .15));
+    const trk = nodes.filter(n => n.type === "tracker");
+    trk.forEach((n, k) => ang.set(n.id, Math.PI * .75 + (k / Math.max(1, trk.length)) * Math.PI * .5 + hash(n.id) * .05));
+    for (const n of nodes) {
+      if (n.type === "me") { n.x = 0; n.y = 0; continue; }
+      const prev = gstate.pos.get(n.id);
+      if (prev) { n.x = prev[0]; n.y = prev[1]; continue; }
+      let a = ang.get(n.id);
+      if (a == null) {
+        const ns = nbr.get(n.id).filter(m => ang.has(m.id));
+        a = ns.length ? Math.atan2(ns.reduce((s, m) => s + Math.sin(ang.get(m.id)), 0), ns.reduce((s, m) => s + Math.cos(ang.get(m.id)), 0)) : hash(n.id) * 2 * Math.PI;
+        a += (hash(n.id) - .5) * .5;
+        ang.set(n.id, a);
+      }
+      n.x = RING_[n.type] * Math.cos(a); n.y = RING_[n.type] * Math.sin(a);
+    }
+    for (const n of nodes) { n.cr = Math.max(26, textW(n.label) / 2 + 6); n.vx = 0; n.vy = 0; }
+    const ITER = 320;
+    for (let it = 0; it < ITER; it++) {
+      const alpha = 1 - it / ITER;
+      for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || .01;
+        const min = a.cr + b.cr;
+        let f = 900 / (d * d);
+        if (d < min) f += (min - d) / d * .5;
+        dx *= f; dy *= f;
+        a.vx -= dx; a.vy -= dy; b.vx += dx; b.vy += dy;
+      }
+      for (const e of edges) {
+        const a = byId.get(e.a.id), b = byId.get(e.b.id);
+        const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || .01;
+        const f = (d - (e.dashed ? 200 : 130) * shrink) / d * .03;
+        a.vx += dx * f; a.vy += dy * f; b.vx -= dx * f; b.vy -= dy * f;
+      }
+      for (const n of nodes) {
+        if (n.type === "me") { n.x = n.y = 0; n.vx = n.vy = 0; continue; }
+        const r = Math.hypot(n.x, n.y) || .01, t = RING_[n.type];
+        n.vx += n.x / r * (t - r) * .06; n.vy += n.y / r * (t - r) * .06;
+        n.x += n.vx * alpha * .6; n.y += n.vy * alpha * .6;
+        n.vx *= .5; n.vy *= .5;
+      }
+    }
+    for (const n of nodes) gstate.pos.set(n.id, [n.x, n.y]);
+  }
+
+  function draw() {
+    const { nodes, edges } = build();
+    layout(nodes, edges);
+    const pad = 40;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const n of nodes) { x0 = Math.min(x0, n.x - n.cr); x1 = Math.max(x1, n.x + n.cr); y0 = Math.min(y0, n.y - 20); y1 = Math.max(y1, n.y + 44); }
+    // 글자 크기를 지키기 위해 1:1로 그리고, 화면보다 크면 끌어서 둘러본다
+    const vw = x1 - x0 + 2 * pad, vh = y1 - y0 + 2 * pad;
+    const svg = s("svg", { viewBox: `${x0 - pad} ${y0 - pad} ${vw} ${vh}`, width: vw.toFixed(0), height: vh.toFixed(0), class: "graph", role: "img",
+      "aria-label": "메일 관계도: " + nodes.length + "개 기호, " + edges.length + "개 선" });
+    const maxE = Math.max(1, ...edges.map(e => e.mails.length));
+    const gE = s("g"), gH = s("g"), gN = s("g");
+    const els = { nodes: new Map(), edges: new Map() };
+    for (const e of edges) {
+      const w = .75 + 2.25 * Math.sqrt(e.mails.length / maxE);
+      const line = s("line", { x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, class: "gedge" + (e.dashed ? " dash" : ""), "stroke-width": w.toFixed(2) });
+      gE.append(line);
+      const hit = s("line", { x1: e.a.x, y1: e.a.y, x2: e.b.x, y2: e.b.y, class: "ghit" });
+      hit.addEventListener("click", () => select({ kind: "edge", e }));
+      hit.addEventListener("mouseenter", () => hover(new Set(e.mails)));
+      hit.addEventListener("mouseleave", () => hover(null));
+      gH.append(hit);
+      els.edges.set(e.id, { el: line, e });
+    }
+    for (const n of nodes) {
+      const g = s("g", { class: "gnode", transform: `translate(${n.x.toFixed(1)},${n.y.toFixed(1)})`, tabindex: "0", role: "button",
+        "aria-label": GTYPES.find(t => t.type === n.type).name + " " + n.label + ", 메일 " + n.mails.length + "통" });
+      g.append(symbol(n.type, n, n.type === "me" ? 13 : 10));
+      g.append(s("text", { y: n.type === "me" ? 30 : 26, "text-anchor": "middle", class: "glabel" }, n.label));
+      g.append(s("text", { y: n.type === "me" ? 45 : 40, "text-anchor": "middle", class: "gsub" }, n.mails.length + "통"));
+      g.addEventListener("click", () => select({ kind: "node", n }));
+      g.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select({ kind: "node", n }); } });
+      g.addEventListener("mouseenter", () => hover(new Set(n.mails)));
+      g.addEventListener("mouseleave", () => hover(null));
+      gN.append(g);
+      els.nodes.set(n.id, { el: g, n });
+    }
+    svg.append(gE, gH, gN);
+    stage.replaceChildren(svg);
+    G = { nodes, edges, els };
+    // 화면 폭에 맞춰 줄이되 글자가 읽히는 크기(72%) 밑으로는 줄이지 않는다. 그보다 크면 끌어서 둘러본다.
+    // 그리고 '나'가 가운데 오도록.
+    requestAnimationFrame(() => {
+      const maxH = Math.min(innerHeight * .78, 860);
+      const k = Math.min(1, Math.max(.72, Math.min((stage.clientWidth - 2) / vw, (maxH - 2) / vh)));
+      svg.setAttribute("width", (vw * k).toFixed(0)); svg.setAttribute("height", (vh * k).toFixed(0));
+      stage.scrollLeft = (0 - (x0 - pad)) * k - stage.clientWidth / 2;
+      stage.scrollTop = (0 - (y0 - pad)) * k - stage.clientHeight / 2;
+    });
+    renderLegend();
+    if (gstate.sel) select(gstate.sel, true); else hover(null);
+  }
+
+  // 강조: 주어진 메일들이 지나간 기호·선만 밝게
+  function emphasize(mails) {
+    if (!G) return;
+    for (const { el, n } of G.els.nodes.values()) el.classList.toggle("dim", !!mails && n.type !== "me" && !n.mails.some(i => mails.has(i)));
+    for (const { el, e } of G.els.edges.values()) {
+      const on = mails && e.mails.some(i => mails.has(i));
+      el.classList.toggle("dim", !!mails && !on);
+      el.classList.toggle("on", !!on);
+    }
+  }
+  const selMails = () => {
+    const sl = gstate.sel;
+    if (!sl) return null;
+    if (sl.kind === "mail") return new Set([sl.i]);
+    return new Set(sl.kind === "node" ? sl.n.mails : sl.e.mails);
+  };
+  function hover(mails) { emphasize(mails || selMails()); }
+
+  function select(sel, keepBack) {
+    if (!keepBack) gstate.back = sel && sel.kind === "mail" ? gstate.sel : null;
+    // 다시 그린 뒤에도 같은 대상을 가리키도록 id로 다시 찾는다
+    if (sel && sel.kind === "node") sel = { kind: "node", n: M.nodes.get(sel.n.id) };
+    if (sel && sel.kind === "edge" && G) { const e = G.edges.find(x => x.id === sel.e.id); sel = e ? { kind: "edge", e } : null; }
+    gstate.sel = sel;
+    hover(null);
+    renderInfo();
+  }
+
+  function mailRow(i) {
+    const r = DATA[i], d = dateOf(r.received);
+    return h("button", { class: "imail", on: { click: () => select({ kind: "mail", i }) } },
+      h("span", { class: "mono dim" }, d ? fmtDate.format(d) : ""),
+      h("span", { class: "iname" }, (r.sender && (r.sender.name || r.sender.address)) || "(이름 없음)"),
+      h("span", { class: "isub faint" }, r.subject || "(제목 없음)"));
+  }
+
+  function renderInfo() {
+    const sl = gstate.sel;
+    info.hidden = !sl;
+    if (!sl) { info.replaceChildren(); return; }
+    const close = h("button", { class: "iclose", "aria-label": "닫기", on: { click: () => { gstate.back = null; select(null); } } }, "×");
+    if (sl.kind === "mail") {
+      const r = DATA[sl.i], s = r.sender || {}, o = originOf(r);
+      const p = M.paths[sl.i];
+      const trackers = p.trackers.map(t => t.label);
+      const steps = [
+        ["보낸 회사", p.sender.label + (s.address ? "  <" + s.address + ">" : "")],
+        ["발송 서비스", r._svc],
+        ["출발 위치", o ? place(o) + (o.kind === "datacenter" ? "  · 데이터센터 (" + (o.operator || "운영 주체 미상") + ")" : o.operator ? "  · " + o.operator : "") : "알 수 없음"],
+        ["경유 구간", (r.hops || []).length + "곳 · " + dur(r.transit_seconds)],
+        ["추적 픽셀", r._pixels + "개" + (trackers.length ? "  →  " + trackers.join(", ") : "")],
+        ["제3자 도메인", r._third + "곳"],
+      ];
+      if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(x => x.form))].join(", ") + ")"]);
+      info.replaceChildren(close,
+        gstate.back ? h("button", { class: "iback", on: { click: () => { const b = gstate.back; gstate.back = null; select(b, true); } } }, "← 목록") : null,
+        h("div", { class: "mono dim" }, dateOf(r.received) ? fmtFull.format(dateOf(r.received)) : ""),
+        h("h4", { class: "ititle" }, r.subject || "(제목 없음)"),
+        h("dl", { class: "ikv" }, steps.map(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
+        h("button", { class: "btn imore", on: { click: () => open(sl.i) } }, "상세 보기 →"));
+      return;
+    }
+    const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
+    const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
+    const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
+    const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
+    const ids = new Set(list);
+    info.replaceChildren(close,
+      h("div", { class: "label" }, kind),
+      h("h4", { class: "ititle" }, title),
+      h("div", { class: "mono dim" }, list.length + "통"),
+      h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
+      list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
+      h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "아래 목록에서 이 메일만 보기"));
+  }
+
+  function renderLegend() {
+    legend.replaceChildren(
+      ...GTYPES.map(t => {
+        const total = [...M.nodes.values()].filter(n => n.type === t.type).length;
+        const on = gstate.show[t.type];
+        return h("div", { class: "lrow" },
+          legendSym(t.type),
+          h("span", null, h("span", { class: "lname" }, t.name), h("span", { class: "ldesc faint" }, t.desc)),
+          h("span", { class: "mono dim" }, total + "곳"),
+          t.type === "me" ? h("span") : h("button", { class: "ltoggle", "aria-pressed": String(on), "aria-label": t.name + (on ? " 접기" : " 펼치기"),
+            on: { click: () => { gstate.show[t.type] = !on; draw(); } } }, on ? "−" : "+"));
+      }),
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음")), h("span"), h("span")),
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"), h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")));
+  }
+
+  // 빈 곳을 끌어서 둘러보기
+  let pan = null;
+  stage.addEventListener("pointerdown", e => {
+    if (e.target.closest(".gnode") || e.target.classList.contains("ghit") || e.pointerType === "touch") return;
+    pan = { x: e.clientX, y: e.clientY, l: stage.scrollLeft, t: stage.scrollTop };
+    stage.setPointerCapture(e.pointerId); stage.classList.add("panning");
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!pan) return;
+    stage.scrollLeft = pan.l - (e.clientX - pan.x); stage.scrollTop = pan.t - (e.clientY - pan.y);
+  });
+  const stop = () => { pan = null; stage.classList.remove("panning"); };
+  stage.addEventListener("pointerup", stop); stage.addEventListener("pointercancel", stop);
+
+  draw();
+  return wrap;
+}
+
+// 목록 위: 지구본 / 관계도
+function overviewTabs() {
+  const box = h("div", { class: "ovtabs" });
+  const body = h("div");
+  let cur;
+  try { cur = localStorage.getItem("mailtrace.overview") === "graph" ? "graph" : "globe"; } catch { cur = "globe"; }
+  const btns = [["globe", "지구본"], ["graph", "관계도"]].map(([k, label]) => h("button", { "data-k": k, on: { click: () => show(k) } }, label));
+  box.append(h("div", { class: "mapmodes ovswitch" }, h("span", { class: "label" }, "보기"), btns), body);
+  function show(k) {
+    cur = k;
+    try { localStorage.setItem("mailtrace.overview", k); } catch {}
+    btns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === k)));
+    body.replaceChildren((k === "graph" ? graphView() : overviewView()) || "");
+  }
+  show(cur);
+  return box;
 }
 
 function domainLists(r) {
