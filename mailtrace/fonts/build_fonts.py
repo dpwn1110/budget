@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-build_fonts.py — IBM Plex(OFL)를 viewer.html 안에 data: URI로 넣는다.
+build_fonts.py — 글꼴(모두 OFL)을 viewer.html 안에 data: URI로 넣는다.
 인터넷 없이도, 어느 컴퓨터에서나 같은 글꼴로 보이게 하려는 것.
 
-- IBM Plex Mono  300 · 400 · 600 · 400 기울임 (라틴 · 라틴 확장만)
-- IBM Plex Sans KR  400 (한글 전체 + 라틴)
+- IBM Plex Mono  300 · 400 · 600 · 400 기울임 (라틴 · 라틴 확장만) — 숫자·데이터
+- Pretendard  300 · 400 (KS X 1001 한글 + 라틴 부분 집합) — 나머지 글자
 
 글꼴 파일(woff2)과 목록(faces.json)은 이 폴더에 두고, viewer.html의 /*FONTS-BEGIN*/ … /*FONTS-END*/ 사이를 채운다.
 
     python3 fonts/build_fonts.py                       # 이 폴더의 파일로 다시 넣기
     python3 fonts/build_fonts.py --from <npm 폴더>      # @fontsource 패키지에서 파일을 새로 가져오기
-      (npm pack @fontsource/ibm-plex-mono @fontsource/ibm-plex-sans-kr 를 풀어 둔 폴더)
+      (npm pack @fontsource/ibm-plex-mono 를 풀어 둔 폴더)
+    python3 fonts/build_fonts.py --pretendard <폴더>   # npm pack pretendard 를 풀어 둔 package 폴더에서 Pretendard 가져오기
 """
 
 import base64
@@ -29,8 +30,8 @@ WANT = [
     ("ibm-plex-mono", "400.css", {"latin", "latin-ext"}),
     ("ibm-plex-mono", "600.css", {"latin", "latin-ext"}),
     ("ibm-plex-mono", "400-italic.css", {"latin", "latin-ext"}),
-    ("ibm-plex-sans-kr", "400.css", None),
 ]
+PRETENDARD = [("300", "Light"), ("400", "Regular")]
 FACE = re.compile(r"/\* (?P<name>[^*]+) \*/\s*@font-face \{(?P<body>[^}]*)\}", re.S)
 
 
@@ -56,15 +57,30 @@ def vendor(src):
         lic = os.path.join(root[0], "LICENSE")
         if os.path.exists(lic):
             shutil.copy(lic, os.path.join(HERE, "LICENSE-" + pkg + ".txt"))
+    old = os.path.join(HERE, "faces.json")
+    if os.path.exists(old):   # 다른 곳에서 가져온 글꼴(Pretendard)은 그대로 둔다
+        faces += [f for f in json.load(open(old)) if f["family"] == "Pretendard"]
+    json.dump(faces, open(os.path.join(HERE, "faces.json"), "w"), indent=1)
+    return faces
+
+
+def vendor_pretendard(src):
+    """pretendard 패키지의 부분 집합 woff2(한 굵기에 파일 하나)를 가져와 faces.json의 Pretendard 항목을 바꾼다."""
+    faces = [f for f in json.load(open(os.path.join(HERE, "faces.json"))) if f["family"] != "Pretendard"]
+    for weight, name in PRETENDARD:
+        file = "Pretendard-" + name + ".subset.woff2"
+        shutil.copy(os.path.join(src, "dist", "web", "static", "woff2-subset", file), os.path.join(HERE, file))
+        faces.append({"family": "Pretendard", "style": "normal", "weight": weight, "file": file, "range": None})
     json.dump(faces, open(os.path.join(HERE, "faces.json"), "w"), indent=1)
     return faces
 
 
 def main():
     if "--from" in sys.argv:
-        faces = vendor(sys.argv[sys.argv.index("--from") + 1])
-    else:
-        faces = json.load(open(os.path.join(HERE, "faces.json")))
+        vendor(sys.argv[sys.argv.index("--from") + 1])
+    if "--pretendard" in sys.argv:
+        vendor_pretendard(sys.argv[sys.argv.index("--pretendard") + 1])
+    faces = json.load(open(os.path.join(HERE, "faces.json")))
     css = []
     for f in faces:
         b64 = base64.b64encode(open(os.path.join(HERE, f["file"]), "rb").read()).decode()
