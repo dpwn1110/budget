@@ -245,7 +245,7 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .gedge { stroke: rgba(255,255,255,.5); fill: none; transition: opacity .15s; }
 .gedge.dash { stroke-dasharray: 3 4; }
 .gedge.on { stroke: var(--fg); }
-.ghit { stroke: transparent; stroke-width: 12px; cursor: pointer; }
+.ghit { stroke: transparent; stroke-width: 12px; fill: none; cursor: pointer; }   /* fill이 없으면 곡선(path)의 안쪽이 검게 채워진다 */
 .gnode { cursor: pointer; transition: opacity .15s; }
 .gnode:focus-visible { outline: none; }
 .gnode:focus-visible .sym { stroke-width: 2.5; }
