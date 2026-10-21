@@ -1979,8 +1979,8 @@ function geoRelView() {
   } } }, h("span", { class: "rk" }, "SEARCH"), q, go);
 
   // 오른쪽 아래 큰 버튼
-  const modeBtn = h("button", { class: "circ" }, "평면");
-  const archBtn = h("button", { class: "circ inv", on: { click: () => { location.hash = "#/archive"; } } }, "ARCHIVE");
+  // Archive는 위 메뉴로 가므로, 오른쪽 아래에는 지구본/평면 전환 하나만
+  const modeBtn = h("button", { class: "circ inv" }, "평면");
 
   const fig = worldView({
     points: pts, routes: [], spin: true, maxH: () => innerHeight, fill: true,
@@ -1988,7 +1988,7 @@ function geoRelView() {
     hud: { cross: ME_PLACE },
     overlay: { mount: (stage, inv) => {
       stage.append(svg, ctl.info, heroBox, readout, rail, infoCard, tline,
-        h("div", { class: "bbar" }, statsBox, search), h("div", { class: "circles" }, modeBtn, archBtn));
+        h("div", { class: "bbar" }, statsBox, search), h("div", { class: "circles" }, modeBtn));
       invalidate = inv; host.el = stage;
     }, draw: overlayDraw },
   });
