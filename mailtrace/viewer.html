@@ -34,15 +34,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .faint { color: var(--faint); }
 .label { font-size: 11px; letter-spacing: .08em; color: var(--dim); }
 
-header.top { padding: 36px 0 24px; border-bottom: 1px solid var(--line); }
-.brand { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px 32px; }
-h1 { font-weight: 300; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.01em; margin: 0; }
-h1 a { color: inherit; text-decoration: none; }
+header.top { padding: 28px 0 18px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; justify-content: flex-end; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 #nav { display: flex; gap: 28px; }
 #nav a { color: var(--dim); text-decoration: none; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid transparent; }
 #nav a:hover { color: var(--fg); }
 #nav a[aria-current] { color: var(--fg); border-bottom-color: var(--fg); }
-.lede { max-width: 38em; color: var(--dim); margin: 14px 0 0; font-size: 14px; }
 #page-analysis .stats { padding: 40px 0 8px; }
 .graphsec { padding: 56px 0 24px; border-top: 1px solid var(--line); }
 .graphsec .fnote { margin-bottom: 24px; }
@@ -274,17 +272,15 @@ footer p { margin: 0 0 8px; }
 </head>
 <body>
 
-<header class="top">
+<header class="top" id="top" hidden>
   <div class="brand">
-    <h1><a href="#/">열기 전에</a></h1>
-    <nav id="nav" hidden aria-label="페이지">
+    <h1 class="sr-only">열기 전에</h1>
+    <nav id="nav" aria-label="페이지">
       <a href="#/" data-page="globe">Globe</a>
       <a href="#/analysis" data-page="analysis">Analysis</a>
       <a href="#/archive" data-page="archive">Archive</a>
     </nav>
   </div>
-  <p class="lede" id="lede">메일함에 도착한 메일 한 통 한 통이 어디를 거쳐 왔는지, 그리고 열어 보는 순간 어디에 신호를 보내는지.
-  이 페이지는 그 신호를 보내지 않고 보기만 합니다.</p>
 </header>
 
 <main>
@@ -455,7 +451,7 @@ function load(text) {
   if (!Array.isArray(recs)) throw new Error("메일 기록 배열이 아닙니다. parse_mbox.py가 만든 파일인지 확인해 주세요.");
   DATA = prepare(recs.filter(r => r && typeof r === "object"));
   document.getElementById("loader").hidden = true;
-  document.getElementById("nav").hidden = false;
+  document.getElementById("top").hidden = false;
   analysisDrawn = false;
   renderStats();
   // 한 부분이 실패해도 나머지는 보이게, 실패한 이유는 그 자리에 적는다
@@ -592,7 +588,6 @@ function route() {
   const hs = location.hash, m = /^#m(\d+)$/.exec(hs);
   const page = m ? null : hs === "#/analysis" ? "analysis" : hs === "#/archive" ? "archive" : "globe";
   for (const k of ["globe", "analysis", "archive"]) document.getElementById("page-" + k).hidden = page !== k;
-  document.getElementById("lede").hidden = page !== "globe";
   for (const a of document.querySelectorAll("#nav a")) a.toggleAttribute("aria-current", a.dataset.page === page);
   const det = document.getElementById("detail");
   if (m && DATA[+m[1]]) {
