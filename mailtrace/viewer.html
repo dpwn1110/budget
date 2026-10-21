@@ -753,8 +753,7 @@ function niceKm(km) { const e = Math.pow(10, Math.floor(Math.log10(km))), m = km
 // points: [{lon, lat, kind, label, r}], routes: [{line: Float64Array, alpha}]
 // remember: 마지막으로 고른 모드(지구본/평면)를 기억할지. 목록 위 지구본은 늘 지구본으로 시작한다.
 // overlay: { mount(stageEl, invalidate), draw(P, W, H) → 계속 그려야 하면 true } — 지구본 위에 겹쳐 그리는 것
-// paused(): true를 돌려주면 자전을 멈춘다 (무언가 선택해 둔 동안 등)
-function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, overlay, paused }) {
+function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, overlay }) {
   const G = geo();
   const canvas = h("canvas", { class: "globe", role: "img", "aria-label": ariaLabel });
   let mode = remember ? loadMode() : "globe";
@@ -936,8 +935,9 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
       const f = Math.min(1, (t - anim.t0) / anim.dur), e = 1 - Math.pow(1 - f, 3);
       lam0 = anim.from + (anim.to - anim.from) * e; dirty = true;
       if (f >= 1) anim = null;
-    } else if (mode === "globe" && spin && !REDUCE && !dragging && !pinch && !hovering && !(paused && paused()) && zoom < 1.05 && t > resumeAt) {
-      lam0 -= 0.035; dirty = true;   // 서쪽에서 동쪽으로 자전하는 것처럼 보이게
+    } else if (mode === "globe" && spin && !REDUCE && !dragging && !pinch && zoom < 1.05 && t > resumeAt) {
+      // 서쪽에서 동쪽으로 자전하는 것처럼 보이게. 마우스를 올려 두면 기호를 누를 수 있게 천천히.
+      lam0 -= hovering ? 0.01 : 0.035; dirty = true;
     }
     if (dirty) {
       dirty = false;
@@ -980,7 +980,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     pointers.delete(e.pointerId);
     if (pointers.size < 2) pinch = null;
     if (!pointers.size) dragging = null;
-    resumeAt = performance.now() + 4000;
+    resumeAt = performance.now() + 1500;
   };
   canvas.addEventListener("pointerup", end);
   canvas.addEventListener("pointercancel", end);
@@ -994,10 +994,9 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     zoomAt(Math.exp(-e.deltaY * (Math.abs(e.deltaY) < 20 ? 0.012 : 0.002)), x, y);
   }, { passive: false });
 
-  // 마우스를 올려 두면 자전을 멈춰 기호를 누르기 쉽게
   let hovering = false;
   mapstage.addEventListener("mouseenter", () => { hovering = true; });
-  mapstage.addEventListener("mouseleave", () => { hovering = false; resumeAt = performance.now() + 1500; });
+  mapstage.addEventListener("mouseleave", () => { hovering = false; });
   if (overlay) overlay.mount(mapstage, () => { dirty = true; });
   sync();
   requestAnimationFrame(frame);
@@ -1661,7 +1660,7 @@ function geoRelView() {
   if (!pts.length) return null;
   const fig = worldView({
     points: pts.map(p => Object.assign({}, p, { hidden: true })), routes: [], spin: true, maxH: 680,
-    ariaLabel: "지구본 위 관계도", remember: false, paused: () => !!geoState.sel,
+    ariaLabel: "지구본 위 관계도", remember: false,
     caption: "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다 · 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다",
     overlay: { mount: (stage, inv) => { stage.append(svg); invalidate = inv; }, draw: overlayDraw },
   });
