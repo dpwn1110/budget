@@ -16,18 +16,21 @@ Standard library only.
 """
 
 import argparse
+import base64
+import binascii
 import collections
 import datetime as dt
 import email
 import email.header
 import email.utils
+import hashlib
 import json
 import re
 import sys
 from email import policy
 from email.parser import BytesParser, BytesHeaderParser
 from html.parser import HTMLParser
-from urllib.parse import urlsplit, parse_qsl, urljoin
+from urllib.parse import urlsplit, parse_qsl, urljoin, quote, unquote
 
 
 # ---------------------------------------------------------------------------
@@ -675,6 +678,98 @@ def extract(msg, received):
 
 
 # ---------------------------------------------------------------------------
+# 내 이메일 주소가 추적 주소 안에 들어 있는지 (--me)
+#
+# 주소 자체는 결과 파일에 남기지 않는다. 어디서, 어떤 형태로 찾았는지만 남긴다.
+
+def me_forms(address):
+    """(형태 이름, 찾을 문자열, 대소문자 무시 여부)"""
+    a = address.strip().lower()
+    b = a.encode()
+    forms = [
+        ("그대로", a, True),
+        ("URL 인코딩", quote(a, safe=""), True),
+        ("base64", base64.b64encode(b).decode().rstrip("="), False),
+        ("base64", base64.urlsafe_b64encode(b).decode().rstrip("="), False),
+        ("MD5", hashlib.md5(b).hexdigest(), True),
+        ("SHA-1", hashlib.sha1(b).hexdigest(), True),
+        ("SHA-256", hashlib.sha256(b).hexdigest(), True),
+        ("SHA-512", hashlib.sha512(b).hexdigest(), True),
+    ]
+    if address.strip() != a:   # 대문자가 섞인 원래 표기의 해시도
+        o = address.strip().encode()
+        forms += [("MD5", hashlib.md5(o).hexdigest(), True), ("SHA-256", hashlib.sha256(o).hexdigest(), True)]
+    seen, out = set(), []
+    for f in forms:
+        if f[1] not in seen:
+            seen.add(f[1])
+            out.append(f)
+    return out
+
+
+B64_TOKEN = re.compile(r"[A-Za-z0-9+/_-]{16,}={0,2}")
+
+
+def find_me(text, forms, address):
+    """text 안에서 찾은 형태 이름 목록."""
+    found = []
+    low = text.lower()
+    for name, value, ci in forms:
+        if (value in low) if ci else (value in text):
+            found.append(name)
+    if not found:
+        # 더 긴 base64 덩어리 안에 섞여 들어간 경우 (예: {"email": "..."} 를 통째로 base64)
+        needle = address.strip().lower().encode()
+        for tok in B64_TOKEN.findall(text):
+            t = tok.rstrip("=")
+            for dec in (base64.b64decode, base64.urlsafe_b64decode):
+                try:
+                    raw = dec(t + "=" * (-len(t) % 4))
+                except (binascii.Error, ValueError):
+                    continue
+                if needle in raw.lower():
+                    found.append("base64 (다른 값과 함께)")
+                    break
+            if found:
+                break
+    return found
+
+
+def locate_me(url, forms, address):
+    """[(형태, 위치)] — 위치는 쿼리 파라미터 이름이나 '경로'."""
+    hits = []
+    try:
+        parts = urlsplit(url)
+        pairs = parse_qsl(parts.query, keep_blank_values=True)
+        path = unquote(parts.path) + ("#" + unquote(parts.fragment) if parts.fragment else "")
+    except ValueError:
+        pairs, path = [], url
+    for k, v in pairs:
+        for once in {v, unquote(v)}:
+            for f in find_me(once, forms, address):
+                hits.append((f, k))
+    for f in find_me(path, forms, address):
+        hits.append((f, "경로"))
+    if not hits:   # 파라미터로 나뉘지 않는 주소
+        for f in find_me(unquote(unquote(url)), forms, address):
+            hits.append((f, "주소"))
+    return sorted(set(hits))
+
+
+def annotate_me(rec, forms, address):
+    found = []
+    pixel_urls = {p["url"] for p in rec["pixels"]}
+    for where, items in (("pixel", rec["pixels"]), ("resource", rec["resources"]), ("link", rec["links"])):
+        for i, item in enumerate(items):
+            if where == "resource" and item["url"] in pixel_urls:
+                continue   # 픽셀은 이미 위에서 셌다
+            for form, loc in locate_me(item["url"], forms, address):
+                found.append({"where": where, "i": i, "domain": item["domain"], "form": form, "in": loc})
+    rec["me"] = found
+    rec["counts"]["me"] = len(found)
+
+
+# ---------------------------------------------------------------------------
 # main
 
 def main():
@@ -686,6 +781,8 @@ def main():
     ap.add_argument("--top", type=int, default=15)
     ap.add_argument("--geo-city", help="DB-IP city lite CSV(.gz) — 경유 IP의 위치 (geo.py 참고)")
     ap.add_argument("--geo-asn", help="DB-IP ASN lite CSV(.gz) — 경유 IP의 네트워크 운영 주체")
+    ap.add_argument("--me", metavar="주소@gmail.com",
+                    help="이 이메일 주소가 픽셀·링크 주소 안에 (그대로·base64·해시로) 들어 있는지 찾는다. 주소는 저장하지 않음")
     args = ap.parse_args()
 
     hparse = BytesHeaderParser(policy=policy.compat32)
@@ -711,6 +808,8 @@ def main():
     tp_domains = collections.Counter()
     pixel_domains = collections.Counter()
     first = True
+    forms = me_forms(args.me) if args.me else None
+    me_forms_seen, me_where, me_domains = collections.Counter(), collections.Counter(), collections.Counter()
 
     with open(args.out, "w", encoding="utf-8") as out:
         out.write("[\n")
@@ -739,6 +838,16 @@ def main():
                 skip_reasons[type(e).__name__ + ": " + str(e)[:60]] += 1
                 continue
 
+            if args.me:
+                annotate_me(rec, forms, args.me)
+                if rec["me"]:
+                    stats["me_msgs"] += 1
+                    for f in {x["form"] for x in rec["me"]}:
+                        me_forms_seen[f] += 1
+                    for w in {x["where"] for x in rec["me"]}:
+                        me_where[w] += 1
+                    for d in {reg_domain(x["domain"]) for x in rec["me"]}:
+                        me_domains[d] += 1
             rec["id"] = stats["kept"]
             stats["kept"] += 1
             stats["pixels"] += rec["counts"]["pixels"]
@@ -775,6 +884,12 @@ def main():
     table("실제 발송 서비스 (메일 수)", services)
     table("제3자 도메인 (등장한 메일 수)", tp_domains)
     table("픽셀 도메인 (메일 수)", pixel_domains)
+    if args.me:
+        w(f"\n내 이메일 주소를 주소 안에 담은 메일  {stats['me_msgs']}통 / {kept}통\n")
+        table("담은 방식 (메일 수)", me_forms_seen)
+        names = {"pixel": "추적 픽셀", "resource": "그 밖의 리소스", "link": "링크"}
+        table("담긴 곳 (메일 수)", collections.Counter({names[k]: v for k, v in me_where.items()}))
+        table("그 주소의 도메인 (메일 수)", me_domains)
     if args.geo_city or args.geo_asn:
         import geo
         with open(args.out, encoding="utf-8") as fh:
