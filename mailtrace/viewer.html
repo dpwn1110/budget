@@ -264,7 +264,9 @@ function dur(sec) {
 
 function place(g) {
   if (!g || !g.country) return "";
-  return [region(g.country), g.city].filter(Boolean).join(" ");
+  // DB-IP 도시 이름의 괄호(동네·길 이름)는 뗀다. 데이터센터 IP 위치는 그만큼 정확하지 않다.
+  const city = (g.city || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+  return [g.country === "ZZ" ? null : region(g.country), city].filter(Boolean).join(" ");
 }
 
 const OPTYPE = { esp: "메일 발송 서비스", cloud: "클라우드", mailbox: "메일함", hosting: "호스팅" };

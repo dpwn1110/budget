@@ -174,10 +174,14 @@ def annotate(records, city_path=None, asn_path=None):
             if not ip:
                 h["geo"] = None
                 continue
+            kind = classify(ip, asns.get(ip))
             g = {}
-            g.update(cities.get(ip) or {})
-            g.update(asns.get(ip) or {})
-            g.update(classify(ip, asns.get(ip)))
+            if kind["kind"] != "internal":   # 사설 IP에는 위치가 없다 (DB-IP는 "ZZ"로 둔다)
+                city = cities.get(ip) or {}
+                if city.get("country") not in (None, "ZZ"):
+                    g.update(city)
+                g.update(asns.get(ip) or {})
+            g.update(kind)
             h["geo"] = g
 
         located = [h for h in r.get("hops", []) if h.get("geo") and h["geo"].get("country")]
@@ -201,6 +205,11 @@ def annotate(records, city_path=None, asn_path=None):
     return records
 
 
+def city_name(c):
+    """DB-IP Lite 도시 이름의 괄호(동네·길 이름)는 뗀다. 데이터센터 IP 위치는 그만큼 정확하지 않다."""
+    return re.sub(r"\s*\(.*?\)\s*", "", c or "").strip() or None
+
+
 def summary(records, top=10, out=sys.stdout):
     w = out.write
     n = len(records)
@@ -211,7 +220,7 @@ def summary(records, top=10, out=sys.stdout):
         route = r.get("route") or {}
         o = route.get("origin")
         if o:
-            origins[" · ".join(x for x in (o.get("country"), o.get("city")) if x)] += 1
+            origins[" · ".join(x for x in (o.get("country"), city_name(o.get("city"))) if x)] += 1
         if route.get("via_datacenter"):
             via += 1
         for d in {d["operator"] for d in route.get("datacenters", []) if d["operator"]}:

@@ -255,6 +255,9 @@ SERVICES = [
     ("yespo.io", "Yespo"),
     ("stibee.com", "Stibee"),
     ("nhncloud.com", "NHN Cloud"),
+    ("stbsrv.net", "Stibee"),
+    ("prd.sparkpost", "SparkPost"),
+    ("facebookmail.com", "Meta"), ("facebook.com", "Meta"), ("instagram.com", "Meta"),
     ("google.com", "Google"), ("googlemail.com", "Google"),
 ]
 
@@ -740,7 +743,8 @@ def main():
             stats["kept"] += 1
             stats["pixels"] += rec["counts"]["pixels"]
             stats["with_pixel"] += 1 if rec["counts"]["pixels"] else 0
-            services[rec["service"]["name"]] += 1
+            svc = rec["service"]
+            services[svc["name"] + (" (자체 발송)" if svc.get("self_hosted") else "")] += 1
             for d in rec["domains"]["third_party"]:
                 tp_domains[d] += 1
             for d in {reg_domain(p["domain"]) for p in rec["pixels"]}:
