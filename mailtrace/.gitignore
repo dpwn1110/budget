@@ -2,3 +2,4 @@
 *.mbox
 *.json
 !demo/demo.json
+!map/countries-110m.json

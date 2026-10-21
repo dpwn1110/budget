@@ -100,6 +100,10 @@ def message(i, when, name, addr, esp):
     if esp in ("sendgrid", "klaviyo"):
         rc.append(f"Received: by filterdrecv-{rnd.randint(1,99)} with SMTP id f{i}; {eu.format_datetime(t_relay)}")
         rc.append(f"Received: from MTU{i} (unknown) by geopod-ismtpd-{rnd.randint(1,9)} (SG) with HTTP id h{i}; {eu.format_datetime(t_send)}")
+        if any("\uac00" <= ch <= "\ud7a3" for ch in name):
+            # 한국 앱 서버 → SendGrid API로 넘기는 구간
+            rc.append(f"Received: from api{rnd.randint(1,3)}.{brand_dom} (api.{brand_dom} [121.134.{rnd.randint(1,250)}.{rnd.randint(1,250)}]) "
+                      f"by geopod-ismtpd-{rnd.randint(1,9)} (SG) with HTTPS; {eu.format_datetime(t_send - dt.timedelta(seconds=rnd.randint(1, 20)))}")
     elif esp == "own_kr":
         rc.append(f"Received: from app{rnd.randint(1,4)}.internal ([10.20.{rnd.randint(1,250)}.{rnd.randint(1,250)}]) "
                   f"by {host} with ESMTP; {eu.format_datetime(t_send)}")
