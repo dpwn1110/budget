@@ -64,7 +64,7 @@ body.globe-mode footer { display: none; }
 .hudhero { left: 16px; top: 72px; border: 1px solid var(--fg); background: var(--bg); min-width: 200px; }
 .hnum { font: 200 54px/1 var(--mono); padding: 14px 20px 12px; letter-spacing: -.02em; }
 .hcap { border-top: 1px solid var(--fg); padding: 8px 20px; font-size: 12px; font-style: italic; text-transform: none; letter-spacing: .02em; }
-.readout { right: 72px; top: 72px; text-align: right; font-size: 13px; line-height: 1.55; max-width: 220px; }
+.readout { right: 72px; top: 72px; text-align: right; font-size: 13px; line-height: 1.55; max-width: 236px; background: rgba(0,0,0,.82); padding: 8px 10px; }   /* 확대한 지도 글씨와 겹쳐도 읽히게 */
 .readout .rh { font-weight: 600; letter-spacing: .08em; }
 .readout .rv2 { color: var(--fg); }
 .readout .rit { font-style: italic; text-transform: none; color: var(--dim); font-size: 11.5px; line-height: 1.45; }
@@ -234,7 +234,6 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
   background: rgba(0,0,0,.85); border: 1px solid var(--line); opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; }
 .zoomhint.show { opacity: 1; }
 .globe:active { cursor: grabbing; }
-.globe.flat { cursor: default; }
 .mapfig figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 8px 24px; flex-wrap: wrap; margin-top: 14px; }
 .mapmodes { display: flex; gap: 16px; }
 .mapmodes button { color: var(--dim); font-size: 13px; border-bottom: 1px solid transparent; }
@@ -823,10 +822,19 @@ function geo() {
 }
 
 // 투영기: p(lon, lat) → [x, y, k]. 지구본은 k>0이면 앞면, 평면은 k가 중앙 경선 기준 경도(이음매 판정용).
-function flatProj(w) {
-  const G = geo(), s = w / (2 * G.xmax);
-  return { kind: "flat", p: (lon, lat) => { const lam = wrapLon(lon), [x, y] = equalEarth(lam, lat); return [(x + G.xmax) * s, (G.ytop - y) * s, lam]; },
-           raw: (lam, lat) => { const [x, y] = equalEarth(lam, lat); return [(x + G.xmax) * s, (G.ytop - y) * s]; } };
+// 평면: 지도 전체가 (위·아래·옆 여백을 뺀) 화면에 들어오는 크기가 배율 1. vx, vy는 화면 가운데에 오는 지도 좌표.
+function flatProj(w, h, view) {
+  const G = geo(), mapW = 2 * G.xmax, mapH = G.ytop - G.ybot;
+  const v = view || {};
+  const top = v.top || 0, bottom = v.bottom || 0, side = v.side || 0;
+  const availW = Math.max(50, w - 2 * side), availH = Math.max(50, (h || w * G.aspect) - top - bottom);
+  const s = Math.min(availW / mapW, availH / mapH) * (v.zoom || 1);
+  const cx = w / 2, cy = top + availH / 2;
+  const vx = v.vx ?? mapW / 2, vy = v.vy ?? mapH / 2;
+  const tx = mx => (mx - vx) * s + cx, ty = my => (my - vy) * s + cy;
+  return { kind: "flat", s, cx, cy, vx, vy, mapW, mapH,
+           p: (lon, lat) => { const lam = wrapLon(lon), [x, y] = equalEarth(lam, lat); return [tx(x + G.xmax), ty(G.ytop - y), lam]; },
+           raw: (lam, lat) => { const [x, y] = equalEarth(lam, lat); return [tx(x + G.xmax), ty(G.ytop - y)]; } };
 }
 function globeProj(w, h, lam0, phi0, zoom = 1) {
   const R = (Math.min(w, h) / 2 - 14) * zoom, cx = w / 2, cy = h / 2, sp0 = Math.sin(phi0 * RAD), cp0 = Math.cos(phi0 * RAD);
@@ -940,7 +948,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   function sync() {
     modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === mode)));
     canvas.classList.toggle("flat", mode === "flat");
-    zoomCtl.hidden = mode !== "globe";
+    zoomCtl.hidden = false;
     hint.textContent = mode === "globe"
       ? L(" · 끌어서 돌려보기 · ") + (IS_MAC ? "⌘" : "Ctrl") + L(" + 스크롤, 두 손가락, 더블클릭으로 확대") : "";
     dirty = true;
@@ -949,7 +957,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   function size() {
     const w = fig.clientWidth || 600;
     const mh = typeof maxH === "function" ? maxH() : maxH;
-    const hh = mode === "globe" ? (fill ? mh : Math.min(w, mh)) : Math.round(w * G.aspect);
+    const hh = fill ? mh : mode === "globe" ? Math.min(w, mh) : Math.round(w * G.aspect);
     if (w === W && hh === H && !dirty) return;
     W = w; H = hh;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -957,10 +965,25 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     canvas.style.height = H + "px";
     dirty = true;
   }
-  const proj = () => mode === "globe" ? globeProj(W, H, lam0, phi0, zoom) : flatProj(W);
+  // 평면의 확대·이동 상태 (지구본과 따로)
+  let fz = 1, fvx = null, fvy = null;
+  const flatView = () => ({ zoom: fz, vx: fvx, vy: fvy, top: fill ? 92 : 0, bottom: fill ? 110 : 0, side: fill ? 80 : 0 });
+  const proj = () => mode === "globe" ? globeProj(W, H, lam0, phi0, zoom) : flatProj(W, H, flatView());
+  function clampFlat() {
+    if (fz <= 1.0001) { fz = 1; fvx = fvy = null; return; }
+    const P = flatProj(W, H, flatView());
+    fvx = Math.max(0, Math.min(P.mapW, P.vx)); fvy = Math.max(0, Math.min(P.mapH, P.vy));
+  }
 
   function zoomAt(f, sx, sy) {
-    if (mode !== "globe") return;
+    if (mode === "flat") {
+      // 커서 아래의 지점이 제자리에 있도록
+      const P = proj(), nz = Math.max(1, Math.min(ZOOM_MAX, fz * f));
+      const mx = (sx - P.cx) / P.s + P.vx, my = (sy - P.cy) / P.s + P.vy, ns = P.s * nz / fz;
+      fvx = mx - (sx - P.cx) / ns; fvy = my - (sy - P.cy) / ns; fz = nz;
+      clampFlat(); dirty = true;
+      return;
+    }
     const nz = Math.max(1, Math.min(ZOOM_MAX, zoom * f));
     f = nz / zoom;
     if (Math.abs(f - 1) < 1e-4) return;
@@ -977,7 +1000,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     }
     zoom = nz; anim = null; resumeAt = performance.now() + 4000; dirty = true;
   }
-  function reset() { zoom = 1; lam0 = c.lam; phi0 = c.phi; anim = null; dirty = true; }
+  function reset() { zoom = 1; lam0 = c.lam; phi0 = c.phi; fz = 1; fvx = fvy = null; anim = null; dirty = true; }
   function showHint(text) {
     zoomHint.textContent = text; zoomHint.classList.add("show");
     clearTimeout(hintTimer); hintTimer = setTimeout(() => zoomHint.classList.remove("show"), 1400);
@@ -989,13 +1012,14 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     ctx.clearRect(0, 0, W, H);
     ctx.lineJoin = ctx.lineCap = "round";
     const P = proj();
-    const fine = P.kind === "globe" && zoom >= 2.5;
+    const zz = P.kind === "globe" ? zoom : fz;   // 지금 배율
+    const fine = zz >= 2.5;
 
     if (P.kind === "globe") {
       ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(P.cx, P.cy, P.R, 0, 2 * Math.PI); ctx.fill();
     }
     ctx.lineWidth = .5; ctx.strokeStyle = "rgba(255,255,255,.09)";
-    strokeLines(ctx, P, P.kind !== "globe" || zoom < 3 ? G.grat : zoom < 10 ? G.grat10 : G.grat5);
+    strokeLines(ctx, P, zz < 3 ? G.grat : zz < 10 ? G.grat10 : G.grat5);
     if (P.kind === "flat") {
       ctx.beginPath();
       for (const lam of [-180, 180]) for (let la = WORLD.latMin; la <= WORLD.latMax; la += 2) {
@@ -1004,9 +1028,9 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
       ctx.stroke();
     }
     ctx.strokeStyle = "rgba(255,255,255,.2)";
-    strokeLines(ctx, P, fine ? visibleLines(P, G.borderFine, G.borderCaps) : G.border);
+    strokeLines(ctx, P, fine ? (P.kind === "globe" ? visibleLines(P, G.borderFine, G.borderCaps) : G.borderFine) : G.border);
     ctx.lineWidth = fine ? .9 : .75; ctx.strokeStyle = "rgba(255,255,255,.62)";
-    strokeLines(ctx, P, fine ? visibleLines(P, G.coastFine, G.coastCaps) : G.coast);
+    strokeLines(ctx, P, fine ? (P.kind === "globe" ? visibleLines(P, G.coastFine, G.coastCaps) : G.coastFine) : G.coast);
     if (P.kind === "globe") {
       ctx.lineWidth = .75; ctx.strokeStyle = "rgba(255,255,255,.5)";
       ctx.beginPath(); ctx.arc(P.cx, P.cy, P.R, 0, 2 * Math.PI); ctx.stroke();
@@ -1081,14 +1105,14 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
     }
 
     // 참고용 도시: 확대할수록 작은 도시까지
-    const maxRank = P.kind === "globe" ? cityRank(zoom) : -1;
+    const maxRank = cityRank(zz);
     if (maxRank >= 0) {
       ctx.font = "11px " + sans;
       let n = 0;
       for (const cty of G.places) {
         if (cty.rank > maxRank) break;
         const [x, y, k] = P.p(cty.lon, cty.lat);
-        if (k <= 0 || x < 0 || x > W || y < 0 || y > H) continue;
+        if ((P.kind === "globe" && k <= 0) || x < 0 || x > W || y < 0 || y > H) continue;
         if (drawn.some(([qx, qy, qr]) => Math.abs(qx - x) < qr + 3 && Math.abs(qy - y) < qr + 3)) continue;
         const spot = placeLabel(cty.name, x, y, 2, 13);
         if (!spot) continue;
@@ -1139,7 +1163,6 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
 
   const local = e => { const b = canvas.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
   canvas.addEventListener("pointerdown", e => {
-    if (mode !== "globe") return;
     pointers.set(e.pointerId, local(e));
     canvas.setPointerCapture(e.pointerId);
     anim = null;
@@ -1158,6 +1181,11 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
       return;
     }
     if (!dragging || e.pointerId !== dragging.id) return;
+    if (mode === "flat") {   // 평면: 확대했을 때만 끌어서 옮긴다
+      if (fz > 1) { const P = proj(); fvx = P.vx - (e.clientX - dragging.x) / P.s; fvy = P.vy - (e.clientY - dragging.y) / P.s; clampFlat(); dirty = true; }
+      dragging.x = e.clientX; dragging.y = e.clientY;
+      return;
+    }
     const k = 100 / Math.max(120, Math.min(W, H)) / zoom;
     const lim = zoom > 2 ? 85 : 70;
     lam0 -= (e.clientX - dragging.x) * k;
@@ -1175,7 +1203,6 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   canvas.addEventListener("dblclick", e => { const [x, y] = local(e); zoomAt(e.shiftKey ? .5 : 2, x, y); });
   // 그냥 스크롤은 페이지를 내리고, ⌘/Ctrl + 스크롤(트랙패드 두 손가락 벌리기 포함)만 확대한다
   canvas.addEventListener("wheel", e => {
-    if (mode !== "globe") return;
     if (!(e.ctrlKey || e.metaKey)) { showHint((IS_MAC ? "⌘" : "Ctrl") + L(" + 스크롤로 확대")); return; }
     e.preventDefault();
     const [x, y] = local(e);
