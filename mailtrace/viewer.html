@@ -310,6 +310,9 @@ footer p { margin: 0 0 8px; }
 <script>
 "use strict";
 
+// 내가 메일을 여는 곳. 메일은 Google 서버(위치 비공개)까지 오고, 화면에는 여기서 열린다.
+const ME_PLACE = { name: "서울", lat: 37.5665, lon: 126.978 };
+
 // ---------------------------------------------------------------- helpers
 // 모든 데이터는 textContent로만 넣는다. innerHTML에 메일 내용을 넣지 않는다.
 function h(tag, attrs, ...kids) {
@@ -1015,52 +1018,17 @@ function routeView(r) {
   if (!pts.length) return null;
   const routes = [];
   for (let i = 1; i < pts.length; i++) routes.push({ line: greatCircle([pts[i - 1].lon, pts[i - 1].lat], [pts[i].lon, pts[i].lat]), alpha: 1 });
+  // 마지막: Google 서버(위치 비공개)를 거쳐 내가 여는 곳으로 — 옅은 선
+  const last = pts[pts.length - 1];
+  routes.push({ line: greatCircle([last.lon, last.lat], [ME_PLACE.lon, ME_PLACE.lat]), alpha: .4 });
+  pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, kind: "other", label: "나 · " + ME_PLACE.name + " (여는 곳)", r: 4.5 });
   return worldView({
     points: pts, routes, spin: false, maxH: 560, remember: true,
     ariaLabel: "경유 위치: " + pts.map(p => p.label).join(" → "),
-    caption: "■ 데이터센터  ○ 그 밖의 위치 · 선은 지구 위 최단 경로(대권) · 숫자는 아래 경유 순서 · 이후 Google 데이터센터(위치 비공개)를 거쳐 받은편지함에 도착",
+    caption: "■ 데이터센터  ○ 그 밖의 위치 · 선은 지구 위 최단 경로(대권) · 숫자는 아래 경유 순서 · 옅은 마지막 선은 Google 데이터센터(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 여는 구간",
   });
 }
 
-// 모든 메일의 출발 위치
-function overviewView() {
-  if (!WORLD) return null;
-  const origins = new Map(), routes = new Map();
-  for (const r of DATA) {
-    const located = (r.hops || []).filter(x => x.geo && x.geo.lat != null && x.geo.lon != null);
-    if (!located.length) continue;
-    const g = located[0].geo, key = g.lat + "," + g.lon;
-    const o = origins.get(key) || { lat: g.lat, lon: g.lon, n: 0, dc: 0, name: place(g) };
-    o.n++; if (g.kind === "datacenter") o.dc++;
-    origins.set(key, o);
-    for (let i = 1; i < located.length; i++) {
-      const a = located[i - 1].geo, b = located[i].geo;
-      if (a.lat === b.lat && a.lon === b.lon) continue;
-      const k = [a.lat, a.lon, b.lat, b.lon].join(",");
-      const e = routes.get(k) || { a: [a.lon, a.lat], b: [b.lon, b.lat], n: 0, kind: b.kind, name: place(b) };
-      e.n++; routes.set(k, e);
-    }
-  }
-  if (!origins.size) return null;
-  // 다른 나라를 거친 경로의 도착점도 점으로
-  const stops = new Map();
-  for (const e of routes.values()) {
-    const k = e.b[1] + "," + e.b[0];
-    if (!origins.has(k)) stops.set(k, { lat: e.b[1], lon: e.b[0], kind: e.kind, r: 3.5, label: e.name, weight: 0 });
-  }
-  const pts = [...origins.values()].sort((a, b) => b.n - a.n).map(o => ({
-    lat: o.lat, lon: o.lon, weight: o.n, kind: o.dc * 2 >= o.n ? "datacenter" : "other",
-    r: 3 + 2.4 * Math.sqrt(o.n), label: o.name + "  " + o.n,
-  }));
-  const max = Math.max(...[...routes.values()].map(e => e.n), 1);
-  return worldView({
-    points: pts.concat([...stops.values()]),
-    routes: [...routes.values()].map(e => ({ line: greatCircle(e.a, e.b), alpha: .35 + .65 * e.n / max })),
-    spin: true, maxH: 620,
-    ariaLabel: "출발 위치: " + pts.map(p => p.label).join(", "),
-    caption: "출발 위치 — 위치를 알 수 있는 첫 구간 · 숫자는 메일 수 · ■ 데이터센터  ○ 그 밖의 위치 · 선은 여러 곳을 거친 경로",
-  });
-}
 
 // ---------------------------------------------------------------- 발견: 어디서 출발했나
 // 데이터로 계산한 문장과 단위 도표(한 칸 = 메일 한 통). 행을 누르면 아래 목록을 그 메일로 거른다.
@@ -1178,7 +1146,7 @@ function findingsView() {
 // ✳ 나(받은편지함)를 가운데 두고, 메일이 온 길(보낸 회사 → 발송 서비스 → 출발 위치 → 나)을 실선으로,
 // 열면 신호가 가는 곳(나 → 추적 도메인)을 점선으로 잇는다. 기호를 누르면 정보 창에 그 메일들이 뜬다.
 const GTYPES = [
-  { type: "me", name: "나", desc: "받은편지함" },
+  { type: "me", name: "나", desc: "메일을 여는 곳 · " + ME_PLACE.name },
   { type: "service", name: "발송 서비스", desc: "메일을 실제로 보낸 곳 · 번호는 메일 수 순위" },
   { type: "city", name: "출발 위치", desc: "▲ 데이터센터  △ 그 밖의 곳" },
   { type: "sender", name: "보낸 회사", desc: "메일 수 상위 60곳" },
@@ -1224,7 +1192,7 @@ function graphModel() {
     if (!nodes.has(id)) nodes.set(id, { id, type, key, label, mails: [], names: new Map(), dc: 0 });
     return nodes.get(id);
   };
-  const me = add("me", "me", "나");
+  const me = add("me", "me", "나 · " + ME_PLACE.name);
   const paths = [];
   for (const r of DATA) {
     const s = r.sender || {};
@@ -1354,7 +1322,7 @@ function relCtl(M, st, renderer) {
             on: { click: () => { st.show[t.type] = !on; renderLegend(); renderer.rebuild(); } } }, on ? "−" : "+"));
       }),
       h("div", { class: "lrow lines" },
-        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음")), h("span"), h("span")),
+        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음 · 나로 가는 마지막 구간은 Google 서버를 거쳐 " + ME_PLACE.name + "에서 열림")), h("span"), h("span")),
       h("div", { class: "lrow lines" },
         h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"), h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")));
   }
@@ -1553,10 +1521,12 @@ function geoRelView() {
     const els = { nodes: new Map(), edges: new Map() };
     for (const e of edges) {
       // 출발 위치 → 나 선은 많아서 옅게
-      const toMe = e.b.type === "me" && !e.dashed;
+      // 출발 위치 → 나: 둘 다 땅 위에 있으니 지구 위 곡선으로, 많아서 옅게
+      const toMe = e.b.type === "me" && !e.dashed && e.a.type === "city";
+      if (toMe) e.arc = greatCircle([cityAt.get(e.a.id).lon, cityAt.get(e.a.id).lat], [ME_PLACE.lon, ME_PLACE.lat], 48);
       const w = .75 + 2 * Math.sqrt(e.mails.length / maxE);
-      const line = s("line", { class: "gedge" + (e.dashed ? " dash" : "") + (toMe ? " faint" : ""), "stroke-width": w.toFixed(2) });
-      const hit = s("line", { class: "ghit" });
+      const line = s(toMe ? "path" : "line", { class: "gedge" + (e.dashed ? " dash" : "") + (toMe ? " faint" : ""), "stroke-width": w.toFixed(2) });
+      const hit = s(toMe ? "path" : "line", { class: "ghit" });
       ctl.bindEdge(hit, e);
       gE.append(line); gH.append(hit);
       els.edges.set(e.id, { el: line, hit, e });
@@ -1579,11 +1549,12 @@ function geoRelView() {
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.setAttribute("width", W); svg.setAttribute("height", H);
     const pos = built.pos, nodes = built.nodes, byId = new Map(nodes.map(n => [n.id, n]));
-    // 나(받은편지함)는 위치를 모르므로 지구본 옆 빈 곳에 (넓으면 오른쪽 가운데, 좁으면 오른쪽 아래)
-    const me = W - H > 220 ? [W - (W - H) / 4, H / 2] : [W - 70, H - 64];
+    // 나는 메일을 여는 곳(ME_PLACE)에 고정
+    const [mx, my, mk] = P.p(ME_PLACE.lon, ME_PLACE.lat);
+    const me = [mx, my];
     const shown = new Set();
     for (const n of nodes) {
-      if (n.type === "me") { pos.set(n.id, me.slice()); shown.add(n.id); continue; }
+      if (n.type === "me") { if (P.kind !== "globe" || mk > 0) { pos.set(n.id, me.slice()); shown.add(n.id); } continue; }
       if (n.type !== "city") continue;
       const g = cityAt.get(n.id);
       if (!g) continue;
@@ -1660,6 +1631,19 @@ function geoRelView() {
       if (!hit) boxes.push(box);
     }
     for (const { el, hit, e } of built.els.edges.values()) {
+      if (e.arc) {   // 곡선: 앞면에 있는 부분만
+        let d = "", pen = false, prevK = null;
+        for (let i = 0; i < e.arc.length; i += 2) {
+          const [x, y, k] = P.p(e.arc[i], e.arc[i + 1]);
+          const vis = P.kind === "globe" ? k > 0 : !(prevK !== null && Math.abs(k - prevK) > 180);
+          if (P.kind !== "globe") prevK = k;
+          if (!vis) { pen = false; if (P.kind === "globe") continue; }
+          d += (pen ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); pen = true;
+        }
+        el.style.display = hit.style.display = d ? "" : "none";
+        el.setAttribute("d", d); hit.setAttribute("d", d);
+        continue;
+      }
       const on = shown.has(e.a.id) && shown.has(e.b.id);
       el.style.display = hit.style.display = on ? "" : "none";
       if (!on) continue;
@@ -1673,11 +1657,12 @@ function geoRelView() {
   const cityAt = new Map();
   for (const p of M.paths) if (p.city && !cityAt.has(p.city.id)) { const o = originOf(DATA[p.i]); if (o && o.lat != null) cityAt.set(p.city.id, o); }
   const pts = [...cityAt.entries()].map(([id, o]) => ({ lat: o.lat, lon: o.lon, weight: M.nodes.get(id).mails.length }));
+  pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, DATA.length / 3) });
   if (!pts.length) return null;
   const fig = worldView({
     points: pts.map(p => Object.assign({}, p, { hidden: true })), routes: [], spin: true, maxH: 680,
     ariaLabel: "지구본 위 관계도", remember: false, paused: () => !!geoState.sel,
-    caption: "출발 위치는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다",
+    caption: "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다 · 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다",
     overlay: { mount: (stage, inv) => { stage.append(svg); invalidate = inv; }, draw: overlayDraw },
   });
   ctl.reselect();
