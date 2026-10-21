@@ -34,10 +34,19 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .faint { color: var(--faint); }
 .label { font-size: 11px; letter-spacing: .08em; color: var(--dim); }
 
-header.top { padding: 72px 0 40px; border-bottom: 1px solid var(--line); }
-h1 { font-weight: 300; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.01em; margin: 0 0 18px; }
-.lede { max-width: 38em; color: var(--dim); margin: 0; }
-.stats { display: flex; flex-wrap: wrap; gap: 8px 40px; margin-top: 36px; }
+header.top { padding: 36px 0 24px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 12px 32px; }
+h1 { font-weight: 300; font-size: clamp(24px, 3vw, 34px); letter-spacing: -.01em; margin: 0; }
+h1 a { color: inherit; text-decoration: none; }
+#nav { display: flex; gap: 28px; }
+#nav a { color: var(--dim); text-decoration: none; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; padding-bottom: 3px; border-bottom: 1px solid transparent; }
+#nav a:hover { color: var(--fg); }
+#nav a[aria-current] { color: var(--fg); border-bottom-color: var(--fg); }
+.lede { max-width: 38em; color: var(--dim); margin: 14px 0 0; font-size: 14px; }
+#page-analysis .stats { padding: 40px 0 8px; }
+.graphsec { padding: 56px 0 24px; border-top: 1px solid var(--line); }
+.graphsec .fnote { margin-bottom: 24px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 40px; }
 .stat b { display: block; font: 300 28px/1.2 var(--mono); }
 .stat b.track { color: var(--track); }
 
@@ -120,13 +129,24 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .mapfig { margin: 0 0 56px; }
 .globe { display: block; width: 100%; touch-action: pan-y; cursor: grab; }
 .mapstage { position: relative; }
-.geooverlay { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.geooverlay { position: absolute; left: 0; top: 0; pointer-events: none; overflow: hidden; }
+/* 첫 화면: 접는 범례와 지도 안 팝업 */
+.legendbtn { position: absolute; z-index: 3; top: 12px; right: 0; font: 12px var(--mono); letter-spacing: .06em; color: var(--dim);
+  border: 1px solid var(--line); background: var(--bg); padding: 7px 12px; }
+.legendbtn:hover, .legendbtn[aria-expanded="true"] { color: var(--fg); }
+.legendbox.compact { position: absolute; z-index: 3; top: 48px; right: 0; width: 248px; padding: 2px 14px 6px; }
+.legendbox.compact .lrow { grid-template-columns: 16px 1fr auto 16px; gap: 10px; padding: 8px 0; }
+.legendbox.compact .lname { font-size: 11.5px; letter-spacing: .04em; }
+.gpopup { position: absolute; z-index: 4; width: min(320px, calc(100% - 16px)); max-height: min(440px, calc(100% - 16px)); overflow: auto;
+  padding: 14px 18px 16px; box-shadow: 0 0 0 1px var(--bg); }
+.gpopup .ikv { grid-template-columns: 6.2em 1fr; font-size: 12.5px; }
+.gpopup .ititle { font-size: 15px; }
 .geooverlay .gnode, .geooverlay .ghit { pointer-events: auto; }
 .gedge.faint { stroke: rgba(255,255,255,.18); }
 .gnode.nolabel .glabel, .gnode.nolabel .gsub { display: none; }
 .gnode.nolabel:hover .glabel, .gnode.nolabel:hover .gsub, .gnode.nolabel:focus .glabel, .gnode.nolabel:focus .gsub { display: inline; }
-.graphwrap.geo .mapfig { margin-bottom: 0; }
-.zoomctl { position: absolute; z-index: 2; top: 12px; right: 0; display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); }
+
+.zoomctl { position: absolute; z-index: 2; bottom: 12px; right: 0; display: flex; flex-direction: column; border: 1px solid var(--line); background: var(--bg); }
 .zoomctl button { width: 32px; height: 32px; font: 15px/1 var(--mono); color: var(--dim); }
 .zoomctl button + button { border-top: 1px solid var(--line); }
 .zoomctl button:hover { color: var(--fg); }
@@ -144,7 +164,6 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 #overview .mapfig { margin-bottom: 8px; }
 
 /* 관계도 */
-.ovswitch { align-items: baseline; margin-bottom: 20px; }
 .graphwrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 32px; align-items: start; padding-bottom: 24px; }
 .graphstage { min-width: 0; overflow: auto; max-height: min(78vh, 860px); cursor: grab;
   border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
@@ -256,10 +275,16 @@ footer p { margin: 0 0 8px; }
 <body>
 
 <header class="top">
-  <h1>열기 전에</h1>
-  <p class="lede">메일함에 도착한 메일 한 통 한 통이 어디를 거쳐 왔는지, 그리고 열어 보는 순간 어디에 신호를 보내는지.
+  <div class="brand">
+    <h1><a href="#/">열기 전에</a></h1>
+    <nav id="nav" hidden aria-label="페이지">
+      <a href="#/" data-page="globe">Globe</a>
+      <a href="#/analysis" data-page="analysis">Analysis</a>
+      <a href="#/archive" data-page="archive">Archive</a>
+    </nav>
+  </div>
+  <p class="lede" id="lede">메일함에 도착한 메일 한 통 한 통이 어디를 거쳐 왔는지, 그리고 열어 보는 순간 어디에 신호를 보내는지.
   이 페이지는 그 신호를 보내지 않고 보기만 합니다.</p>
-  <div class="stats" id="stats" hidden></div>
 </header>
 
 <main>
@@ -271,9 +296,21 @@ footer p { margin: 0 0 8px; }
     </div>
   </div>
 
-  <div id="list" hidden>
+  <section id="page-globe" class="page" hidden>
     <div id="overview"></div>
+  </section>
+
+  <section id="page-analysis" class="page" hidden>
+    <div class="stats" id="stats"></div>
     <div id="findings"></div>
+    <section class="graphsec">
+      <h2 class="ftitle">관계도</h2>
+      <p class="fnote faint">지도 없이 본 메일의 길. 기호나 선을 누르면 오른쪽에 그 메일들이 나옵니다.</p>
+      <div id="graphsec"></div>
+    </section>
+  </section>
+
+  <section id="page-archive" class="page" hidden>
     <div class="bar">
       <div class="sorts" role="group" aria-label="정렬">
         <span class="label">정렬</span>
@@ -294,7 +331,7 @@ footer p { margin: 0 0 8px; }
       <div>받은 시각</div><div>보낸 사람</div><div>실제 발송</div><div>출발 위치</div><div>추적 요소</div>
     </div>
     <div id="rows"></div>
-  </div>
+  </section>
 
   <div id="detail" hidden></div>
 </main>
@@ -418,6 +455,8 @@ function load(text) {
   if (!Array.isArray(recs)) throw new Error("메일 기록 배열이 아닙니다. parse_mbox.py가 만든 파일인지 확인해 주세요.");
   DATA = prepare(recs.filter(r => r && typeof r === "object"));
   document.getElementById("loader").hidden = true;
+  document.getElementById("nav").hidden = false;
+  analysisDrawn = false;
   renderStats();
   // 한 부분이 실패해도 나머지는 보이게, 실패한 이유는 그 자리에 적는다
   const safe = (fn, what) => {
@@ -429,11 +468,11 @@ function load(text) {
     ? h("p", { class: "nogeo" },
         "이 파일에는 위치 정보가 없어서 지구본과 ‘어디서 출발했나’를 그릴 수 없습니다. ",
         "파서를 --geo-city와 --geo-asn 옵션과 함께 실행해 만든 messages.json을 넣어 주세요.")
-    : safe(overviewTabs, "지구본·관계도"));
+    : safe(geoRelView, "지구본"));
   state.filter = null;
   document.getElementById("findings").replaceChildren(safe(findingsView, "'어디서 출발했나'"));
   renderList();
-  route();
+  if (location.hash.startsWith("#/")) route(); else location.hash = "#/";
 }
 
 // ---------------------------------------------------------------- list
@@ -546,26 +585,38 @@ for (const b of document.querySelectorAll(".sorts button")) {
 // ---------------------------------------------------------------- detail
 function open(i) { state.scroll = window.scrollY; location.hash = "m" + i; }
 
+// 페이지: #/ (Globe), #/analysis, #/archive, 메일 상세: #m번호
+let analysisDrawn = false, fromDetail = false;
 function route() {
-  const m = /^#m(\d+)$/.exec(location.hash);
-  const list = document.getElementById("list"), det = document.getElementById("detail");
   if (!DATA.length) return;
+  const hs = location.hash, m = /^#m(\d+)$/.exec(hs);
+  const page = m ? null : hs === "#/analysis" ? "analysis" : hs === "#/archive" ? "archive" : "globe";
+  for (const k of ["globe", "analysis", "archive"]) document.getElementById("page-" + k).hidden = page !== k;
+  document.getElementById("lede").hidden = page !== "globe";
+  for (const a of document.querySelectorAll("#nav a")) a.toggleAttribute("aria-current", a.dataset.page === page);
+  const det = document.getElementById("detail");
   if (m && DATA[+m[1]]) {
-    list.hidden = true;
     det.hidden = false;
     renderDetail(DATA[+m[1]]);
     window.scrollTo(0, 0);
     det.querySelector(".back").focus({ preventScroll: true });
-  } else {
-    det.hidden = true;
-    det.replaceChildren();
-    list.hidden = false;
-    window.scrollTo(0, state.scroll);
+    fromDetail = true;
+    return;
   }
+  det.hidden = true;
+  det.replaceChildren();
+  // 관계도는 화면 크기를 재야 하므로 Analysis를 처음 열 때 그린다
+  if (page === "analysis" && !analysisDrawn && DATA.some(r => r.route)) {
+    analysisDrawn = true;
+    try { document.getElementById("graphsec").replaceChildren(graphView()); }
+    catch (e) { console.error(e); document.getElementById("graphsec").replaceChildren(h("p", { class: "drawerr" }, "관계도를 그리지 못했습니다: " + e.message)); }
+  }
+  window.scrollTo(0, fromDetail ? state.scroll : 0);
+  fromDetail = false;
 }
 window.addEventListener("hashchange", route);
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && location.hash) history.back();
+  if (e.key === "Escape" && /^#m\d+$/.test(location.hash)) history.back();
 });
 
 function isGoogleHost(x) { return /(^|\.)google\.com$|^2002:|^[0-9a-f]{1,4}(:[0-9a-f]{0,4}){2,}$/i.test(x || ""); }
@@ -1037,10 +1088,11 @@ const originOf = r => (r.route && r.route.origin) || null;
 const fromDC = r => { const o = originOf(r); return !!(o && o.kind === "datacenter"); };
 const cityName = o => (o.city || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
 
+// 목록을 거르고 Archive로 간다
 function setFilter(label, test) {
   state.filter = label ? { label, test } : null;
   renderList();
-  if (label) document.querySelector(".bar").scrollIntoView({ behavior: REDUCE ? "auto" : "smooth" });
+  if (label && location.hash !== "#/archive") location.hash = "#/archive";
 }
 
 function units(rs, filled) {
@@ -1055,7 +1107,7 @@ function unitRows(title, note, groups, filled) {
     h("div", { class: "label fhead" }, title),
     note ? h("div", { class: "fnote faint" }, note) : null,
     groups.map(g => h("button", {
-      class: "frow", title: g.label + " · " + g.rs.length + "통 — 누르면 아래 목록에서 이 메일만",
+      class: "frow", title: g.label + " · " + g.rs.length + "통 — 누르면 Archive에서 이 메일만",
       on: { click: () => setFilter(g.filterLabel || g.label, g.test) },
     },
       h("span", { class: "flabel" }, g.label, g.sub ? h("span", { class: "fsub dim" }, g.sub) : null),
@@ -1065,7 +1117,7 @@ function unitRows(title, note, groups, filled) {
 
 function hero(num, den, text, foot, onClick) {
   const pct = den ? Math.round(100 * num / den) : 0;
-  return h("button", { class: "hero", on: { click: onClick }, title: "누르면 아래 목록에서 이 메일만" },
+  return h("button", { class: "hero", on: { click: onClick }, title: "누르면 Archive에서 이 메일만" },
     h("b", null, pct + "%"),
     h("span", { class: "mono dim" }, num + "통 / " + den + "통"),
     h("span", { class: "htext" }, text),
@@ -1129,7 +1181,7 @@ function findingsView() {
   const legend = h("div", { class: "flegend label" },
     h("span", null, h("i", { class: "u on" }), "데이터센터에서 출발"),
     h("span", null, h("i", { class: "u" }), "그 밖의 곳에서 출발"),
-    h("span", null, "한 칸 = 메일 한 통 · 행을 누르면 아래 목록에서 그 메일만"));
+    h("span", null, "한 칸 = 메일 한 통 · 행을 누르면 Archive에서 그 메일만"));
 
   return h("section", { class: "findings" },
     h("h2", { class: "ftitle" }, "어디서 출발했나"),
@@ -1217,9 +1269,15 @@ function graphModel() {
 
 // 범례·정보 창·선택은 지구본 위 관계도와 따로 보는 관계도가 함께 쓴다.
 // renderer: { rebuild(), emphasize(mailsSet|null) }
-function relCtl(M, st, renderer) {
-  const legend = h("div", { class: "gbox legendbox" });
-  const info = h("div", { class: "gbox infobox", hidden: true });
+// popupIn: { el } — 주면 정보 창을 그 요소 안, 누른 자리 옆 팝업으로 띄우고, 범례는 작은 버튼으로 접어 둔다.
+function relCtl(M, st, renderer, popupIn) {
+  const legend = h("div", { class: "gbox legendbox" + (popupIn ? " compact" : ""), hidden: !!popupIn });
+  const info = h("div", { class: "gbox " + (popupIn ? "gpopup" : "infobox"), hidden: true, role: popupIn ? "dialog" : null });
+  const legendBtn = popupIn ? h("button", { class: "legendbtn", "aria-expanded": "false", on: { click: () => {
+    legend.hidden = !legend.hidden;
+    legendBtn.setAttribute("aria-expanded", String(!legend.hidden));
+    legendBtn.textContent = legend.hidden ? "범례 +" : "범례 −";
+  } } }, "범례 +") : null;
 
   function visible(n) {
     if (!n || !st.show[n.type]) return false;
@@ -1259,6 +1317,7 @@ function relCtl(M, st, renderer) {
     hover(null);
     renderInfo();
   }
+  const close = () => { st.back = null; select(null); };
 
   function mailRow(i) {
     const r = DATA[i], d = dateOf(r.received);
@@ -1272,7 +1331,7 @@ function relCtl(M, st, renderer) {
     const sl = st.sel;
     info.hidden = !sl;
     if (!sl) { info.replaceChildren(); return; }
-    const close = h("button", { class: "iclose", "aria-label": "닫기", on: { click: () => { st.back = null; select(null); } } }, "×");
+    const x = h("button", { class: "iclose", "aria-label": "닫기", on: { click: close } }, "×");
     if (sl.kind === "mail") {
       const r = DATA[sl.i], s = r.sender || {}, o = originOf(r);
       const p = M.paths[sl.i];
@@ -1285,57 +1344,91 @@ function relCtl(M, st, renderer) {
         ["추적 픽셀", r._pixels + "개" + (trackers.length ? "  →  " + trackers.join(", ") : "")],
         ["제3자 도메인", r._third + "곳"],
       ];
-      if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(x => x.form))].join(", ") + ")"]);
-      info.replaceChildren(close,
+      if (r.me && r.me.length) steps.push(["내 이메일 주소", "주소 " + r.me.length + "곳에 담김 (" + [...new Set(r.me.map(q => q.form))].join(", ") + ")"]);
+      info.replaceChildren(x,
         st.back ? h("button", { class: "iback", on: { click: () => { const b = st.back; st.back = null; select(b, true); } } }, "← 목록") : null,
         h("div", { class: "mono dim" }, dateOf(r.received) ? fmtFull.format(dateOf(r.received)) : ""),
         h("h4", { class: "ititle" }, r.subject || "(제목 없음)"),
         h("dl", { class: "ikv" }, steps.map(([k, v]) => [h("dt", null, k), h("dd", null, v)])),
         h("button", { class: "btn imore", on: { click: () => open(sl.i) } }, "상세 보기 →"));
-      return;
+    } else {
+      const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
+      const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
+      const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
+      const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
+      const ids = new Set(list);
+      info.replaceChildren(x,
+        h("div", { class: "label" }, kind),
+        h("h4", { class: "ititle" }, title),
+        h("div", { class: "mono dim" }, list.length + "통"),
+        h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
+        list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
+        h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "Archive에서 이 메일만 보기"));
     }
-    const mails = sl.kind === "node" ? sl.n.mails : sl.e.mails;
-    const title = sl.kind === "node" ? sl.n.label : sl.e.a.label + "  →  " + sl.e.b.label;
-    const kind = sl.kind === "node" ? GTYPES.find(t => t.type === sl.n.type).name : sl.e.dashed ? "열면 신호가 가는 길" : "메일이 온 길";
-    const list = [...mails].sort((a, b) => DATA[b]._t - DATA[a]._t);
-    const ids = new Set(list);
-    info.replaceChildren(close,
-      h("div", { class: "label" }, kind),
-      h("h4", { class: "ititle" }, title),
-      h("div", { class: "mono dim" }, list.length + "통"),
-      h("div", { class: "ilist" }, list.slice(0, 80).map(mailRow)),
-      list.length > 80 ? h("div", { class: "faint", style: "font-size:12px;padding-top:8px" }, "… 외 " + (list.length - 80) + "통") : null,
-      h("button", { class: "btn imore", on: { click: () => setFilter(title + " (관계도)", r => ids.has(r._i)) } }, "아래 목록에서 이 메일만 보기"));
+    if (popupIn) placePopup();
+  }
+
+  // 팝업은 누른 자리 옆에. 넘치면 반대쪽으로, 위아래는 안쪽으로.
+  function placePopup() {
+    if (!popupIn.el) return;
+    const sr = popupIn.el.getBoundingClientRect(), at = st.at || [sr.left + sr.width / 2, sr.top + sr.height / 2];
+    const w = info.offsetWidth, hh = info.offsetHeight;
+    let x = at[0] - sr.left + 18, y = at[1] - sr.top - 24;
+    if (x + w > sr.width - 8) x = at[0] - sr.left - 18 - w;
+    x = Math.max(8, Math.min(sr.width - w - 8, x));
+    // 위아래는 지구본 화면과 지금 보이는 창 둘 다의 안쪽으로
+    const top = Math.max(8, -sr.top + 8), bottom = Math.min(sr.height, innerHeight - sr.top) - 8;
+    y = Math.max(top, Math.min(bottom - hh, y));
+    info.style.left = x + "px"; info.style.top = y + "px";
+  }
+  if (popupIn) {
+    // 팝업 바깥을 누르면 닫는다 (기호나 선을 누르면 그 자리에 새로 뜬다)
+    document.addEventListener("pointerdown", ev => {
+      if (info.hidden || !info.isConnected) return;
+      if (info.contains(ev.target) || (ev.target.closest && ev.target.closest(".gnode, .ghit, .legendbox, .legendbtn"))) return;
+      close();
+    }, true);
+    document.addEventListener("keydown", ev => { if (ev.key === "Escape" && !info.hidden && info.isConnected) close(); });
   }
 
   function renderLegend() {
+    const lineRows = [
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"),
+          popupIn ? null : h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음 · 나로 가는 마지막 구간은 Google 서버를 거쳐 " + ME_PLACE.name + "에서 열림")), h("span"), h("span")),
+      h("div", { class: "lrow lines" },
+        h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"),
+          popupIn ? null : h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")),
+    ];
     legend.replaceChildren(
       ...GTYPES.map(t => {
         const total = [...M.nodes.values()].filter(n => n.type === t.type).length;
         const on = st.show[t.type];
-        return h("div", { class: "lrow" },
+        return h("div", { class: "lrow", title: t.desc },
           legendSym(t.type),
-          h("span", null, h("span", { class: "lname" }, t.name), h("span", { class: "ldesc faint" }, t.desc)),
+          h("span", null, h("span", { class: "lname" }, t.name), popupIn ? null : h("span", { class: "ldesc faint" }, t.desc)),
           h("span", { class: "mono dim" }, total + "곳"),
           t.type === "me" ? h("span") : h("button", { class: "ltoggle", "aria-pressed": String(on), "aria-label": t.name + (on ? " 접기" : " 펼치기"),
             on: { click: () => { st.show[t.type] = !on; renderLegend(); renderer.rebuild(); } } }, on ? "−" : "+"));
       }),
-      h("div", { class: "lrow lines" },
-        h("span", { class: "lline" }), h("span", null, h("span", { class: "lname" }, "메일이 온 길"), h("span", { class: "ldesc faint" }, "굵을수록 메일이 많음 · 나로 가는 마지막 구간은 Google 서버를 거쳐 " + ME_PLACE.name + "에서 열림")), h("span"), h("span")),
-      h("div", { class: "lrow lines" },
-        h("span", { class: "lline dash" }), h("span", null, h("span", { class: "lname" }, "열면 신호가 가는 길"), h("span", { class: "ldesc faint" }, "나 → 추적 도메인")), h("span"), h("span")));
+      ...lineRows);
   }
   renderLegend();
 
-  // 기호·선 요소에 마우스·키보드 동작을 단다
+  // 기호·선 요소에 마우스·키보드 동작을 단다. 누른 자리는 팝업 위치로 쓴다.
   function bindNode(el, n) {
-    el.addEventListener("click", () => select({ kind: "node", n }));
-    el.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); select({ kind: "node", n }); } });
+    el.addEventListener("click", ev => { st.at = [ev.clientX, ev.clientY]; select({ kind: "node", n }); });
+    el.addEventListener("keydown", ev => {
+      if (ev.key !== "Enter" && ev.key !== " ") return;
+      ev.preventDefault();
+      const b = el.getBoundingClientRect(); st.at = [b.left + b.width / 2, b.top + b.height / 2];
+      select({ kind: "node", n });
+    });
     el.addEventListener("mouseenter", () => hover(new Set(n.mails)));
     el.addEventListener("mouseleave", () => hover(null));
   }
   function bindEdge(el, e) {
-    el.addEventListener("click", () => select({ kind: "edge", e }));
+    el.addEventListener("click", ev => { st.at = [ev.clientX, ev.clientY]; select({ kind: "edge", e }); });
     el.addEventListener("mouseenter", () => hover(new Set(e.mails)));
     el.addEventListener("mouseleave", () => hover(null));
   }
@@ -1348,8 +1441,9 @@ function relCtl(M, st, renderer) {
       el.classList.toggle("on", !!on);
     }
   }
-  const side = h("div", { class: "gside" }, legend, info);
-  return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, current: selMails, reselect: () => { if (st.sel) select(st.sel, true); } };
+  const side = popupIn ? null : h("div", { class: "gside" }, legend, info);
+  return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, legend, legendBtn, info,
+           reselect: () => { if (st.sel) select(st.sel, true); } };
 }
 
 function nodeEl(n, sizeScale = 1) {
@@ -1496,22 +1590,28 @@ function graphView() {
   return wrap;
 }
 
-// ---- 지구본 위 관계도
-// 출발 위치(▲△)는 실제 자리에 고정하고, 위치가 없는 발송 서비스·보낸 회사·추적 도메인은
-// 이어진 곳 근처에 매달려 지구본을 돌리면 따라 움직인다. 나(받은편지함)는 위치를 알 수 없어 오른쪽 아래에 둔다.
+// ---- 지구본 위 관계도 (첫 화면)
+// 출발 위치(▲△)와 나(ME_PLACE)는 실제 자리에 고정. 위치가 없는 발송 서비스·보낸 회사·추적 도메인은
+// 힘으로 밀고 당기지 않고, 이어진 곳에서 '지구본 바깥 방향으로 정해진 각도·거리'에 붙인다.
+// 그래서 지구본이 돌아도 떨리지 않고 매끄럽게 따라온다.
 const geoState = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null };
 
 function geoRelView() {
   if (!WORLD) return null;
   const M = graphModel();
-  let built = null;           // { nodes, edges, els, svg }
+  let built = null;           // { nodes, edges, els, pos }
   let invalidate = () => {};
+  const host = { el: null };   // 팝업을 띄울 지구본 화면 (worldView가 만든 뒤 채운다)
   const ctl = relCtl(M, geoState, {
     rebuild: () => { built = null; invalidate(); },
     emphasize: mails => { if (built) ctl.applyEmphasis(built.els.nodes.values(), built.els.edges.values(), mails); },
-  });
+  }, host);
   const svg = s("svg", { class: "geooverlay" });
   const textW = str => [...str].reduce((w, c) => w + (/[ᄀ-￿]/.test(c) ? 12.5 : 7.2), 0);
+
+  // 출발 위치 기호의 경도·위도
+  const cityAt = new Map();
+  for (const p of M.paths) if (p.city && !cityAt.has(p.city.id)) { const o = originOf(DATA[p.i]); if (o && o.lat != null) cityAt.set(p.city.id, o); }
 
   function rebuild() {
     const { nodes, edges } = ctl.build();
@@ -1519,9 +1619,8 @@ function geoRelView() {
     const gE = s("g"), gH = s("g"), gN = s("g");
     const els = { nodes: new Map(), edges: new Map() };
     for (const e of edges) {
-      // 출발 위치 → 나 선은 많아서 옅게
       // 출발 위치 → 나: 둘 다 땅 위에 있으니 지구 위 곡선으로, 많아서 옅게
-      const toMe = e.b.type === "me" && !e.dashed && e.a.type === "city";
+      const toMe = e.b.type === "me" && !e.dashed && e.a.type === "city" && cityAt.has(e.a.id);
       if (toMe) e.arc = greatCircle([cityAt.get(e.a.id).lon, cityAt.get(e.a.id).lat], [ME_PLACE.lon, ME_PLACE.lat], 48);
       const w = .75 + 2 * Math.sqrt(e.mails.length / maxE);
       const line = s(toMe ? "path" : "line", { class: "gedge" + (e.dashed ? " dash" : "") + (toMe ? " faint" : ""), "stroke-width": w.toFixed(2) });
@@ -1535,155 +1634,139 @@ function geoRelView() {
       ctl.bindNode(g, n);
       gN.append(g);
       n.cr = Math.max(22, textW(n.label) / 2 + 4);
-      els.nodes.set(n.id, { el: g, n });
+      els.nodes.set(n.id, { el: g, n, lab: true });
     }
     svg.replaceChildren(gE, gH, gN);
-    built = { nodes, edges, els, pos: new Map() };
+    // 매달 곳(anchor) 후보: 한 단계 아래(출발 위치 쪽)의 이웃과 함께 지나간 메일 수
+    const LEVEL = { me: 0, city: 1, service: 2, sender: 3, tracker: 1 };
+    const cand = new Map(nodes.map(n => [n.id, []]));
+    for (const e of edges) {
+      const [lo, hi] = LEVEL[e.a.type] < LEVEL[e.b.type] ? [e.a, e.b] : [e.b, e.a];
+      if (e.dashed) { cand.get(e.b.id).push({ id: M.me.id, w: e.mails.length }); continue; }
+      if (hi.type !== "city" && hi.type !== "me") cand.get(hi.id).push({ id: lo.id, w: e.mails.length });
+    }
+    for (const c of cand.values()) c.sort((a, b) => b.w - a.w || (a.id < b.id ? -1 : 1));
+    built = { nodes, edges, els, pos: new Map(), cand };
     ctl.hover(null);
   }
 
-  // 매 프레임: 고정점(출발 위치·나)을 투영하고, 나머지는 몇 번씩 힘을 주어 따라오게 한다
   function overlayDraw(P, W, H) {
     if (!built) rebuild();
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     svg.setAttribute("width", W); svg.setAttribute("height", H);
-    const pos = built.pos, nodes = built.nodes, byId = new Map(nodes.map(n => [n.id, n]));
-    // 나는 메일을 여는 곳(ME_PLACE)에 고정
+    const { nodes, pos, cand } = built;
+    const target = new Map(), shown = new Set();
+    // 1) 고정점
     const [mx, my, mk] = P.p(ME_PLACE.lon, ME_PLACE.lat);
-    const me = [mx, my];
-    const shown = new Set();
+    if (P.kind !== "globe" || mk > 0) { target.set(M.me.id, [mx, my]); shown.add(M.me.id); }
     for (const n of nodes) {
-      if (n.type === "me") { if (P.kind !== "globe" || mk > 0) { pos.set(n.id, me.slice()); shown.add(n.id); } continue; }
       if (n.type !== "city") continue;
       const g = cityAt.get(n.id);
       if (!g) continue;
       const [x, y, k] = P.p(g.lon, g.lat);
       if (P.kind === "globe" && k <= 0) continue;
-      pos.set(n.id, [x, y]); shown.add(n.id);
+      target.set(n.id, [x, y]); shown.add(n.id);
     }
-    // 매달린 기호: 이어진 고정점이 하나라도 보이면 보인다
-    const nbr = new Map(nodes.map(n => [n.id, []]));
-    for (const e of built.edges) { nbr.get(e.a.id).push(e.b.id); nbr.get(e.b.id).push(e.a.id); }
-    const free = nodes.filter(n => n.type !== "me" && n.type !== "city");
-    for (let pass = 0; pass < 2; pass++) for (const n of free) {
-      if (shown.has(n.id)) continue;
-      const anchors = nbr.get(n.id).filter(id => shown.has(id) && (n.type === "tracker" || byId.get(id).type !== "me"));
-      if (!anchors.length) continue;
-      shown.add(n.id);
-      if (!pos.has(n.id) && n.type === "tracker") {
-        // 추적 도메인은 나를 중심으로 부채꼴로 펼쳐 놓고 시작
-        const trk = free.filter(m => m.type === "tracker"), k = trk.indexOf(n), cnt = trk.length;
-        const a = Math.PI * (.5 + (k + .5) / cnt);
-        pos.set(n.id, [me[0] + Math.cos(a) * (90 + 40 * (k % 3)), me[1] + Math.sin(a) * (90 + 40 * (k % 3))]);
-      }
-      if (!pos.has(n.id)) {
-        // 처음 자리: 이웃의 평균에서 지구본 바깥쪽으로 조금
-        const ax = anchors.reduce((t, id) => t + pos.get(id)[0], 0) / anchors.length;
-        const ay = anchors.reduce((t, id) => t + pos.get(id)[1], 0) / anchors.length;
-        const cx = W / 2, cy = H / 2, dx = ax - cx, dy = ay - cy, d = Math.hypot(dx, dy) || 1;
-        const h0 = (n.id.length * 37 % 100) / 100 - .5;
-        pos.set(n.id, [ax + dx / d * 70 + h0 * 30, ay + dy / d * 70 + h0 * 30]);
-      }
-    }
-    let moved = 0;
-    const live = nodes.filter(n => shown.has(n.id));
-    for (let it = 0; it < 6; it++) {
-      const f = new Map(live.map(n => [n.id, [0, 0]]));
-      for (let i = 0; i < live.length; i++) for (let j = i + 1; j < live.length; j++) {
-        const a = live[i], b = live[j], pa = pos.get(a.id), pb = pos.get(b.id);
-        let dx = pb[0] - pa[0], dy = pb[1] - pa[1], d = Math.hypot(dx, dy) || .01;
-        const min = (a.cr + b.cr) * .85;
-        if (d >= min) continue;
-        const push = (min - d) / d * .5;
-        f.get(a.id)[0] -= dx * push; f.get(a.id)[1] -= dy * push;
-        f.get(b.id)[0] += dx * push; f.get(b.id)[1] += dy * push;
-      }
-      for (const e of built.edges) {
-        if (!shown.has(e.a.id) || !shown.has(e.b.id)) continue;
-        if (e.b.type === "me" && !e.dashed) continue;   // 출발 위치 → 나 선은 당기지 않는다
-        const pa = pos.get(e.a.id), pb = pos.get(e.b.id);
-        const dx = pb[0] - pa[0], dy = pb[1] - pa[1], d = Math.hypot(dx, dy) || .01;
-        const k = (d - (e.dashed ? 90 : 70)) / d * .12;
-        f.get(e.a.id)[0] += dx * k; f.get(e.a.id)[1] += dy * k;
-        f.get(e.b.id)[0] -= dx * k; f.get(e.b.id)[1] -= dy * k;
-      }
-      for (const n of live) {
-        if (n.type === "me" || n.type === "city") continue;
-        const p = pos.get(n.id), [fx, fy] = f.get(n.id);
-        p[0] = Math.max(16, Math.min(W - 16, p[0] + fx)); p[1] = Math.max(16, Math.min(H - 30, p[1] + fy));
-        moved = Math.max(moved, Math.abs(fx) + Math.abs(fy));
+    // 2) 매달린 기호: 보이는 후보 중 메일을 가장 많이 함께 나른 곳에, 그곳의 자식 순서대로 부채꼴로
+    const C = [W / 2, H / 2];
+    const children = new Map();
+    const order = ["service", "sender", "tracker"];
+    for (const type of order) {
+      const list = nodes.filter(n => n.type === type).sort((a, b) => b.mails.length - a.mails.length || (a.id < b.id ? -1 : 1));
+      for (const n of list) {
+        const a = cand.get(n.id).find(c => shown.has(c.id));
+        if (!a) continue;
+        if (!children.has(a.id)) children.set(a.id, []);
+        const idx = children.get(a.id).push(n.id) - 1;
+        const ap = target.get(a.id);
+        let p;
+        if (a.id === M.me.id) {
+          // 나에게 매달린 것(추적 도메인 등)은 나를 둘러싼 고리에
+          const cnt = Math.max(6, list.filter(m => cand.get(m.id)[0] && cand.get(m.id)[0].id === M.me.id).length);
+          const ang = -Math.PI / 2 + idx * 2 * Math.PI / cnt;
+          const r = 84 + (idx % 2) * 40;
+          p = [ap[0] + Math.cos(ang) * r, ap[1] + Math.sin(ang) * r];
+        } else {
+          const dx = ap[0] - C[0], dy = ap[1] - C[1], d = Math.hypot(dx, dy);
+          const u = d < 1 ? [1, 0] : [dx / d, dy / d];
+          // 한 줄에 7개씩 부채꼴로, 넘치면 한 칸 바깥 줄에
+          const j = idx % 7, ring = Math.floor(idx / 7);
+          const fan = j === 0 ? 0 : (j % 2 ? 1 : -1) * Math.ceil(j / 2);
+          const ang = fan * .42 + ring * .21;
+          const dist = (type === "service" ? 64 : 58) + ring * 36;
+          const ca = Math.cos(ang), sa = Math.sin(ang);
+          p = [ap[0] + (u[0] * ca - u[1] * sa) * dist, ap[1] + (u[0] * sa + u[1] * ca) * dist];
+        }
+        target.set(n.id, p); shown.add(n.id);
       }
     }
-    // 라벨이 겹치면 메일이 많은 쪽만 남긴다 (나 → 출발 위치 → 발송 서비스 → 보낸 회사 → 추적 도메인 순)
-    const ORDER = { me: 0, city: 1, service: 2, sender: 3, tracker: 4 };
+    // 3) 부드럽게 따라가기 (밀고 당기는 힘이 없으니 떨리지 않는다)
+    let moving = false;
+    for (const [id, t] of target) {
+      const n = built.els.nodes.get(id).n;
+      const fixed = n.type === "city" || n.type === "me";
+      const prev = pos.get(id);
+      if (!prev || fixed) { pos.set(id, t.slice()); continue; }
+      const dx = t[0] - prev[0], dy = t[1] - prev[1];
+      if (Math.abs(dx) + Math.abs(dy) > .4) moving = true;
+      prev[0] += dx * .3; prev[1] += dy * .3;
+    }
+    for (const id of [...pos.keys()]) if (!shown.has(id)) pos.delete(id);
+
+    // 4) 라벨: 겹치면 메일이 많은 쪽만. 한 번 정한 상태는 여유를 두고 바꿔 깜빡이지 않게.
+    const RANK = { me: 0, city: 1, service: 2, sender: 3, tracker: 4 };
     const boxes = [];
     const ranked = [...built.els.nodes.values()].filter(({ n }) => shown.has(n.id))
-      .sort((a, b) => ORDER[a.n.type] - ORDER[b.n.type] || b.n.mails.length - a.n.mails.length);
-    for (const { el, n } of built.els.nodes.values()) if (!shown.has(n.id)) el.style.display = "none";
-    for (const { el, n } of ranked) {
-      const p = pos.get(n.id);
+      .sort((a, b) => RANK[a.n.type] - RANK[b.n.type] || b.n.mails.length - a.n.mails.length);
+    for (const item of built.els.nodes.values()) if (!shown.has(item.n.id)) item.el.style.display = "none";
+    for (const item of ranked) {
+      const { el, n } = item, p = pos.get(n.id);
       el.style.display = "";
       el.setAttribute("transform", `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`);
-      const w = n.cr * 2 - 8, box = [p[0] - w / 2, p[1] + 12, p[0] + w / 2, p[1] + 46];
+      const w = n.cr * 2 - 8, pad = item.lab ? -6 : 6;   // 보이는 중이면 조금 겹쳐도 두고, 숨은 중이면 넉넉히 비어야 보인다
+      const box = [p[0] - w / 2 - pad, p[1] + 12 - pad, p[0] + w / 2 + pad, p[1] + 46 + pad];
       const hit = boxes.some(b => box[0] < b[2] && box[2] > b[0] && box[1] < b[3] && box[3] > b[1]);
+      item.lab = !hit;
       el.classList.toggle("nolabel", hit);
-      if (!hit) boxes.push(box);
+      if (!hit) boxes.push([p[0] - w / 2, p[1] + 12, p[0] + w / 2, p[1] + 46]);
     }
     for (const { el, hit, e } of built.els.edges.values()) {
       if (e.arc) {   // 곡선: 앞면에 있는 부분만
         let d = "", pen = false, prevK = null;
         for (let i = 0; i < e.arc.length; i += 2) {
           const [x, y, k] = P.p(e.arc[i], e.arc[i + 1]);
-          const vis = P.kind === "globe" ? k > 0 : !(prevK !== null && Math.abs(k - prevK) > 180);
-          if (P.kind !== "globe") prevK = k;
-          if (!vis) { pen = false; if (P.kind === "globe") continue; }
+          let vis = true;
+          if (P.kind === "globe") vis = k > 0;
+          else { if (prevK !== null && Math.abs(k - prevK) > 180) pen = false; prevK = k; }
+          if (!vis) { pen = false; continue; }
           d += (pen ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1); pen = true;
         }
         el.style.display = hit.style.display = d ? "" : "none";
         el.setAttribute("d", d); hit.setAttribute("d", d);
         continue;
       }
-      const on = shown.has(e.a.id) && shown.has(e.b.id);
+      const on = pos.has(e.a.id) && pos.has(e.b.id);
       el.style.display = hit.style.display = on ? "" : "none";
       if (!on) continue;
       const a = pos.get(e.a.id), b = pos.get(e.b.id);
-      for (const l of [el, hit]) { l.setAttribute("x1", a[0]); l.setAttribute("y1", a[1]); l.setAttribute("x2", b[0]); l.setAttribute("y2", b[1]); }
+      for (const l of [el, hit]) { l.setAttribute("x1", a[0].toFixed(1)); l.setAttribute("y1", a[1].toFixed(1)); l.setAttribute("x2", b[0].toFixed(1)); l.setAttribute("y2", b[1].toFixed(1)); }
     }
-    return moved > .3;   // 아직 자리를 잡는 중이면 다음 프레임도 그린다
+    return moving;
   }
 
-  // 출발 위치 기호의 경도·위도
-  const cityAt = new Map();
-  for (const p of M.paths) if (p.city && !cityAt.has(p.city.id)) { const o = originOf(DATA[p.i]); if (o && o.lat != null) cityAt.set(p.city.id, o); }
-  const pts = [...cityAt.entries()].map(([id, o]) => ({ lat: o.lat, lon: o.lon, weight: M.nodes.get(id).mails.length }));
-  pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, DATA.length / 3) });
+  const pts = [...cityAt.entries()].map(([id, o]) => ({ lat: o.lat, lon: o.lon, weight: M.nodes.get(id).mails.length, hidden: true }));
   if (!pts.length) return null;
+  pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, DATA.length / 3), hidden: true });
   const fig = worldView({
-    points: pts.map(p => Object.assign({}, p, { hidden: true })), routes: [], spin: true, maxH: 680,
+    // 지구본이 한 화면(머리말 아래)에 들어오게
+    points: pts, routes: [], spin: true,
+    maxH: Math.round(Math.max(420, Math.min(900, innerHeight - (document.querySelector("header.top") || { offsetHeight: 200 }).offsetHeight - 80))),
     ariaLabel: "지구본 위 관계도", remember: false,
-    caption: "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다 · 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다",
-    overlay: { mount: (stage, inv) => { stage.append(svg); invalidate = inv; }, draw: overlayDraw },
+    caption: "출발 위치와 나(" + ME_PLACE.name + ")는 실제 자리 · 메일은 Google 서버(위치 비공개)를 거쳐 " + ME_PLACE.name + "에서 열립니다",
+    overlay: { mount: (stage, inv) => { stage.append(svg, ctl.legendBtn, ctl.legend, ctl.info); invalidate = inv; host.el = stage; }, draw: overlayDraw },
   });
   ctl.reselect();
-  return h("div", { class: "graphwrap geo" }, fig, ctl.side);
-}
-
-// 목록 위: 지구본 / 관계도
-function overviewTabs() {
-  const box = h("div", { class: "ovtabs" });
-  const body = h("div");
-  let cur;
-  try { cur = localStorage.getItem("mailtrace.overview") === "graph" ? "graph" : "globe"; } catch { cur = "globe"; }
-  const btns = [["globe", "지구본"], ["graph", "관계도"]].map(([k, label]) => h("button", { "data-k": k, on: { click: () => show(k) } }, label));
-  box.append(h("div", { class: "mapmodes ovswitch" }, h("span", { class: "label" }, "보기"), btns), body);
-  function show(k) {
-    cur = k;
-    try { localStorage.setItem("mailtrace.overview", k); } catch {}
-    btns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.k === k)));
-    body.replaceChildren((k === "graph" ? graphView() : geoRelView()) || "");
-  }
-  show(cur);
-  return box;
+  return fig;
 }
 
 function domainLists(r) {
@@ -1743,7 +1826,7 @@ function renderDetail(r) {
     ({ received: "경유 서버", "return-path": "반송 주소", dkim: "DKIM 서명", header: "헤더" }[e.source] || e.source) + "  " + e.value);
 
   det.replaceChildren(
-    h("button", { class: "back", on: { click: () => history.back() } }, "← 목록으로  (Esc)"),
+    h("button", { class: "back", on: { click: () => history.back() } }, "← 돌아가기  (Esc)"),
     h("div", { class: "dhead" },
       h("div", { class: "mono dim" }, d ? fmtFull.format(d) : "날짜 없음"),
       h("h2", null, r.subject || "(제목 없음)"),
