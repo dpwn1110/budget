@@ -233,7 +233,7 @@ SERVICES = [
     ("customer.io", "Customer.io"), ("customeriomail.com", "Customer.io"),
     ("ccsend.com", "Constant Contact"), ("constantcontact.com", "Constant Contact"),
     ("mailjet.com", "Mailjet"),
-    ("sendinblue.com", "Brevo"), ("brevo.com", "Brevo"), ("sendibm1.com", "Brevo"),
+    ("sendinblue.com", "Brevo"), ("brevo.com", "Brevo"), ("mailin.fr", "Brevo"), ("sendibm1.com", "Brevo"),
     ("sendibt2.com", "Brevo"), ("sendibt3.com", "Brevo"),
     ("acems1.com", "ActiveCampaign"), ("acems2.com", "ActiveCampaign"),
     ("activecampaign.com", "ActiveCampaign"),
