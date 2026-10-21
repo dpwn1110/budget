@@ -41,17 +41,15 @@ main { padding-top: 76px; }
 body.globe-mode { overflow: hidden; }
 body.globe-mode footer { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-#nav { display: flex; border: 1px solid var(--line); background: var(--bg); }
-#nav a { color: var(--dim); text-decoration: none; font: 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; padding: 9px 14px; }
-#nav a + a { border-left: 1px solid var(--line); }
+/* 메뉴: 상자 없이 글자만, 지금 보는 페이지에 밑줄 */
+#nav { display: flex; align-items: baseline; gap: 28px; padding-top: 4px; text-shadow: 0 0 6px #000, 0 0 2px #000; }
+#nav a { color: var(--dim); text-decoration: none; font: 12px var(--mono); letter-spacing: .16em; text-transform: uppercase; padding: 4px 0 5px; border-bottom: 1px solid transparent; }
 #nav a:hover { color: var(--fg); }
-#nav a[aria-current] { color: var(--bg); background: var(--fg); }
-#nav a:focus-visible { outline: 1px solid var(--fg); outline-offset: -4px; }
-#nav a[aria-current]:focus-visible { outline-color: var(--bg); }
-.langsw { display: flex; border-left: 1px solid var(--line); }
-.langsw button { font: 12px var(--mono); letter-spacing: .1em; color: var(--dim); padding: 9px 10px; }
-.langsw button + button { border-left: 1px solid var(--line); }
-.langsw button[aria-pressed="true"] { color: var(--fg); text-decoration: underline; text-underline-offset: 4px; }
+#nav a[aria-current] { color: var(--fg); border-bottom-color: var(--fg); }
+#nav a:focus-visible { outline: 1px solid var(--fg); outline-offset: 4px; }
+.langsw { display: flex; align-items: baseline; gap: 10px; margin-left: 4px; color: var(--faint); font: 12px var(--mono); }
+.langsw button { font: 12px var(--mono); letter-spacing: .12em; color: var(--dim); padding: 4px 0 5px; border-bottom: 1px solid transparent; }
+.langsw button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--fg); }
 .langsw button:hover { color: var(--fg); }
 
 /* ---- 첫 화면: 화면을 가득 채운 지구본 + 계기판 */
@@ -77,17 +75,17 @@ body.globe-mode footer { display: none; }
 .infocard p { margin: 0 0 8px; font-family: var(--sans); }
 .infocard .rh { font-weight: 600; letter-spacing: .08em; margin-bottom: 8px; }
 .lgl { display: flex; align-items: center; gap: 10px; font-family: var(--sans); padding: 3px 0; }
-.tline { top: 16px; left: 340px; right: 16px; height: 38px; display: flex; align-items: stretch; border: 1px solid var(--line); background: var(--bg); }
-.tplay { width: 40px; border-right: 1px solid var(--line); color: var(--fg); font-size: 11px; }
-.ticks { position: relative; flex: 1; display: flex; justify-content: space-between; align-items: center; padding: 0 14px; cursor: ew-resize; touch-action: none; }
-.ticks i { width: 1px; height: 8px; background: rgba(255,255,255,.35); }
-.ticks i.major { height: 14px; background: rgba(255,255,255,.7); }
-.tmark { position: absolute; top: 4px; bottom: 4px; width: 2px; margin-left: 13px; background: var(--fg); pointer-events: none; }
-.tlabel { display: flex; align-items: center; justify-content: flex-end; min-width: 9.5em; padding: 0 14px; border-left: 1px solid var(--line); font-size: 12px; white-space: nowrap; }   /* 폭을 고정해 눈금이 밀리지 않게 */
 .bbar { position: absolute; z-index: 3; left: 16px; bottom: 16px; right: 200px; display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
-.hudstats { position: static; display: flex; border: 1px solid var(--line); background: var(--bg); }
+/* 숫자 칸: 테두리 대신 네 꼭짓점에 점 */
+.hudstats { position: static; display: flex; padding: 4px;
+  background:
+    radial-gradient(circle, var(--fg) 1.6px, transparent 2.2px) left top / 6px 6px no-repeat,
+    radial-gradient(circle, var(--fg) 1.6px, transparent 2.2px) right top / 6px 6px no-repeat,
+    radial-gradient(circle, var(--fg) 1.6px, transparent 2.2px) left bottom / 6px 6px no-repeat,
+    radial-gradient(circle, var(--fg) 1.6px, transparent 2.2px) right bottom / 6px 6px no-repeat,
+    rgba(0,0,0,.6); }
 .hudstats .rd { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 16px; }
-.hudstats .rd + .rd { border-left: 1px dashed var(--line); }
+.hudstats .rd + .rd { border-left: 1px dotted rgba(255,255,255,.18); }
 .hudstats .rv { font-size: 17px; font-weight: 300; }
 .circles { position: absolute; z-index: 3; right: 16px; bottom: 16px; display: flex; gap: 10px; }
 .circ { width: 92px; height: 92px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px var(--mono); letter-spacing: .1em; }
@@ -95,9 +93,8 @@ body.globe-mode footer { display: none; }
 .circ.inv { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 #page-globe .zoomctl { bottom: auto; top: 50%; right: 16px; transform: translateY(-50%); }
 @media (max-width: 760px) {
-  .tline { left: 16px; top: 62px; }
   .readout { display: none; }
-  .rail { top: 120px; transform: none; gap: 6px; }
+  .rail { top: 72px; transform: none; gap: 6px; }
   .rbtn { width: 36px; height: 36px; }
   .infocard { left: 16px; right: 16px; width: auto; top: auto; bottom: 150px; transform: none; }
   .bbar { right: 16px; bottom: 112px; }
@@ -107,8 +104,8 @@ body.globe-mode footer { display: none; }
   .hudstats .rv { font-size: 15px; }
   .circles { right: 16px; left: 16px; bottom: 16px; justify-content: flex-end; }
   .circ { width: 76px; height: 76px; border-radius: 0; height: 44px; width: auto; padding: 0 18px; }
-  #page-globe .zoomctl { top: 120px; transform: none; }
-  .infocard { top: 120px; bottom: auto; left: 60px; right: 16px; }
+  #page-globe .zoomctl { top: 72px; transform: none; }
+  .infocard { top: 72px; bottom: auto; left: 60px; right: 16px; }
 }
 #page-analysis .stats { padding: 40px 0 8px; }
 .graphsec { padding: 56px 0 24px; border-top: 1px solid var(--line); }
@@ -346,7 +343,7 @@ footer p { margin: 0 0 8px; }
       <a href="#/" data-page="globe">Globe</a>
       <a href="#/analysis" data-page="analysis">Analysis</a>
       <a href="#/archive" data-page="archive">Archive</a>
-      <span class="langsw"><button data-lang="ko">KR</button><button data-lang="en">EN</button></span>
+      <span class="langsw"><button data-lang="ko">KR</button><span aria-hidden="true">/</span><button data-lang="en">EN</button></span>
     </nav>
   </div>
 </header>
@@ -954,7 +951,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   }
   // 평면의 확대·이동 상태 (지구본과 따로)
   let fz = 1, fvx = null, fvy = null;
-  const flatView = () => ({ zoom: fz, vx: fvx, vy: fvy, top: fill ? 92 : 0, bottom: fill ? 110 : 0, side: fill ? 80 : 0 });
+  const flatView = () => ({ zoom: fz, vx: fvx, vy: fvy, top: fill ? 72 : 0, bottom: fill ? 100 : 0, side: fill ? 80 : 0 });
   const proj = () => mode === "globe" ? globeProj(W, H, lam0, phi0, zoom) : flatProj(W, H, flatView());
   function clampFlat() {
     if (fz <= 1.0001) { fz = 1; fvx = fvy = null; return; }
@@ -1917,14 +1914,7 @@ function geoRelView() {
   if (!pts.length) return null;
   pts.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, DATA.length / 3), hidden: true });
 
-  // ---- 첫 화면 계기판: 위 타임라인, 왼쪽 기호 버튼, 아래 숫자·검색, 오른쪽 아래 큰 버튼, 왼쪽 위 큰 숫자, 오른쪽 판독 칸
-  const DAY = 864e5;
-  const times = DATA.map(r => r._t).filter(Boolean);
-  const tMin = Math.min(...times), tMax = Math.max(...times);
-  const d0 = new Date(tMin); d0.setHours(0, 0, 0, 0);
-  const days = Math.max(1, Math.ceil((tMax - d0.getTime()) / DAY));
-  const dayEnd = k => Math.min(tMax, d0.getTime() + (k + 1) * DAY - 1);
-  const fmtMD = new Intl.DateTimeFormat(LOCALE, { month: "2-digit", day: "2-digit" });
+  // ---- 첫 화면 계기판: 왼쪽 기호 버튼, 아래 숫자, 오른쪽 아래 지구본/평면 전환, 오른쪽 판독 칸
   const dms = (v, pos, neg) => { const a = Math.abs(v), d = Math.floor(a), m = (a - d) * 60; return (v >= 0 ? pos : neg) + " " + d + "°" + m.toFixed(2).padStart(5, "0"); };
 
   const visibleMails = () => DATA.filter(r => ctl.inTime(r._i));
@@ -1944,14 +1934,10 @@ function geoRelView() {
     const third = new Set(vm.flatMap(r => (r.domains && r.domains.third_party) || [])).size;
     statsBox.replaceChildren(
       read("MAIL", vm.length), read("PIXEL", pix), read("VIA DC", dc), read("3RD PARTY", third));
-    const until = geoState.until == null ? tMax : geoState.until;
     readout.replaceChildren(
       h("div", { class: "rh" }, L("[나 · ") + ME_PLACE.name.toUpperCase() + "]"),
       h("div", { class: "rv2" }, dms(ME_PLACE.lat, "N", "S")),
       h("div", { class: "rv2" }, dms(ME_PLACE.lon, "E", "W")),
-      h("div", { class: "rsep" }),
-      h("div", { class: "rh" }, "UNTIL"),
-      h("div", { class: "rv2" }, fmtMD.format(until).replace(/\s/g, "").replace(/\.$/, "")),
       h("div", { class: "rsep" }),
       h("div", { class: "rh" }, "CENTRE FIX"),
       h("div", { class: "rv2 rit" }, L("메일은 Google 서버(위치 비공개)를 거쳐 ") + ME_PLACE.name + L("에서 열림")));
@@ -1976,40 +1962,6 @@ function geoRelView() {
   const rail = h("div", { class: "rail" }, railBtns, infoBtn);
   function syncRail() { railBtns.forEach(b => b.setAttribute("aria-pressed", String(geoState.show[b.dataset.type]))); }
 
-  // 위 타임라인
-  const marker = h("div", { class: "tmark" }), tlabel = h("span", { class: "tlabel mono" });
-  const ticks = h("div", { class: "ticks" }, Array.from({ length: days + 1 }, (_, k) => h("i", { class: k % 7 === 0 ? "major" : "" })), marker);
-  const playBtn = h("button", { class: "tplay", "aria-label": L("재생") }, "▶");
-  const tline = h("div", { class: "hud tline" }, playBtn, ticks, tlabel);
-  let timer = 0;
-  function setUntil(t) {
-    geoState.until = t == null || t >= tMax ? null : t;
-    const f = ((geoState.until == null ? tMax : geoState.until) - d0.getTime()) / (tMax - d0.getTime() || 1);
-    marker.style.left = (Math.max(0, Math.min(1, f)) * 100).toFixed(2) + "%";
-    tlabel.textContent = (geoState.until == null ? "ALL · " : "~" + fmtMD.format(geoState.until).replace(/\s/g, "").replace(/\.$/, "") + " · ") + visibleMails().length;
-    built = null; invalidate(); refreshNumbers();
-    if (geoState.sel) ctl.reselect();
-  }
-  function stop() { clearInterval(timer); timer = 0; playBtn.textContent = "▶"; playBtn.setAttribute("aria-label", L("재생")); }
-  playBtn.addEventListener("click", () => {
-    if (timer) return stop();
-    let k = geoState.until == null ? 0 : Math.floor((geoState.until - d0.getTime()) / DAY) + 1;
-    if (k > days) k = 0;
-    playBtn.textContent = "❚❚"; playBtn.setAttribute("aria-label", L("멈춤"));
-    setUntil(dayEnd(k));
-    timer = setInterval(() => {
-      if (!ticks.isConnected) return stop();
-      k++;
-      if (k > days) { stop(); setUntil(null); return; }
-      setUntil(dayEnd(k));
-    }, 650);
-  });
-  const fromX = x => { const b = ticks.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (x - b.left) / b.width)); return Math.round(f * days); };
-  let scrub = false;
-  ticks.addEventListener("pointerdown", e => { stop(); scrub = true; ticks.setPointerCapture(e.pointerId); const k = fromX(e.clientX); setUntil(k >= days ? null : dayEnd(k)); });
-  ticks.addEventListener("pointermove", e => { if (!scrub) return; const k = fromX(e.clientX); setUntil(k >= days ? null : dayEnd(k)); });
-  ticks.addEventListener("pointerup", () => { scrub = false; });
-
   // 오른쪽 아래 큰 버튼
   // Archive는 위 메뉴로 가므로, 오른쪽 아래에는 지구본/평면 전환 하나만
   const modeBtn = h("button", { class: "circ inv" }, L("평면"));
@@ -2019,19 +1971,16 @@ function geoRelView() {
     ariaLabel: L("지구본 위 관계도"), remember: false, caption: "",
     hud: { cross: ME_PLACE },
     overlay: { mount: (stage, inv) => {
-      stage.append(svg, ctl.info, readout, rail, infoCard, tline,
+      stage.append(svg, ctl.info, readout, rail, infoCard,
         h("div", { class: "bbar" }, statsBox), h("div", { class: "circles" }, modeBtn));
       invalidate = inv; host.el = stage;
-      // 타임라인은 메뉴 칸 바로 오른쪽에서 시작 (메뉴 폭은 언어에 따라 다르다)
-      const fit = () => { const nav = document.getElementById("nav"); if (nav && innerWidth > 760) tline.style.left = Math.round(nav.getBoundingClientRect().right + 12) + "px"; else tline.style.left = ""; };
-      requestAnimationFrame(fit); addEventListener("resize", fit);
     }, draw: overlayDraw },
   });
   modeBtn.addEventListener("click", () => {
     const next = fig.api.mode() === "globe" ? "flat" : "globe";
     fig.api.setMode(next); modeBtn.textContent = next === "globe" ? L("평면") : L("지구본");
   });
-  syncRail(); setUntil(null);
+  syncRail(); refreshNumbers();
   ctl.reselect();
   return fig;
 }
