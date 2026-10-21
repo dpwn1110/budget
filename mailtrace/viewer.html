@@ -46,6 +46,8 @@ body.globe-mode footer { display: none; }
 #nav a + a { border-left: 1px solid var(--line); }
 #nav a:hover { color: var(--fg); }
 #nav a[aria-current] { color: var(--bg); background: var(--fg); }
+#nav a:focus-visible { outline: 1px solid var(--fg); outline-offset: -4px; }
+#nav a[aria-current]:focus-visible { outline-color: var(--bg); }
 
 /* ---- 첫 화면: 화면을 가득 채운 지구본 + 계기판 */
 #page-globe { position: fixed; inset: 0; z-index: 1; }
@@ -54,7 +56,7 @@ body.globe-mode footer { display: none; }
 #page-globe figcaption { display: none; }
 .hud { position: absolute; z-index: 3; font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
 .hud .rk { color: var(--dim); font-size: 10.5px; letter-spacing: .1em; }
-.hero { left: 16px; top: 72px; border: 1px solid var(--fg); background: var(--bg); min-width: 200px; }
+.hudhero { left: 16px; top: 72px; border: 1px solid var(--fg); background: var(--bg); min-width: 200px; }
 .hnum { font: 200 54px/1 var(--mono); padding: 14px 20px 12px; letter-spacing: -.02em; }
 .hcap { border-top: 1px solid var(--fg); padding: 8px 20px; font-size: 12px; font-style: italic; text-transform: none; letter-spacing: .02em; }
 .readout { right: 72px; top: 72px; text-align: right; font-size: 13px; line-height: 1.55; max-width: 220px; }
@@ -81,10 +83,10 @@ body.globe-mode footer { display: none; }
 .tmark { position: absolute; top: 4px; bottom: 4px; width: 2px; margin-left: 13px; background: var(--fg); pointer-events: none; }
 .tlabel { display: flex; align-items: center; justify-content: flex-end; min-width: 9.5em; padding: 0 14px; border-left: 1px solid var(--line); font-size: 12px; white-space: nowrap; }   /* 폭을 고정해 눈금이 밀리지 않게 */
 .bbar { position: absolute; z-index: 3; left: 16px; bottom: 16px; right: 200px; display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
-.stats { position: static; display: flex; border: 1px solid var(--line); background: var(--bg); }
-.stats .rd { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 16px; }
-.stats .rd + .rd { border-left: 1px dashed var(--line); }
-.stats .rv { font-size: 17px; font-weight: 300; }
+.hudstats { position: static; display: flex; border: 1px solid var(--line); background: var(--bg); }
+.hudstats .rd { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 16px; }
+.hudstats .rd + .rd { border-left: 1px dashed var(--line); }
+.hudstats .rv { font-size: 17px; font-weight: 300; }
 .search { position: static; display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); background: var(--bg); padding-left: 14px; flex: 1; min-width: 240px; max-width: 460px; }
 .sinput { flex: 1; width: 100%; min-width: 0; -webkit-appearance: none; appearance: none; background: none; border: 0; border-radius: 0;
   color: var(--fg); font: 13px var(--mono); padding: 12px 0; outline: none; }
@@ -98,7 +100,7 @@ body.globe-mode footer { display: none; }
 #page-globe .zoomctl { bottom: auto; top: 50%; right: 16px; transform: translateY(-50%); }
 @media (max-width: 760px) {
   .tline { left: 16px; top: 62px; }
-  .hero { top: 112px; min-width: 0; }
+  .hudhero { top: 112px; min-width: 0; }
   .hnum { font-size: 34px; padding: 10px 14px 8px; }
   .hcap { padding: 6px 14px; font-size: 11px; }
   .readout { display: none; }
@@ -106,10 +108,10 @@ body.globe-mode footer { display: none; }
   .rbtn { width: 36px; height: 36px; }
   .infocard { left: 16px; right: 16px; width: auto; top: auto; bottom: 150px; transform: none; }
   .bbar { right: 16px; bottom: 112px; }
-  .stats { width: 100%; flex-wrap: nowrap; }
-  .stats .rd { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
-  .stats .rk { font-size: 9px; letter-spacing: .06em; white-space: nowrap; }
-  .stats .rv { font-size: 15px; }
+  .hudstats { width: 100%; flex-wrap: nowrap; }
+  .hudstats .rd { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
+  .hudstats .rk { font-size: 9px; letter-spacing: .06em; white-space: nowrap; }
+  .hudstats .rv { font-size: 15px; }
   .search { max-width: none; min-width: 0; width: 100%; }
   .circles { right: 16px; left: 16px; bottom: 16px; justify-content: flex-end; }
   .circ { width: 76px; height: 76px; border-radius: 0; height: 44px; width: auto; padding: 0 18px; }
@@ -1879,13 +1881,13 @@ function geoRelView() {
 
   // 큰 숫자 상자 (왼쪽 위)
   const heroNum = h("div", { class: "hnum" }), heroCap = h("div", { class: "hcap" });
-  const heroBox = h("div", { class: "hud hero" }, heroNum, heroCap);
+  const heroBox = h("div", { class: "hud hudhero" }, heroNum, heroCap);
 
   // 오른쪽 판독 칸
   const readout = h("div", { class: "hud readout" });
 
   // 아래 숫자 칸
-  const statsBox = h("div", { class: "hud stats" });
+  const statsBox = h("div", { class: "hud hudstats" });
 
   function refreshNumbers() {
     const vm = visibleMails();
