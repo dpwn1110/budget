@@ -129,6 +129,33 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 #overview { padding-top: 48px; }
 #overview .mapfig { margin-bottom: 8px; }
 
+/* 발견 */
+.findings { padding: 56px 0 24px; border-top: 1px solid var(--line); }
+.ftitle { font: 300 clamp(22px, 3vw, 30px)/1.3 var(--sans); margin: 0 0 32px; }
+.heroes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px 48px; margin-bottom: 48px; }
+.hero { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 18px 0 0; border-top: 1px solid var(--fg); }
+.hero b { font: 200 clamp(44px, 6vw, 72px)/1 var(--mono); letter-spacing: -.02em; }
+.hero .htext { font-size: 15px; margin-top: 6px; }
+.hero:hover b { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; }
+.flegend { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--hair); }
+.flegend span { display: inline-flex; align-items: center; gap: 8px; }
+.fgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 64px; }
+.fblock { padding-top: 32px; }
+.fhead { color: var(--fg); font-size: 12px; }
+.fnote { font-size: 11.5px; margin: 2px 0 12px; }
+.frow { display: grid; grid-template-columns: minmax(110px, 13em) 1fr 2.5em; gap: 16px; align-items: center; width: 100%; text-align: left; padding: 7px 0; border-bottom: 1px solid var(--hair); }
+.frow:hover { background: rgba(255,255,255,.035); }
+.flabel { font-size: 13.5px; line-height: 1.35; }
+.fsub { display: block; font-size: 11px; }
+.fn { text-align: right; padding-right: 2px; }
+.units { display: flex; flex-wrap: wrap; gap: 2px; }
+.u { display: inline-block; width: 6px; height: 6px; border: 1px solid rgba(255,255,255,.55); flex: none; }
+.u.on { background: var(--fg); border-color: var(--fg); }
+#filterchip { display: inline-flex; gap: 14px; align-items: baseline; font-size: 13px; padding-left: 8px; border-left: 1px solid var(--line); }
+#filterchip .clear { color: var(--dim); }
+#filterchip .clear:hover { color: var(--fg); }
+@media (max-width: 860px) { .fgrid { grid-template-columns: 1fr; } .frow { grid-template-columns: 8.5em 1fr 2.2em; gap: 10px; } }
+
 /* 도메인 목록 */
 .dlist { list-style: none; margin: 0; padding: 0; }
 .dlist li { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
@@ -182,6 +209,7 @@ footer p { margin: 0 0 8px; }
 
   <div id="list" hidden>
     <div id="overview"></div>
+    <div id="findings"></div>
     <div class="bar">
       <div class="sorts" role="group" aria-label="정렬">
         <span class="label">정렬</span>
@@ -190,6 +218,7 @@ footer p { margin: 0 0 8px; }
         <button data-sort="third" aria-pressed="false">제3자 도메인</button>
         <button data-sort="service" aria-pressed="false">발송 서비스</button>
         <span class="mono dim" id="dir"></span>
+        <span id="filterchip" hidden></span>
       </div>
       <div class="legend label">
         <span><i class="px"></i>추적 픽셀 1개</span>
@@ -298,7 +327,7 @@ const typeText = t => TYPE[t] || t.replace(/^link-/, "link ");
 
 // ---------------------------------------------------------------- data
 let DATA = [];
-const state = { sort: "date", dir: -1, scroll: 0 };
+const state = { sort: "date", dir: -1, scroll: 0, filter: null };
 
 function prepare(records) {
   return records.map((r, i) => {
@@ -324,6 +353,8 @@ function load(text) {
   document.getElementById("loader").hidden = true;
   renderStats();
   document.getElementById("overview").replaceChildren(overviewView() || "");
+  state.filter = null;
+  document.getElementById("findings").replaceChildren(findingsView() || "");
   renderList();
   route();
 }
@@ -361,7 +392,7 @@ function sorted() {
     third: (a, b) => d * (a._third - b._third) || byDate(a, b),
     service: (a, b) => -d * a._svc.localeCompare(b._svc, "ko") || byDate(a, b),
   }[k];
-  return DATA.slice().sort(cmp);
+  return (state.filter ? DATA.filter(state.filter.test) : DATA.slice()).sort(cmp);
 }
 
 function row(r) {
@@ -420,6 +451,11 @@ function renderList() {
     service: state.dir < 0 ? "가나다순" : "역순",
   };
   document.getElementById("dir").textContent = dirLabels[state.sort];
+  const chip = document.getElementById("filterchip");
+  chip.hidden = !state.filter;
+  chip.replaceChildren(...(state.filter ? [
+    h("span", null, "보는 중  " + state.filter.label + " · " + rs.length + "통"),
+    h("button", { class: "clear", on: { click: () => setFilter(null) } }, "모두 보기 ×")] : []));
 }
 
 for (const b of document.querySelectorAll(".sorts button")) {
@@ -781,6 +817,118 @@ function overviewView() {
     ariaLabel: "출발 위치: " + pts.map(p => p.label).join(", "),
     caption: "출발 위치 — 위치를 알 수 있는 첫 구간 · 숫자는 메일 수 · ■ 데이터센터  ○ 그 밖의 위치 · 선은 여러 곳을 거친 경로",
   });
+}
+
+// ---------------------------------------------------------------- 발견: 어디서 출발했나
+// 데이터로 계산한 문장과 단위 도표(한 칸 = 메일 한 통). 행을 누르면 아래 목록을 그 메일로 거른다.
+const HANGUL = /[가-힣]/;
+const isKrSender = r => /\.kr$/i.test((r.sender && r.sender.domain) || "") || HANGUL.test((r.sender && r.sender.name) || "");
+const originOf = r => (r.route && r.route.origin) || null;
+const fromDC = r => { const o = originOf(r); return !!(o && o.kind === "datacenter"); };
+const cityName = o => (o.city || "").replace(/\s*\(.*?\)\s*/g, " ").trim();
+
+function setFilter(label, test) {
+  state.filter = label ? { label, test } : null;
+  renderList();
+  if (label) document.querySelector(".bar").scrollIntoView({ behavior: REDUCE ? "auto" : "smooth" });
+}
+
+function units(rs, filled) {
+  return h("span", { class: "units", "aria-hidden": "true" },
+    rs.map(r => h("i", { class: filled(r) ? "u on" : "u" })));
+}
+
+function unitRows(title, note, groups, filled) {
+  // groups: [{ key, label, sub, rs }]
+  const max = Math.max(...groups.map(g => g.rs.length), 1);
+  return h("div", { class: "fblock" },
+    h("div", { class: "label fhead" }, title),
+    note ? h("div", { class: "fnote faint" }, note) : null,
+    groups.map(g => h("button", {
+      class: "frow", title: g.label + " · " + g.rs.length + "통 — 누르면 아래 목록에서 이 메일만",
+      on: { click: () => setFilter(g.filterLabel || g.label, g.test) },
+    },
+      h("span", { class: "flabel" }, g.label, g.sub ? h("span", { class: "fsub dim" }, g.sub) : null),
+      units(g.rs, filled),
+      h("span", { class: "fn mono" }, g.rs.length))));
+}
+
+function hero(num, den, text, foot, onClick) {
+  const pct = den ? Math.round(100 * num / den) : 0;
+  return h("button", { class: "hero", on: { click: onClick }, title: "누르면 아래 목록에서 이 메일만" },
+    h("b", null, pct + "%"),
+    h("span", { class: "mono dim" }, num + "통 / " + den + "통"),
+    h("span", { class: "htext" }, text),
+    foot ? h("span", { class: "fnote faint" }, foot) : null);
+}
+
+function findingsView() {
+  if (!DATA.some(r => r.route)) return null;
+  const n = DATA.length;
+  const viaDC = DATA.filter(r => r.route && r.route.via_datacenter);
+  const located = DATA.filter(originOf);
+  const abroad = located.filter(r => originOf(r).country !== "KR");
+  const kr = located.filter(isKrSender);
+  const krAbroad = kr.filter(r => originOf(r).country !== "KR");
+
+  const heroes = h("div", { class: "heroes" },
+    hero(viaDC.length, n, "데이터센터를 거쳐 도착한 메일", null,
+      () => setFilter("데이터센터를 거쳐 온 메일", r => r.route && r.route.via_datacenter)),
+    hero(abroad.length, located.length, "대한민국 밖에서 출발한 메일", "출발 위치를 알 수 있는 메일 중",
+      () => setFilter("대한민국 밖에서 출발한 메일", r => originOf(r) && originOf(r).country !== "KR")),
+    kr.length ? hero(krAbroad.length, kr.length, "한국 쪽 발신자의 메일 중 해외에서 출발",
+      "한국 쪽 발신자 = 보낸 주소가 .kr로 끝나거나 보낸 사람 이름이 한글인 경우",
+      () => setFilter("한국 쪽 발신자 · 해외에서 출발", r => isKrSender(r) && originOf(r) && originOf(r).country !== "KR")) : null);
+
+  // 출발 나라
+  const byCountry = new Map();
+  for (const r of located) {
+    const c = originOf(r).country;
+    (byCountry.get(c) || byCountry.set(c, []).get(c)).push(r);
+  }
+  const countries = [...byCountry.entries()].sort((a, b) => b[1].length - a[1].length).map(([c, rs]) => ({
+    label: region(c), rs, filterLabel: region(c) + "에서 출발한 메일", test: r => originOf(r) && originOf(r).country === c,
+  }));
+
+  // 출발 도시 + 그 도시에서 가장 많은 운영 주체
+  const byCity = new Map();
+  for (const r of located) {
+    const o = originOf(r), k = o.country + "|" + cityName(o);
+    (byCity.get(k) || byCity.set(k, []).get(k)).push(r);
+  }
+  const cities = [...byCity.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 12).map(([k, rs]) => {
+    const ops = new Map();
+    for (const r of rs) { const op = originOf(r).operator || "운영 주체 미상"; ops.set(op, (ops.get(op) || 0) + 1); }
+    const [top, cnt] = [...ops.entries()].sort((a, b) => b[1] - a[1])[0];
+    const o = originOf(rs[0]);
+    const label = [region(o.country), cityName(o)].filter(Boolean).join(" ");
+    return { label, sub: top + " " + cnt + "/" + rs.length, rs, filterLabel: label + "에서 출발한 메일",
+             test: r => { const x = originOf(r); return x && x.country + "|" + cityName(x) === k; } };
+  });
+
+  // 거쳐 간 데이터센터 운영 주체 (한 통이 여러 곳을 거치면 각각에 센다)
+  const byOp = new Map();
+  for (const r of DATA) for (const op of new Set(((r.route && r.route.datacenters) || []).map(d => d.operator).filter(Boolean)))
+    (byOp.get(op) || byOp.set(op, []).get(op)).push(r);
+  const typeOf = op => { for (const r of byOp.get(op)) for (const d of r.route.datacenters) if (d.operator === op) return OPTYPE[d.operator_type]; };
+  const ops = [...byOp.entries()].sort((a, b) => b[1].length - a[1].length).slice(0, 12).map(([op, rs]) => ({
+    label: op, sub: typeOf(op), rs, filterLabel: op + " 데이터센터를 거친 메일",
+    test: r => ((r.route && r.route.datacenters) || []).some(d => d.operator === op),
+  }));
+
+  const legend = h("div", { class: "flegend label" },
+    h("span", null, h("i", { class: "u on" }), "데이터센터에서 출발"),
+    h("span", null, h("i", { class: "u" }), "그 밖의 곳에서 출발"),
+    h("span", null, "한 칸 = 메일 한 통 · 행을 누르면 아래 목록에서 그 메일만"));
+
+  return h("section", { class: "findings" },
+    h("h2", { class: "ftitle" }, "어디서 출발했나"),
+    heroes, legend,
+    h("div", { class: "fgrid" },
+      h("div", null,
+        unitRows("출발 나라", "위치를 알 수 있는 첫 구간 기준 · 위치 없음 " + (n - located.length) + "통", countries, fromDC),
+        unitRows("거쳐 간 데이터센터의 운영 주체", "한 통이 여러 곳을 거치면 각각 셉니다", ops, () => true)),
+      unitRows("출발 도시 (상위 12곳)", "작은 글씨: 그 출발 지점의 네트워크를 운영하는 곳 중 가장 많은 것 · 해당 메일 수/그 도시 전체", cities, fromDC)));
 }
 
 function domainLists(r) {
