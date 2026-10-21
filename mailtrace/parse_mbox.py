@@ -600,7 +600,7 @@ def extract(msg, received):
     name, address = email.utils.parseaddr(decode_header(msg.get("From")))
     address = address.lower()
     if not address and not name:
-        raise ValueError("no From header")
+        raise ValueError("보낸 사람(From) 없음")
     sender_domain = addr_domain(address)
 
     rp = decode_header(msg.get("Return-Path"))
@@ -718,11 +718,11 @@ def main():
                 received = received_time(head)
             except Exception as e:
                 stats["skipped"] += 1
-                skip_reasons["unparseable headers"] += 1
+                skip_reasons["헤더를 읽을 수 없음"] += 1
                 continue
             if received is None:
                 stats["skipped"] += 1
-                skip_reasons["no usable date"] += 1
+                skip_reasons["날짜 없음"] += 1
                 continue
             if not (start <= received <= end):
                 stats["outside_window"] += 1
@@ -751,14 +751,14 @@ def main():
     kept = stats["kept"]
     w = sys.stdout.write
     w("\n")
-    w(f"window          {iso(start)}  →  {iso(end)}  ({args.days} days, anchor={args.anchor})\n")
-    w(f"scanned         {stats['scanned']}\n")
-    w(f"outside window  {stats['outside_window']}\n")
-    w(f"skipped         {stats['skipped']}\n")
+    w(f"기간            {iso(start)}  →  {iso(end)}  ({args.days}일, 기준={args.anchor})\n")
+    w(f"읽은 메일      {stats['scanned']}\n")
+    w(f"기간 밖        {stats['outside_window']}\n")
+    w(f"건너뜀(손상)   {stats['skipped']}\n")
     for reason, n in skip_reasons.most_common():
         w(f"                  {n:>5}  {reason}\n")
-    w(f"messages        {kept}\n")
-    w(f"tracking pixels {stats['pixels']}  (in {stats['with_pixel']} messages)\n")
+    w(f"분석한 메일    {kept}\n")
+    w(f"추적 픽셀      {stats['pixels']}개  (픽셀이 있는 메일 {stats['with_pixel']}통)\n")
 
     def table(title, counter):
         w(f"\n{title}\n")
@@ -766,10 +766,10 @@ def main():
             pct = 100 * n / kept if kept else 0
             w(f"  {n:>5}  {pct:5.1f}%  {name}\n")
 
-    table("sending services (messages)", services)
-    table("third-party domains (messages that reference them)", tp_domains)
-    table("pixel domains (messages)", pixel_domains)
-    w(f"\nwrote {args.out}\n")
+    table("실제 발송 서비스 (메일 수)", services)
+    table("제3자 도메인 (등장한 메일 수)", tp_domains)
+    table("픽셀 도메인 (메일 수)", pixel_domains)
+    w(f"\n저장: {args.out}\n")
 
 
 if __name__ == "__main__":
