@@ -128,6 +128,7 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .mapmodes button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--fg); }
 #overview { padding-top: 48px; }
 #overview .mapfig { margin-bottom: 8px; }
+.nogeo { color: var(--dim); font-size: 13.5px; max-width: 42em; padding: 40px 0 8px; margin: 0; }
 .drawerr { color: var(--track); font-family: var(--mono); font-size: 12.5px; padding: 24px 0; }
 
 /* 발견 */
@@ -358,7 +359,12 @@ function load(text) {
     try { return fn() || ""; }
     catch (e) { console.error(e); return h("p", { class: "drawerr" }, what + "을(를) 그리지 못했습니다: " + e.message); }
   };
-  document.getElementById("overview").replaceChildren(safe(overviewView, "지구본"));
+  const noGeo = !DATA.some(r => r.route);
+  document.getElementById("overview").replaceChildren(noGeo
+    ? h("p", { class: "nogeo" },
+        "이 파일에는 위치 정보가 없어서 지구본과 ‘어디서 출발했나’를 그릴 수 없습니다. ",
+        "파서를 --geo-city와 --geo-asn 옵션과 함께 실행해 만든 messages.json을 넣어 주세요.")
+    : safe(overviewView, "지구본"));
   state.filter = null;
   document.getElementById("findings").replaceChildren(safe(findingsView, "'어디서 출발했나'"));
   renderList();
@@ -378,13 +384,13 @@ function renderStats() {
   const ts = DATA.map(r => r._t).filter(Boolean);
   const span = ts.length ? fmtDay.format(Math.min(...ts)) + " – " + fmtDay.format(Math.max(...ts)) : "";
   const stat = (num, lab, cls) => h("div", { class: "stat" }, h("b", { class: cls }, num), h("span", { class: "label" }, lab));
-  el.append(
+  el.append(...[
     stat(n, "통의 메일"),
     stat(px, "개의 추적 픽셀 (" + withPx + "통)", "track"),
     stat(tps.size, "곳의 제3자 도메인"),
     hasGeo ? stat(dc, "통이 데이터센터 경유") : null,
     h("div", { class: "stat" }, h("b", { class: "mono", style: "font-size:13px;padding-top:12px" }, span), h("span", { class: "label" }, "받은 기간")),
-  );
+  ].filter(Boolean));
   el.hidden = false;
   document.getElementById("credit").hidden = !hasGeo;
 }
