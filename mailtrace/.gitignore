@@ -1,3 +1,4 @@
 # personal mail data — never commit
 *.mbox
 *.json
+!demo/demo.json

@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 이 페이지는 바깥으로 아무것도 요청하지 않는다. 메일 속 주소는 글자로만 다룬다. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'none'; font-src 'none'; media-src 'none'; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>열기 전에</title>
+<style>
+:root {
+  --bg: #000;
+  --fg: #fff;
+  --dim: rgba(255,255,255,.52);
+  --faint: rgba(255,255,255,.28);
+  --line: rgba(255,255,255,.22);
+  --hair: rgba(255,255,255,.12);
+  --track: #ff453a;          /* 유일한 색: 추적 픽셀 */
+  --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SF Mono", "D2Coding", "JetBrains Mono", Menlo, Consolas, "Noto Sans Mono CJK KR", monospace;
+  --gutter: clamp(16px, 5vw, 72px);
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
+  padding: 0 var(--gutter);
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+:focus-visible { outline: 1px solid var(--fg); outline-offset: 3px; }
+.mono { font-family: var(--mono); font-size: 12.5px; letter-spacing: .01em; }
+.dim { color: var(--dim); }
+.faint { color: var(--faint); }
+.label { font-size: 11px; letter-spacing: .08em; color: var(--dim); }
+
+header.top { padding: 72px 0 40px; border-bottom: 1px solid var(--line); }
+h1 { font-weight: 300; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.01em; margin: 0 0 18px; }
+.lede { max-width: 38em; color: var(--dim); margin: 0; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 40px; margin-top: 36px; }
+.stat b { display: block; font: 300 28px/1.2 var(--mono); }
+.stat b.track { color: var(--track); }
+
+/* 불러오기 */
+#loader { min-height: 46vh; display: grid; place-items: center; padding: 64px 0; }
+#drop {
+  width: min(560px, 100%); border: 1px dashed var(--line); padding: 56px 32px; text-align: center;
+}
+#drop.over { border-color: var(--fg); }
+#drop p { margin: 0 0 20px; }
+.btn { border: 1px solid var(--line); padding: 8px 16px; font-size: 13px; }
+.btn:hover { border-color: var(--fg); }
+#err { color: var(--track); margin-top: 16px; min-height: 1.6em; }
+
+/* 정렬·범례 */
+.bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px; padding: 28px 0 20px; border-bottom: 1px solid var(--line); }
+.sorts { display: flex; flex-wrap: wrap; gap: 6px 24px; align-items: baseline; }
+.sorts button { color: var(--dim); padding-bottom: 2px; border-bottom: 1px solid transparent; font-size: 14px; }
+.sorts button:hover { color: var(--fg); }
+.sorts button[aria-pressed="true"] { color: var(--fg); border-bottom-color: var(--fg); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 22px; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* 목록 */
+.cols, .row {
+  display: grid; align-items: baseline; column-gap: 28px;
+  grid-template-columns: 150px minmax(180px, 1.3fr) minmax(150px, 1fr) minmax(120px, .8fr) minmax(170px, 1.2fr);
+}
+.cols { padding: 18px 0 10px; border-bottom: 1px solid var(--hair); }
+.row {
+  width: 100%; text-align: left; padding: 16px 0; border-bottom: 1px solid var(--hair);
+}
+.row:hover { background: rgba(255,255,255,.035); }
+.row .who { overflow: hidden; }
+.row .name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .addr { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svc { display: block; }
+.dc { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--dim); }
+.sq { display: inline-block; width: 7px; height: 7px; background: var(--fg); flex: none; }
+.ring { display: inline-block; width: 7px; height: 7px; border: 1px solid var(--fg); border-radius: 50%; flex: none; }
+.dash { display: inline-block; width: 8px; height: 1px; background: var(--dim); flex: none; }
+.marks { display: flex; align-items: center; gap: 14px; }
+.marks .n { min-width: 2.2em; font: 300 20px/1 var(--mono); }
+.pix, .tps { display: flex; flex-wrap: wrap; gap: 3px; align-items: center; }
+.px { width: 7px; height: 7px; background: var(--track); }
+.tp { width: 1px; height: 12px; background: var(--fg); }
+.group {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 44px 0 10px; border-bottom: 1px solid var(--line);
+}
+.group h3 { margin: 0; font: 400 18px/1.3 var(--sans); }
+
+/* 상세 */
+#detail { padding-bottom: 96px; }
+.back { margin: 40px 0 0; color: var(--dim); font-size: 13px; }
+.back:hover { color: var(--fg); }
+.dhead { padding: 40px 0 36px; border-bottom: 1px solid var(--line); }
+.dhead h2 { font-weight: 300; font-size: clamp(22px, 3vw, 32px); margin: 8px 0 14px; line-height: 1.35; }
+.kv { display: grid; grid-template-columns: 9em 1fr; gap: 8px 24px; margin-top: 28px; }
+.kv > div:nth-child(odd) { color: var(--dim); font-size: 13px; }
+section.part { padding: 48px 0; border-bottom: 1px solid var(--line); }
+section.part > h3 { margin: 0 0 6px; font: 400 18px/1.3 var(--sans); }
+section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max-width: 42em; }
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; }
+
+/* 경유 경로: 세로선 */
+.chain { position: relative; margin-left: 6px; }
+.hop { position: relative; padding-left: 32px; }
+.hop::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 1px solid var(--fg); }
+.hop.last::before { display: none; }
+.hop .node { position: absolute; left: -4px; top: 6px; }
+.hop .node .sq, .hop .node .ring { width: 9px; height: 9px; background-clip: padding-box; }
+.hop .node .ring { background: var(--bg); }
+.hop .node .dash { width: 9px; margin-top: 4px; }
+.hop .host { font-family: var(--mono); font-size: 13.5px; word-break: break-all; }
+.hop .kind { font-size: 13px; margin-top: 2px; }
+.hop .meta { margin-top: 4px; }
+.hop .gap { color: var(--faint); font-family: var(--mono); font-size: 11.5px; padding: 6px 0; }
+
+.map { width: 100%; height: auto; display: block; }
+.map text { font-family: var(--mono); font-size: 10px; fill: var(--fg); }
+
+/* 도메인 목록 */
+.dlist { list-style: none; margin: 0; padding: 0; }
+.dlist li { display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.dlist .d { font-family: var(--mono); font-size: 13px; word-break: break-all; }
+.dlist .first { color: var(--dim); }
+.dlist .sub { grid-column: 1 / -1; }
+.tag { font-size: 11px; color: var(--dim); white-space: nowrap; }
+.tag.track { color: var(--track); }
+.urls { list-style: none; margin: 0; padding: 0; }
+.urls li { padding: 10px 0; border-bottom: 1px solid var(--hair); }
+.url { font-family: var(--mono); font-size: 12px; word-break: break-all; color: var(--fg); }
+.params { margin-top: 4px; }
+details summary { cursor: pointer; color: var(--dim); font-size: 13px; padding: 8px 0; }
+details summary:hover { color: var(--fg); }
+
+footer { padding: 56px 0 72px; color: var(--dim); font-size: 12px; max-width: 46em; }
+footer p { margin: 0 0 8px; }
+[hidden] { display: none !important; }
+
+@media (max-width: 860px) {
+  .cols { display: none; }
+  .row { grid-template-columns: 1fr auto; row-gap: 6px; }
+  .row .when { grid-column: 1 / -1; }
+  .row .who { grid-column: 1 / 2; }
+  .row .marks { grid-column: 2 / 3; grid-row: 2 / 4; align-self: center; }
+  .row .via, .row .from { grid-column: 1 / 2; }
+  .twocol { grid-template-columns: 1fr; }
+  .kv { grid-template-columns: 1fr; gap: 2px; }
+  .kv > div:nth-child(even) { margin-bottom: 10px; }
+  header.top { padding-top: 48px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>열기 전에</h1>
+  <p class="lede">프로모션 메일함의 메일 한 통 한 통이 어디를 거쳐 왔는지, 그리고 열어 보는 순간 어디에 신호를 보내는지.
+  이 페이지는 그 신호를 보내지 않고 보기만 합니다.</p>
+  <div class="stats" id="stats" hidden></div>
+</header>
+
+<main>
+  <div id="loader">
+    <div id="drop">
+      <p>파서가 만든 <span class="mono">messages.json</span>을 여기에 끌어다 놓으세요.</p>
+      <label class="btn" tabindex="0" id="pick">파일 선택<input type="file" id="file" accept=".json,application/json" hidden></label>
+      <div id="err" role="alert"></div>
+    </div>
+  </div>
+
+  <div id="list" hidden>
+    <div class="bar">
+      <div class="sorts" role="group" aria-label="정렬">
+        <span class="label">정렬</span>
+        <button data-sort="date" aria-pressed="true">날짜</button>
+        <button data-sort="pixels" aria-pressed="false">추적 픽셀</button>
+        <button data-sort="third" aria-pressed="false">제3자 도메인</button>
+        <button data-sort="service" aria-pressed="false">발송 서비스</button>
+        <span class="mono dim" id="dir"></span>
+      </div>
+      <div class="legend label">
+        <span><i class="px"></i>추적 픽셀 1개</span>
+        <span><i class="tp"></i>제3자 도메인 1곳</span>
+        <span><i class="sq"></i>데이터센터 경유</span>
+      </div>
+    </div>
+    <div class="cols label">
+      <div>받은 시각</div><div>보낸 사람</div><div>실제 발송</div><div>출발 위치</div><div>추적 요소</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div id="detail" hidden></div>
+</main>
+
+<footer>
+  <p>이 페이지는 메일 속 이미지·글꼴·스타일시트·스크립트를 하나도 불러오지 않습니다.
+  브라우저 보안 정책(Content-Security-Policy)으로 바깥 요청을 모두 막아 두었고, 모든 주소는 글자로만 표시합니다. 링크도 누를 수 없게 했습니다.</p>
+  <p>추적 요소 = 추적 픽셀 + 파라미터가 붙은 링크. 데이터센터·통신사 분류와 위치는 IP 대역을 가진 회사 이름과 위치 DB에 따른 추정입니다.</p>
+  <p id="credit" hidden>IP Geolocation by DB-IP (db-ip.com), CC BY 4.0.</p>
+</footer>
+
+<script>
+"use strict";
+
+// ---------------------------------------------------------------- helpers
+// 모든 데이터는 textContent로만 넣는다. innerHTML에 메일 내용을 넣지 않는다.
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "on") for (const [ev, fn] of Object.entries(v)) el.addEventListener(ev, fn);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid instanceof Node ? kid : String(kid));
+  }
+  return el;
+}
+const SVG = "http://www.w3.org/2000/svg";
+function s(tag, attrs, text) {
+  const el = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+const region = (() => {
+  try { const d = new Intl.DisplayNames(["ko"], { type: "region" }); return c => { try { return d.of(c); } catch { return c; } }; }
+  catch { return c => c; }
+})();
+const fmtDate = new Intl.DateTimeFormat("ko-KR", { month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+const fmtFull = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const fmtDay = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
+const dateOf = iso => iso ? new Date(iso) : null;
+
+function dur(sec) {
+  if (sec == null) return "—";
+  const neg = sec < 0; sec = Math.abs(sec);
+  const d = Math.floor(sec / 86400), hr = Math.floor(sec % 86400 / 3600), m = Math.floor(sec % 3600 / 60), ss = sec % 60;
+  const out = [];
+  if (d) out.push(d + "일");
+  if (hr) out.push(hr + "시간");
+  if (m) out.push(m + "분");
+  if (ss || !out.length) out.push(ss + "초");
+  return (neg ? "−" : "") + out.slice(0, 2).join(" ");
+}
+
+function place(g) {
+  if (!g || !g.country) return "";
+  return [region(g.country), g.city].filter(Boolean).join(" ");
+}
+
+const OPTYPE = { esp: "메일 발송 서비스", cloud: "클라우드", mailbox: "메일함", hosting: "호스팅" };
+function kindText(g) {
+  if (!g) return null;
+  if (g.kind === "datacenter") return "데이터센터 경유 — " + (g.operator || "운영 주체 미상") + (OPTYPE[g.operator_type] ? " (" + OPTYPE[g.operator_type] + ")" : "");
+  if (g.kind === "isp") return "통신사 회선 — " + (g.operator || "");
+  if (g.kind === "internal") return "내부망 (위치 없음)";
+  if (g.operator) return g.operator;
+  return null;
+}
+function kindMark(g) {
+  if (g && g.kind === "datacenter") return h("i", { class: "sq", title: "데이터센터" });
+  if (g && g.kind === "isp") return h("i", { class: "ring", title: "통신사 회선" });
+  return h("i", { class: "dash" });
+}
+
+function serviceText(svc) {
+  if (!svc) return "알 수 없음";
+  if (svc.self_hosted) return "자체 서버";
+  if (!svc.recognized && svc.name && svc.name !== "unknown") return svc.name + " (미확인)";
+  return svc.name === "unknown" ? "알 수 없음" : svc.name;
+}
+
+const REASON = { "attr-1x1": "1×1 크기 속성", "style-1px": "1px 스타일" };
+const reasonText = r => REASON[r] || (r.startsWith("name:") ? "이름에 ‘" + r.slice(5) + "’" : r);
+const TYPE = { image: "이미지", font: "글꼴", stylesheet: "스타일시트", script: "스크립트", frame: "프레임", media: "미디어", refresh: "자동 이동" };
+const typeText = t => TYPE[t] || t.replace(/^link-/, "link ");
+
+// ---------------------------------------------------------------- data
+let DATA = [];
+const state = { sort: "date", dir: -1, scroll: 0 };
+
+function prepare(records) {
+  return records.map((r, i) => {
+    const c = r.counts || {};
+    const pixels = c.pixels || 0;
+    const tracked = c.links_with_params || 0;
+    return Object.assign(r, {
+      _i: i,
+      _t: dateOf(r.received) ? dateOf(r.received).getTime() : 0,
+      _pixels: pixels,
+      _third: c.third_party_domains || 0,
+      _tracking: pixels + tracked,
+      _svc: serviceText(r.service),
+    });
+  });
+}
+
+function load(text) {
+  let recs;
+  try { recs = JSON.parse(text); } catch (e) { throw new Error("JSON 형식이 아닙니다."); }
+  if (!Array.isArray(recs)) throw new Error("메일 기록 배열이 아닙니다. parse_mbox.py가 만든 파일인지 확인해 주세요.");
+  DATA = prepare(recs.filter(r => r && typeof r === "object"));
+  document.getElementById("loader").hidden = true;
+  renderStats();
+  renderList();
+  route();
+}
+
+// ---------------------------------------------------------------- list
+function renderStats() {
+  const el = document.getElementById("stats");
+  el.replaceChildren();
+  const n = DATA.length;
+  const px = DATA.reduce((a, r) => a + r._pixels, 0);
+  const withPx = DATA.filter(r => r._pixels).length;
+  const tps = new Set(DATA.flatMap(r => (r.domains && r.domains.third_party) || []));
+  const dc = DATA.filter(r => r.route && r.route.via_datacenter).length;
+  const hasGeo = DATA.some(r => r.route);
+  const ts = DATA.map(r => r._t).filter(Boolean);
+  const span = ts.length ? fmtDay.format(Math.min(...ts)) + " – " + fmtDay.format(Math.max(...ts)) : "";
+  const stat = (num, lab, cls) => h("div", { class: "stat" }, h("b", { class: cls }, num), h("span", { class: "label" }, lab));
+  el.append(
+    stat(n, "통의 메일"),
+    stat(px, "개의 추적 픽셀 (" + withPx + "통)", "track"),
+    stat(tps.size, "곳의 제3자 도메인"),
+    hasGeo ? stat(dc, "통이 데이터센터 경유") : null,
+    h("div", { class: "stat" }, h("b", { class: "mono", style: "font-size:13px;padding-top:12px" }, span), h("span", { class: "label" }, "받은 기간")),
+  );
+  el.hidden = false;
+  document.getElementById("credit").hidden = !hasGeo;
+}
+
+function sorted() {
+  const k = state.sort, d = state.dir;
+  const byDate = (a, b) => b._t - a._t;
+  const cmp = {
+    date: (a, b) => d * (a._t - b._t),
+    pixels: (a, b) => d * (a._pixels - b._pixels) || byDate(a, b),
+    third: (a, b) => d * (a._third - b._third) || byDate(a, b),
+    service: (a, b) => -d * a._svc.localeCompare(b._svc, "ko") || byDate(a, b),
+  }[k];
+  return DATA.slice().sort(cmp);
+}
+
+function row(r) {
+  const d = dateOf(r.received);
+  const s = r.sender || {};
+  const o = r.route && r.route.origin;
+  const dc = r.route && r.route.via_datacenter;
+  return h("button", { class: "row", on: { click: () => open(r._i) }, "aria-label": (s.name || s.address || "") + " 상세 보기" },
+    h("div", { class: "when mono dim" }, d ? fmtDate.format(d) : "날짜 없음"),
+    h("div", { class: "who" },
+      h("span", { class: "name" }, s.name || s.address || "(이름 없음)"),
+      h("span", { class: "addr mono faint" }, s.address || "")),
+    h("div", { class: "via" },
+      h("span", { class: "svc mono" }, "→ " + r._svc),
+      dc ? h("span", { class: "dc" }, h("i", { class: "sq" }), "데이터센터 경유") : null),
+    h("div", { class: "from" },
+      o ? h("span", null, place(o)) : h("span", { class: "faint" }, r.route ? "위치 없음" : ""),
+    ),
+    h("div", { class: "marks" },
+      h("span", { class: "n", title: "추적 요소: 픽셀 + 파라미터가 붙은 링크" }, r._tracking),
+      h("div", null,
+        h("div", { class: "pix", title: "추적 픽셀 " + r._pixels + "개" }, Array.from({ length: r._pixels }, () => h("i", { class: "px" }))),
+        h("div", { class: "tps", title: "제3자 도메인 " + r._third + "곳", style: "margin-top:4px" }, Array.from({ length: r._third }, () => h("i", { class: "tp" }))),
+      )),
+  );
+}
+
+function renderList() {
+  const box = document.getElementById("rows");
+  const frag = document.createDocumentFragment();
+  const rs = sorted();
+  if (state.sort === "service") {
+    let cur = null, group = null, count = 0;
+    const flush = () => { if (group) group.querySelector(".mono").textContent = count + "통"; };
+    for (const r of rs) {
+      if (r._svc !== cur) {
+        flush();
+        cur = r._svc; count = 0;
+        group = h("div", { class: "group" }, h("h3", null, r._svc), h("span", { class: "mono dim" }, ""));
+        frag.append(group);
+      }
+      count++;
+      frag.append(row(r));
+    }
+    flush();
+  } else {
+    for (const r of rs) frag.append(row(r));
+  }
+  box.replaceChildren(frag);
+  for (const b of document.querySelectorAll(".sorts button"))
+    b.setAttribute("aria-pressed", String(b.dataset.sort === state.sort));
+  const dirLabels = {
+    date: state.dir < 0 ? "최신순" : "오래된 순",
+    pixels: state.dir < 0 ? "많은 순" : "적은 순",
+    third: state.dir < 0 ? "많은 순" : "적은 순",
+    service: state.dir < 0 ? "가나다순" : "역순",
+  };
+  document.getElementById("dir").textContent = dirLabels[state.sort];
+}
+
+for (const b of document.querySelectorAll(".sorts button")) {
+  b.addEventListener("click", () => {
+    if (state.sort === b.dataset.sort) state.dir = -state.dir;
+    else { state.sort = b.dataset.sort; state.dir = -1; }
+    renderList();
+  });
+}
+
+// ---------------------------------------------------------------- detail
+function open(i) { state.scroll = window.scrollY; location.hash = "m" + i; }
+
+function route() {
+  const m = /^#m(\d+)$/.exec(location.hash);
+  const list = document.getElementById("list"), det = document.getElementById("detail");
+  if (!DATA.length) return;
+  if (m && DATA[+m[1]]) {
+    list.hidden = true;
+    det.hidden = false;
+    renderDetail(DATA[+m[1]]);
+    window.scrollTo(0, 0);
+    det.querySelector(".back").focus({ preventScroll: true });
+  } else {
+    det.hidden = true;
+    det.replaceChildren();
+    list.hidden = false;
+    window.scrollTo(0, state.scroll);
+  }
+}
+window.addEventListener("hashchange", route);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && location.hash) history.back();
+});
+
+function isGoogleHost(x) { return /(^|\.)google\.com$|^2002:|^[0-9a-f]{1,4}(:[0-9a-f]{0,4}){2,}$/i.test(x || ""); }
+
+function chain(r) {
+  const hops = r.hops || [];
+  const box = h("div", { class: "chain" });
+  if (!hops.length) return h("p", { class: "dim" }, "Received 헤더가 없습니다.");
+  const stamps = hops.map(x => dateOf(x.timestamp));
+  let prev = null;
+  hops.forEach((hop, i) => {
+    const g = hop.geo;
+    const t = stamps[i];
+    const delta = prev && t ? Math.round((t - prev) / 1000) : null;
+    if (t) prev = t;
+    // 시간 간격을 세로 길이로: 오래 걸린 구간일수록 선이 길다
+    const gapPx = delta == null ? 18 : Math.round(14 + 26 * Math.log10(1 + Math.max(0, delta)));
+    const fromName = hop.from ? hop.from + (hop.rdns && hop.rdns !== hop.from ? "  (" + hop.rdns + ")" : "") : null;
+    const internalGmail = !hop.from && isGoogleHost(hop.by);
+    const kt = kindText(g);
+    box.append(h("div", { class: "hop" },
+      h("span", { class: "node" }, internalGmail ? h("i", { class: "sq" }) : kindMark(g)),
+      h("div", { class: "host" }, fromName || (internalGmail ? "Gmail 내부 전달" : "(보낸 서버 기록 없음)")),
+      hop.ip ? h("div", { class: "mono dim" }, hop.ip) : null,
+      kt || place(g) ? h("div", { class: "kind" }, [kt, place(g)].filter(Boolean).join(" · ")) : null,
+      internalGmail ? h("div", { class: "kind" }, "데이터센터 경유 — Google (메일함 · 위치 비공개)") : null,
+      h("div", { class: "meta mono faint" },
+        "→ " + (hop.by || "?") + (hop.with ? "  " + hop.with : ""),
+        h("br"),
+        t ? fmtFull.format(t) : "시각 기록 없음",
+        delta != null ? "   +" + dur(delta) : ""),
+      h("div", { class: "gap", style: "height:" + gapPx + "px" }),
+    ));
+  });
+  const last = hops[hops.length - 1];
+  const g = isGoogleHost(last.by);
+  box.append(h("div", { class: "hop last" },
+    h("span", { class: "node" }, g ? h("i", { class: "sq" }) : h("i", { class: "ring" })),
+    h("div", { class: "host" }, "받은편지함"),
+    g ? h("div", { class: "kind dim" }, "Google 데이터센터 · 위치 비공개 (헤더에 IP가 없습니다)") : null,
+    h("div", { class: "meta mono" }, "첫 구간부터 " + dur(r.transit_seconds))));
+  return box;
+}
+
+function map(r) {
+  const pts = (r.hops || []).filter(x => x.geo && x.geo.lat != null && x.geo.lon != null)
+    .map(x => ({ lat: x.geo.lat, lon: x.geo.lon, label: place(x.geo), dc: x.geo.kind === "datacenter" }));
+  if (!pts.length) return null;
+  const W = 720, H = 360, X = lon => (lon + 180) / 360 * W, Y = lat => (90 - lat) / 180 * H;
+  const svg = s("svg", { class: "map", viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "경유 위치: " + pts.map(p => p.label).join(" → ") });
+  for (let lon = -180; lon <= 180; lon += 30)
+    svg.append(s("line", { x1: X(lon), y1: 0, x2: X(lon), y2: H, stroke: "rgba(255,255,255,.12)", "stroke-width": lon === 0 ? 1 : .5 }));
+  for (let lat = -90; lat <= 90; lat += 30)
+    svg.append(s("line", { x1: 0, y1: Y(lat), x2: W, y2: Y(lat), stroke: "rgba(255,255,255,.12)", "stroke-width": lat === 0 ? 1 : .5 }));
+  // 눈금 표기: 지도 대신 좌표 도면처럼 읽히도록
+  const lab = { fill: "rgba(255,255,255,.4)" };
+  for (let lon = -150; lon <= 150; lon += 30)
+    svg.append(s("text", Object.assign({ x: X(lon) + 3, y: 11 }, lab), Math.abs(lon) + "°" + (lon < 0 ? "W" : lon > 0 ? "E" : "")));
+  for (let lat = 60; lat >= -60; lat -= 30)
+    svg.append(s("text", Object.assign({ x: 3, y: Y(lat) - 3 }, lab), Math.abs(lat) + "°" + (lat > 0 ? "N" : lat < 0 ? "S" : "")));
+  if (pts.length > 1)
+    svg.append(s("polyline", { points: pts.map(p => X(p.lon) + "," + Y(p.lat)).join(" "), fill: "none", stroke: "#fff", "stroke-width": 1 }));
+  const seen = new Set();
+  pts.forEach((p, i) => {
+    const x = X(p.lon), y = Y(p.lat);
+    svg.append(p.dc ? s("rect", { x: x - 4, y: y - 4, width: 8, height: 8, fill: "#fff" })
+                    : s("circle", { cx: x, cy: y, r: 4, fill: "#000", stroke: "#fff" }));
+    if (!seen.has(p.label)) {
+      seen.add(p.label);
+      const right = x < W - 140;
+      svg.append(s("text", { x: right ? x + 9 : x - 9, y: y + 3.5, "text-anchor": right ? "start" : "end" }, (i + 1) + "  " + p.label));
+    }
+  });
+  return svg;
+}
+
+function domainLists(r) {
+  const senderReg = regDomain((r.sender && r.sender.domain) || "");
+  const third = new Set((r.domains && r.domains.third_party) || []);
+  const pixelHosts = new Set((r.pixels || []).map(p => p.domain));
+  const auto = new Map();
+  for (const x of r.resources || []) {
+    if (!x.domain) continue;
+    const e = auto.get(x.domain) || { types: new Map() };
+    e.types.set(x.type, (e.types.get(x.type) || 0) + 1);
+    auto.set(x.domain, e);
+  }
+  const links = new Map();
+  for (const l of r.links || []) {
+    if (!l.domain) continue;
+    const e = links.get(l.domain) || { n: 0, params: new Set() };
+    e.n++; (l.params || []).forEach(p => e.params.add(p));
+    links.set(l.domain, e);
+  }
+  const item = (dom, right, sub) => {
+    const isThird = third.has(regDomain(dom)) || regDomain(dom) !== senderReg;
+    return h("li", null,
+      h("span", { class: "d" + (isThird ? "" : " first") }, dom),
+      h("span", null,
+        pixelHosts.has(dom) ? h("span", { class: "tag track" }, "추적 픽셀  ") : null,
+        h("span", { class: "tag" }, isThird ? "제3자" : "보낸 회사")),
+      sub ? h("div", { class: "sub mono faint" }, sub) : null,
+      right ? h("div", { class: "sub mono dim" }, right) : null);
+  };
+  const autoList = h("ul", { class: "dlist" },
+    [...auto.entries()].sort((a, b) => (pixelHosts.has(b[0]) - pixelHosts.has(a[0])) || a[0].localeCompare(b[0]))
+      .map(([d, e]) => item(d, [...e.types].map(([t, n]) => typeText(t) + " " + n).join(" · "))));
+  const linkList = h("ul", { class: "dlist" },
+    [...links.entries()].sort((a, b) => b[1].n - a[1].n || a[0].localeCompare(b[0]))
+      .map(([d, e]) => item(d, "링크 " + e.n + "개", e.params.size ? "파라미터  " + [...e.params].join("  ") : null)));
+  return { auto, links, autoList, linkList };
+}
+
+// 파서와 같은 방식의 대략적 등록 도메인
+const TWO = new Set("co.uk org.uk ac.uk gov.uk com.au net.au org.au co.jp ne.jp or.jp co.kr or.kr ne.kr com.br com.cn com.mx co.nz co.in com.sg com.tw com.hk co.za com.tr com.ar".split(" "));
+function regDomain(host) {
+  const l = (host || "").toLowerCase().replace(/\.$/, "").split(".");
+  if (l.length >= 3 && TWO.has(l.slice(-2).join("."))) return l.slice(-3).join(".");
+  return l.slice(-2).join(".");
+}
+
+function renderDetail(r) {
+  const det = document.getElementById("detail");
+  const s = r.sender || {};
+  const svc = r.service || {};
+  const d = dateOf(r.received);
+  const { auto, links, autoList, linkList } = domainLists(r);
+  const allDomains = new Set([...auto.keys(), ...links.keys()]);
+
+  const evidence = (svc.evidence || []).map(e =>
+    ({ received: "경유 서버", "return-path": "반송 주소", dkim: "DKIM 서명", header: "헤더" }[e.source] || e.source) + "  " + e.value);
+
+  det.replaceChildren(
+    h("button", { class: "back", on: { click: () => history.back() } }, "← 목록으로  (Esc)"),
+    h("div", { class: "dhead" },
+      h("div", { class: "mono dim" }, d ? fmtFull.format(d) : "날짜 없음"),
+      h("h2", null, r.subject || "(제목 없음)"),
+      h("div", null, s.name || "", " ", h("span", { class: "mono dim" }, s.address ? "<" + s.address + ">" : "")),
+      h("div", { class: "kv" },
+        h("div", null, "보낸 사람 표시"), h("div", { class: "mono" }, s.domain || "—"),
+        h("div", null, "실제 발송"), h("div", null, h("span", { class: "mono" }, serviceText(svc)),
+          evidence.length ? h("div", { class: "mono faint" }, evidence.map(e => h("div", null, e))) : null),
+        h("div", null, "DKIM 서명"), h("div", { class: "mono" }, (r.dkim_domains || []).join("  →  ") || "없음"),
+        h("div", null, "반송 주소"), h("div", { class: "mono" }, r.return_path || "—"),
+        h("div", null, "추적"), h("div", null,
+          h("span", { class: "mono", style: "color:var(--track)" }, r._pixels + " 픽셀"), "   ",
+          h("span", { class: "mono" }, ((r.counts && r.counts.links_with_params) || 0) + " 파라미터 링크"), "   ",
+          h("span", { class: "mono" }, r._third + " 제3자 도메인")),
+      )),
+
+    h("section", { class: "part" },
+      h("h3", null, "경유 경로"),
+      h("p", { class: "note" }, "위에서 아래로, 처음 보낸 서버부터 받은편지함까지. 선의 길이는 구간 사이에 걸린 시간입니다. ",
+        "■ 데이터센터  ○ 통신사 회선  – 내부망·미상"),
+      (() => { const m = map(r); return h("div", { class: m ? "twocol" : "" }, chain(r), m); })()),
+
+    h("section", { class: "part" },
+      h("h3", null, "이 메일이 연결되는 곳  ", h("span", { class: "mono dim" }, allDomains.size + "곳")),
+      h("p", { class: "note" }, "왼쪽은 메일을 여는 것만으로 브라우저가 접속하는 곳, 오른쪽은 링크를 눌렀을 때 가는 곳입니다. 이 페이지는 어느 쪽에도 접속하지 않았습니다."),
+      h("div", { class: "twocol" },
+        h("div", null, h("div", { class: "label", style: "margin-bottom:8px" }, "열면 자동으로 접속 · " + auto.size + "곳"),
+          auto.size ? autoList : h("p", { class: "dim" }, "없음")),
+        h("div", null, h("div", { class: "label", style: "margin-bottom:8px" }, "누르면 이동 · " + links.size + "곳"),
+          links.size ? linkList : h("p", { class: "dim" }, "없음")))),
+
+    h("section", { class: "part" },
+      h("h3", null, "추적 픽셀  ", h("span", { class: "mono", style: "color:var(--track)" }, r._pixels + "개")),
+      h("p", { class: "note" }, "보이지 않는 크기의 이미지. 메일을 여는 순간 이 주소로 요청이 가고, 주소에 담긴 값으로 누가 언제 열었는지 기록됩니다. 아래 주소는 글자일 뿐 불러오지 않았습니다."),
+      (r.pixels || []).length
+        ? h("ul", { class: "urls" }, r.pixels.map(p => h("li", null,
+            h("div", { class: "url" }, p.url),
+            h("div", { class: "mono", style: "color:var(--track);margin-top:4px" }, p.reasons.map(reasonText).join(" · ")))))
+        : h("p", { class: "dim" }, "찾지 못했습니다.")),
+
+    h("section", { class: "part" },
+      h("details", null,
+        h("summary", null, "외부 리소스 주소 전체 · " + (r.resources || []).length + "개"),
+        h("ul", { class: "urls" }, (r.resources || []).map(x => h("li", null,
+          h("div", { class: "label" }, typeText(x.type) + "  ·  " + x.tag),
+          h("div", { class: "url" }, x.url))))),
+      h("details", null,
+        h("summary", null, "링크 주소 전체 · " + (r.links || []).length + "개"),
+        h("ul", { class: "urls" }, (r.links || []).map(l => h("li", null,
+          h("div", { class: "url" }, l.url),
+          l.params && l.params.length ? h("div", { class: "params mono faint" }, "파라미터  " + l.params.join("  ")) : null))))),
+  );
+}
+
+// ---------------------------------------------------------------- loading
+const fileInput = document.getElementById("file");
+const drop = document.getElementById("drop");
+const err = document.getElementById("err");
+function readFile(f) {
+  if (!f) return;
+  err.textContent = "";
+  const fr = new FileReader();
+  fr.onload = () => { try { load(fr.result); } catch (e) { err.textContent = e.message; } };
+  fr.onerror = () => { err.textContent = "파일을 읽지 못했습니다."; };
+  fr.readAsText(f, "utf-8");
+}
+fileInput.addEventListener("change", () => readFile(fileInput.files[0]));
+document.getElementById("pick").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+for (const ev of ["dragenter", "dragover"]) document.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); });
+for (const ev of ["dragleave", "drop"]) document.addEventListener(ev, e => { e.preventDefault(); if (ev === "drop" || e.target === document.documentElement) drop.classList.remove("over"); });
+document.addEventListener("drop", e => readFile(e.dataTransfer.files[0]));
+if (location.hash) history.replaceState(null, "", location.pathname);
+</script>
+</body>
+</html>

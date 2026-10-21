@@ -287,7 +287,7 @@ def useful_host(host):
     """A real, public hostname (not an IP, localhost, 'unknown', or a bare label)."""
     host = (host or "").lower().strip(".")
     return ("." in host and not re.fullmatch(r"[\d.]+", host) and ":" not in host
-            and host not in ("localhost.localdomain",) and not host.endswith(".local")
+            and not re.search(r"(^|\.)(localhost|localdomain|local|internal|lan|corp|home|intranet)$", host)
             and not host.endswith(RECEIVER_SUFFIXES))
 
 
@@ -363,7 +363,7 @@ def identify_service(msg, hops, dkim_domains, return_path_domain, sender_domain)
     chosen = (foreign or candidates or [None])[0]
     if chosen:
         rd = reg_domain(chosen[1])
-        return {"name": rd, "domain": rd, "recognized": False,
+        return {"name": rd, "domain": rd, "recognized": False, "self_hosted": rd == sender_reg,
                 "evidence": [{"source": chosen[0], "value": chosen[1], "service": None}]}
     return {"name": "unknown", "domain": None, "recognized": False, "evidence": []}
 
