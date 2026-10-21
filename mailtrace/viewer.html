@@ -61,9 +61,6 @@ body.globe-mode footer { display: none; }
 #page-globe figcaption { display: none; }
 .hud { position: absolute; z-index: 3; font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; }
 .hud .rk { color: var(--dim); font-size: 10.5px; letter-spacing: .1em; }
-.hudhero { left: 16px; top: 72px; border: 1px solid var(--fg); background: var(--bg); min-width: 200px; }
-.hnum { font: 200 54px/1 var(--mono); padding: 14px 20px 12px; letter-spacing: -.02em; }
-.hcap { border-top: 1px solid var(--fg); padding: 8px 20px; font-size: 12px; font-style: italic; text-transform: none; letter-spacing: .02em; }
 .readout { right: 72px; top: 72px; text-align: right; font-size: 13px; line-height: 1.55; max-width: 236px; background: rgba(0,0,0,.82); padding: 8px 10px; }   /* 확대한 지도 글씨와 겹쳐도 읽히게 */
 .readout .rh { font-weight: 600; letter-spacing: .08em; }
 .readout .rv2 { color: var(--fg); }
@@ -92,12 +89,6 @@ body.globe-mode footer { display: none; }
 .hudstats .rd { display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 7px 16px; }
 .hudstats .rd + .rd { border-left: 1px dashed var(--line); }
 .hudstats .rv { font-size: 17px; font-weight: 300; }
-.search { position: static; display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); background: var(--bg); padding-left: 14px; flex: 1; min-width: 240px; max-width: 460px; }
-.sinput { flex: 1; width: 100%; min-width: 0; -webkit-appearance: none; appearance: none; background: none; border: 0; border-radius: 0;
-  color: var(--fg); font: 13px var(--mono); padding: 12px 0; outline: none; }
-.sinput::-webkit-search-cancel-button { display: none; }
-.sinput::placeholder { color: var(--faint); text-transform: none; }
-.sgo { align-self: stretch; padding: 0 18px; background: var(--fg); color: var(--bg); font: 600 12px var(--mono); letter-spacing: .1em; }
 .circles { position: absolute; z-index: 3; right: 16px; bottom: 16px; display: flex; gap: 10px; }
 .circ { width: 92px; height: 92px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px var(--mono); letter-spacing: .1em; }
 .circ:hover { border-color: var(--fg); }
@@ -105,11 +96,8 @@ body.globe-mode footer { display: none; }
 #page-globe .zoomctl { bottom: auto; top: 50%; right: 16px; transform: translateY(-50%); }
 @media (max-width: 760px) {
   .tline { left: 16px; top: 62px; }
-  .hudhero { top: 112px; min-width: 0; }
-  .hnum { font-size: 34px; padding: 10px 14px 8px; }
-  .hcap { padding: 6px 14px; font-size: 11px; }
   .readout { display: none; }
-  .rail { top: 236px; transform: none; gap: 6px; }
+  .rail { top: 120px; transform: none; gap: 6px; }
   .rbtn { width: 36px; height: 36px; }
   .infocard { left: 16px; right: 16px; width: auto; top: auto; bottom: 150px; transform: none; }
   .bbar { right: 16px; bottom: 112px; }
@@ -117,11 +105,10 @@ body.globe-mode footer { display: none; }
   .hudstats .rd { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
   .hudstats .rk { font-size: 9px; letter-spacing: .06em; white-space: nowrap; }
   .hudstats .rv { font-size: 15px; }
-  .search { max-width: none; min-width: 0; width: 100%; }
   .circles { right: 16px; left: 16px; bottom: 16px; justify-content: flex-end; }
   .circ { width: 76px; height: 76px; border-radius: 0; height: 44px; width: auto; padding: 0 18px; }
-  #page-globe .zoomctl { top: 236px; transform: none; }
-  .infocard { top: 236px; bottom: auto; left: 60px; right: 16px; }
+  #page-globe .zoomctl { top: 120px; transform: none; }
+  .infocard { top: 120px; bottom: auto; left: 60px; right: 16px; }
 }
 #page-analysis .stats { padding: 40px 0 8px; }
 .graphsec { padding: 56px 0 24px; border-top: 1px solid var(--line); }
@@ -1943,9 +1930,6 @@ function geoRelView() {
   const visibleMails = () => DATA.filter(r => ctl.inTime(r._i));
   const read = (k, v) => h("div", { class: "rd" }, h("span", { class: "rk" }, k), h("span", { class: "rv" }, v));
 
-  // 큰 숫자 상자 (왼쪽 위)
-  const heroNum = h("div", { class: "hnum" }), heroCap = h("div", { class: "hcap" });
-  const heroBox = h("div", { class: "hud hudhero" }, heroNum, heroCap);
 
   // 오른쪽 판독 칸
   const readout = h("div", { class: "hud readout" });
@@ -1958,8 +1942,6 @@ function geoRelView() {
     const dc = vm.filter(r => r.route && r.route.via_datacenter).length;
     const pix = vm.reduce((a, r) => a + r._pixels, 0);
     const third = new Set(vm.flatMap(r => (r.domains && r.domains.third_party) || [])).size;
-    heroNum.textContent = vm.length ? (dc / vm.length).toFixed(2) : "0.00";
-    heroCap.textContent = "via data centre · " + dc + " / " + vm.length;
     statsBox.replaceChildren(
       read("MAIL", vm.length), read("PIXEL", pix), read("VIA DC", dc), read("3RD PARTY", third));
     const until = geoState.until == null ? tMax : geoState.until;
@@ -2028,20 +2010,6 @@ function geoRelView() {
   ticks.addEventListener("pointermove", e => { if (!scrub) return; const k = fromX(e.clientX); setUntil(k >= days ? null : dayEnd(k)); });
   ticks.addEventListener("pointerup", () => { scrub = false; });
 
-  // 아래 검색
-  const q = h("input", { class: "sinput", type: "search", placeholder: L("보낸 사람 · 도메인 · 서비스"), "aria-label": L("메일 검색") });
-  const go = h("button", { class: "sgo" }, "GO");
-  const search = h("form", { class: "hud search", on: { submit: e => {
-    e.preventDefault();
-    const v = q.value.trim().toLowerCase();
-    if (!v) return;
-    const mails = DATA.filter(r => [r.sender && r.sender.name, r.sender && r.sender.address, r.sender && r.sender.domain, r._svc, r.subject,
-      ...((r.pixels || []).map(p => p.domain))].some(x => x && String(x).toLowerCase().includes(v))).map(r => r._i);
-    const b = search.getBoundingClientRect();
-    geoState.at = [b.left + 40, b.top - 12];
-    ctl.select({ kind: "search", q: q.value.trim(), mails });
-  } } }, h("span", { class: "rk" }, "SEARCH"), q, go);
-
   // 오른쪽 아래 큰 버튼
   // Archive는 위 메뉴로 가므로, 오른쪽 아래에는 지구본/평면 전환 하나만
   const modeBtn = h("button", { class: "circ inv" }, L("평면"));
@@ -2051,8 +2019,8 @@ function geoRelView() {
     ariaLabel: L("지구본 위 관계도"), remember: false, caption: "",
     hud: { cross: ME_PLACE },
     overlay: { mount: (stage, inv) => {
-      stage.append(svg, ctl.info, heroBox, readout, rail, infoCard, tline,
-        h("div", { class: "bbar" }, statsBox, search), h("div", { class: "circles" }, modeBtn));
+      stage.append(svg, ctl.info, readout, rail, infoCard, tline,
+        h("div", { class: "bbar" }, statsBox), h("div", { class: "circles" }, modeBtn));
       invalidate = inv; host.el = stage;
       // 타임라인은 메뉴 칸 바로 오른쪽에서 시작 (메뉴 폭은 언어에 따라 다르다)
       const fit = () => { const nav = document.getElementById("nav"); if (nav && innerWidth > 760) tline.style.left = Math.round(nav.getBoundingClientRect().right + 12) + "px"; else tline.style.left = ""; };
