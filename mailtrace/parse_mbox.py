@@ -681,6 +681,8 @@ def main():
     ap.add_argument("--days", type=int, default=30)
     ap.add_argument("--anchor", choices=["now", "latest"], default="now")
     ap.add_argument("--top", type=int, default=15)
+    ap.add_argument("--geo-city", help="DB-IP city lite CSV(.gz) — 경유 IP의 위치 (geo.py 참고)")
+    ap.add_argument("--geo-asn", help="DB-IP ASN lite CSV(.gz) — 경유 IP의 네트워크 운영 주체")
     args = ap.parse_args()
 
     hparse = BytesHeaderParser(policy=policy.compat32)
@@ -769,6 +771,14 @@ def main():
     table("실제 발송 서비스 (메일 수)", services)
     table("제3자 도메인 (등장한 메일 수)", tp_domains)
     table("픽셀 도메인 (메일 수)", pixel_domains)
+    if args.geo_city or args.geo_asn:
+        import geo
+        with open(args.out, encoding="utf-8") as fh:
+            records = json.load(fh)
+        geo.annotate(records, args.geo_city, args.geo_asn)
+        with open(args.out, "w", encoding="utf-8") as fh:
+            fh.write("[\n" + ",\n".join(json.dumps(r, ensure_ascii=False) for r in records) + "\n]\n")
+        geo.summary(records, args.top)
     w(f"\n저장: {args.out}\n")
 
 
