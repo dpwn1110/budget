@@ -32,7 +32,8 @@ def main():
             continue
         name = short_ko(p.get("NAME_KO")) or p.get("NAME")
         lon, lat = f["geometry"]["coordinates"][:2]
-        out.append([round(lon, 2), round(lat, 2), rank, name, 1 if p.get("ADM0CAP") else 0])
+        # [경도, 위도, 크기 등급, 한국어 이름, 수도 여부, 영어 이름]
+        out.append([round(lon, 2), round(lat, 2), rank, name, 1 if p.get("ADM0CAP") else 0, p.get("NAME_EN") or p.get("NAME")])
     out.sort(key=lambda c: (c[2], -c[4]))
     json.dump(out, open(os.path.join(HERE, "places.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"도시 {len(out)}곳 → map/places.json")
