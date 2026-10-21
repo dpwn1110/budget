@@ -24,6 +24,7 @@ import email
 import email.header
 import email.utils
 import hashlib
+import ipaddress
 import json
 import re
 import sys
@@ -297,9 +298,19 @@ def useful_host(host):
             and not host.endswith(RECEIVER_SUFFIXES))
 
 
+def private_ip(ip):
+    try:
+        a = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return a.is_private or a.is_loopback or a.is_link_local
+
+
 def hop_hosts(hop):
     out = []
-    for h in (hop.get("rdns"), hop.get("from"), hop.get("by")):
+    # 사설 IP에서 온 구간의 자기소개(HELO) 이름은 회사 내부 서버 이름이다 (예: cvowl1013.nm)
+    helo = None if hop.get("ip") and private_ip(hop["ip"]) and not hop.get("rdns") else hop.get("from")
+    for h in (hop.get("rdns"), helo, hop.get("by")):
         if useful_host(h) and h not in out:
             out.append(h)
     return out
