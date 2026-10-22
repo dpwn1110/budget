@@ -255,7 +255,7 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .symnum { fill: var(--fg); font: 9.5px var(--data); }
 .glabel { fill: var(--fg); font: 12.5px var(--sans); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; stroke-linejoin: round; }
 .gsub { fill: var(--dim); font: 10.5px var(--data); paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
-.dim { opacity: .13; }
+.gnode.dim, .gedge.dim { opacity: .13; }   /* 관계도에서 강조 밖의 기호·선만 흐리게 (글자색 .dim과 별개) */
 .gbox { border: 1px solid var(--line); padding: 6px 20px 14px; background: var(--bg); }
 .infobox { margin-top: 16px; padding-top: 16px; position: relative; max-height: 640px; overflow: auto; }
 .lrow { display: grid; grid-template-columns: 18px 1fr auto 20px; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--line); }
