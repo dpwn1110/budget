@@ -9,3 +9,4 @@
 # commercial fonts (e.g. Neue Sammlung) — install locally, never commit
 *.ttf
 *.otf
+__pycache__/
