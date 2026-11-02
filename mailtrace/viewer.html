@@ -1704,11 +1704,12 @@ function graphView() {
   // 글자·기호 크기는 그대로 두고 자리만 판에 맞춰 펼친다. 확대해도 글자는 커지지 않고 사이가 벌어진다.
   // 판 위 자리 = 판 가운데 + (자리 − 관계도 가운데) × 맞춤 배율 × vz + (ox, oy)
   let bounds = null, fitS = [1, 1], vz = 1, ox = 0, oy = 0;
-  const PADX = 90;
   function fitScale() {
-    const sw = stage.clientWidth || 1, sh = stage.clientHeight || 1, PADY = paper ? 78 : 56;   // 종이 보기는 아래 설명글 자리만큼
+    // 종이 보기는 원 둘레 바깥에 이름이 붙고 아래에 설명글이 있어 여백을 더 둔다
+    const sw = stage.clientWidth || 1, sh = stage.clientHeight || 1, PADX = paper ? Math.min(170, sw * .22) : 90, PADY = paper ? 70 : 56;
     let sx = (sw - 2 * PADX) / bounds.w, sy = (sh - 2 * PADY) / bounds.h;
     const k = Math.min(sx, sy);
+    if (paper) { fitS = [Math.max(.2, k), Math.max(.2, k)]; return; }   // 원은 찌그러뜨리지 않는다
     // 판 모양에 맞춰 조금 늘이되(1.5배까지), 휴대폰처럼 좁으면 너무 오므리지 않는다(.35)
     sx = Math.max(.35, Math.min(2.4, Math.min(sx, k * 1.5))); sy = Math.max(.35, Math.min(2.4, Math.min(sy, k * 1.5)));
     fitS = [sx, sy];
@@ -1719,14 +1720,28 @@ function graphView() {
     const sw = stage.clientWidth, sh = stage.clientHeight;
     svg.setAttribute("viewBox", `0 0 ${sw} ${sh}`);
     const P = n => [sw / 2 + (n.x - bounds.c[0]) * fitS[0] * vz + ox, sh / 2 + (n.y - bounds.c[1]) * fitS[1] * vz + oy];
-    for (const { el, n } of G.els.nodes.values()) { const [x, y] = P(n); el.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`); }
+    for (const { el, n, lab, sub } of G.els.nodes.values()) {
+      const [x, y] = P(n); el.setAttribute("transform", `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+      if (!paper || n.ang == null) continue;
+      // 이름은 원 바깥쪽에: 오른쪽은 왼쪽 맞춤, 왼쪽은 오른쪽 맞춤, 위·아래는 가운데
+      const c = Math.cos(n.ang), sn = Math.sin(n.ang), r = (PR[n.type] || 0) + 6;
+      const side = Math.abs(c) > .18, anchor = !side ? "middle" : c > 0 ? "start" : "end";
+      const lx = side ? c * r : 0, ly = side ? sn * r + 4 : sn < 0 ? -r - 15 : r + 11;
+      for (const [t, dy] of [[lab, 0], [sub, 13]]) { t.setAttribute("x", lx.toFixed(1)); t.setAttribute("y", (ly + dy).toFixed(1)); t.setAttribute("text-anchor", anchor); }
+    }
     // 종이 보기: 모든 선을 같은 방향으로 휘게 하고, 화살표가 기호에 닿기 직전에 멈추게
     const curv = paper ? .2 : 0, R = n => paper ? (n.type === "sender" ? 12 : PR[n.type] + 3) : 0;
     const back = (x, y, tx, ty, r) => { const l = Math.hypot(tx, ty) || 1; return [x - tx / l * r, y - ty / l * r]; };
     const f = v => v.toFixed(1);
     for (const { el, hit, e } of G.els.edges.values()) {
       const [x1, y1] = P(e.a), [x2, y2] = P(e.b);
-      const cx = (x1 + x2) / 2 - (y2 - y1) * curv, cy = (y1 + y2) / 2 + (x2 - x1) * curv;
+      let cx = (x1 + x2) / 2 - (y2 - y1) * curv, cy = (y1 + y2) / 2 + (x2 - x1) * curv;
+      if (paper) {
+        // 원 둘레의 두 점을 잇는 선은 원 가운데 쪽으로 휜다. 멀리 떨어진 사이일수록 더 깊게.
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, ccx = sw / 2 + ox, ccy = sh / 2 + oy;
+        const chord = Math.hypot(x2 - x1, y2 - y1), dia = 2 * circleR * fitS[0] * vz || 1, k = .2 + .45 * Math.min(1, chord / dia);
+        cx = mx + (ccx - mx) * k - (y2 - y1) * .06; cy = my + (ccy - my) * k + (x2 - x1) * .06;
+      }
       const [sx, sy] = back(x1, y1, x1 - cx, y1 - cy, R(e.a)), [ex, ey] = back(x2, y2, x2 - cx, y2 - cy, R(e.b));
       const d = curv ? `M${f(sx)} ${f(sy)}Q${f(cx)} ${f(cy)} ${f(ex)} ${f(ey)}` : `M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}`;
       el.setAttribute("d", d); hit.setAttribute("d", d);
@@ -1737,7 +1752,7 @@ function graphView() {
       const [x, y] = P(nt.n);
       let ux = x - sw / 2, uy = y - sh / 2, l = Math.hypot(ux, uy);
       let tx, ty;
-      if (l < 30) { tx = x + 110; ty = y - 130; ux = 1; }   // 가운데(나)는 오른쪽 위로 비켜
+      if (l < 30 || nt.n.type === "me") { tx = x + Math.max(150, sw * .14); ty = y - 40; ux = 1; }   // 나는 오른쪽 위로, 옆 이름을 피해 비켜
       else { ux /= l; uy /= l; tx = x + ux * 120 + 30; ty = y + uy * 90 - 10; }
       // 판 밖으로 나가지 않게: 오른쪽 끝이면 왼쪽으로 붙여 적는다
       const left = ux < -.2 || tx > sw - 220;
@@ -1823,12 +1838,35 @@ function graphView() {
     for (const n of nodes) gstate.pos.set(n.id, [n.x, n.y]);
   }
 
+  // 종이 보기 배치 (Lombardi 식): 나는 원의 맨 위, 나머지는 큰 원 둘레에 이어진 것끼리 이웃하게.
+  // 나에서 메일이 흘러온 길을 거슬러 올라가며(출발 위치 → 발송 서비스 → 보낸 회사) 차례를 정하고,
+  // 어디에도 거슬러 닿지 않는 것(추적 도메인)은 나의 왼쪽, 원의 끝에 둔다.
+  function circleLayout(nodes, edges) {
+    const kids = new Map(nodes.map(n => [n.id, []]));
+    for (const e of edges) if (!e.dashed) kids.get(e.b.id).push(e.a);
+    const big = (a, b) => (b.count || 0) - (a.count || 0) || (a.id < b.id ? -1 : 1);
+    for (const k of kids.values()) k.sort(big);
+    const me = nodes.find(n => n.type === "me"), ring = [], seen = new Set();
+    const walk = n => { if (seen.has(n.id)) return; seen.add(n.id); if (n !== me) ring.push(n); kids.get(n.id).forEach(walk); };
+    walk(me);
+    ring.push(...nodes.filter(n => !seen.has(n.id)).sort(big));
+    const R = Math.max(280, ring.length * 15), gap = .34, span = 2 * Math.PI - 2 * gap;
+    me.ang = -Math.PI / 2; me.x = 0; me.y = -R;
+    ring.forEach((n, i) => {
+      n.ang = -Math.PI / 2 + gap + span * (ring.length === 1 ? .5 : i / (ring.length - 1));
+      n.x = R * Math.cos(n.ang); n.y = R * Math.sin(n.ang);
+    });
+    circleR = R;
+  }
+  let circleR = 0;
+
   function draw() {
     const { nodes, edges } = ctl.build();
-    layout(nodes, edges);
+    if (paper) circleLayout(nodes, edges); else { nodes.forEach(n => { delete n.ang; }); layout(nodes, edges); }
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const n of nodes) { x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y); }
-    bounds = { w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0), c: [(x0 + x1) / 2, (y0 + y1) / 2] };
+    bounds = paper ? { w: 2 * circleR, h: 2 * circleR, c: [0, 0] }
+                   : { w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0), c: [(x0 + x1) / 2, (y0 + y1) / 2] };
     svg = s("svg", { class: "graph", role: "img",
       "aria-label": L("메일 관계도: ") + nodes.length + L("개 기호, ") + edges.length + L("개 선") });
     const maxE = Math.max(1, ...edges.map(e => e.mails.length));
@@ -1847,7 +1885,7 @@ function graphView() {
       const g = paper ? paperNodeEl(n) : nodeEl(n);
       ctl.bindNode(g, n);
       gN.append(g);
-      els.nodes.set(n.id, { el: g, n });
+      els.nodes.set(n.id, { el: g, n, lab: g.querySelector(".glabel"), sub: g.querySelector(".gsub") });
     }
     const marker = (id, color) => {
       const m = s("marker", { id, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "8", markerHeight: "8", orient: "auto", markerUnits: "userSpaceOnUse" });
