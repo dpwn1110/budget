@@ -81,13 +81,29 @@ body.globe-mode footer { display: none; }
 .rbtn { position: relative; width: 40px; height: 40px; display: grid; place-items: center; border: 0; background: none; color: var(--fg); font: 14px var(--data); }
 .rbtn:hover { opacity: 1; filter: drop-shadow(0 0 4px rgba(255,255,255,.5)); }
 .rbtn[aria-pressed="false"] { opacity: .35; }
-.rbtn .rtip { position: absolute; left: 50px; white-space: nowrap; font: 11px var(--data); letter-spacing: .06em; background: var(--bg); border: 0; padding: 4px 8px; opacity: 0; pointer-events: none; transition: opacity .12s; }
-.rbtn:hover .rtip, .rbtn:focus-visible .rtip { opacity: 1; }
+.rbtn .rtip { position: absolute; left: 44px; white-space: nowrap; font: 12px var(--sans); color: var(--dim); text-shadow: 0 0 6px #000, 0 0 2px #000; pointer-events: none; }   /* 이름은 늘 보이게 */
+.rbtn:hover .rtip, .rbtn:focus-visible .rtip { color: var(--fg); }
 .rbtn.info { margin-top: 10px; }
 .rbtn.dcbtn { margin-top: 10px; font: 600 11.5px var(--data); letter-spacing: .08em; }
 .dcsym { width: 18px; font: 600 10px var(--data); letter-spacing: .04em; text-align: center; flex: none; }
 .infocard { left: 68px; top: 50%; transform: translateY(-50%); width: 280px; border: 0; background: var(--bg); box-shadow: 0 0 30px rgba(255,255,255,.36), 0 0 6px rgba(255,255,255,.3); padding: 12px 16px; text-transform: none; font-size: 12px; line-height: 1.55; }
 .infocard p { margin: 0 0 8px; font-family: var(--sans); }
+/* 첫 화면 이야기: 지구본 위에 한 단계씩 */
+.story { left: 16px; top: 50%; transform: translateY(-50%); width: clamp(270px, calc((100vw - 84vh) / 2 - 36px), 440px);   /* 지구본 옆 빈자리만큼 */ text-transform: none; letter-spacing: 0;
+  background: rgba(0,0,0,.78); padding: 20px 22px 18px; box-shadow: 0 0 30px rgba(255,255,255,.22), 0 0 6px rgba(255,255,255,.2); }
+.story .sstep { font: 11px var(--data); letter-spacing: .14em; color: var(--dim); text-transform: uppercase; margin-bottom: 12px; }
+.story .shead { font: 300 clamp(19px, 1.6vw, 24px)/1.4 var(--sans); margin: 0 0 12px; word-break: keep-all; }
+.story .shead b { font-weight: 400; }
+.story .shead .trk { color: var(--track); }
+.story .sbody { font: 14px/1.65 var(--sans); color: var(--dim); margin: 0 0 18px; word-break: keep-all; }
+.story .snav { display: flex; align-items: baseline; gap: 22px; }
+.story .snext { font: 14px var(--sans); color: var(--fg); border-bottom: 1px solid var(--fg); padding: 2px 0; }
+.story .sskip { font: 12.5px var(--sans); color: var(--dim); }
+.story .sskip:hover { color: var(--fg); }
+.story .sdots { margin-left: auto; display: flex; gap: 6px; }
+.story .sdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+.story .sdots i.on { background: var(--fg); }
+.infocard .replay { font: 12.5px var(--sans); color: var(--fg); border-bottom: 1px solid var(--fg); padding: 1px 0; margin-top: 4px; }
 .infocard .rh { font-weight: 600; letter-spacing: .08em; margin-bottom: 8px; }
 .lgl { display: flex; align-items: center; gap: 10px; font-family: var(--sans); padding: 3px 0; }
 .bbar { position: absolute; z-index: 3; left: 16px; bottom: 16px; right: 200px; display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
@@ -103,6 +119,10 @@ body.globe-mode footer { display: none; }
 #page-globe .zoomctl { bottom: auto; top: 50%; right: 16px; transform: translateY(-50%); }
 @media (max-width: 760px) {
   .readout { display: none; }
+  .rbtn .rtip { display: none; }
+  .story { top: auto; bottom: 16px; transform: none; left: 16px; right: 16px; width: auto; padding: 16px 18px 14px; }
+  .storying .bbar, .storying .circles { display: none; }   /* 이야기 중에는 숫자가 이야기 안에 있다 */
+  .story .shead { font-size: 19px; }
   .rail { top: 72px; transform: none; gap: 6px; }
   .rbtn { width: 36px; height: 36px; }
   .infocard { left: 16px; right: 16px; width: auto; top: auto; bottom: 150px; transform: none; }
@@ -244,7 +264,11 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .graphstage .zoomctl { bottom: 12px; right: 4px; }
 .graph { display: block; width: 100%; height: 100%; }
 .gedge { stroke: rgba(255,255,255,.5); fill: none; transition: opacity .15s; }
-.gedge.dash { stroke-dasharray: 3 4; }
+.gedge.dash { stroke-dasharray: 3 4; stroke: rgba(255,69,58,.75); }   /* 색 규칙: 빨강 = 나에게서 새어 나가는 신호 */
+.gedge.dash.on { stroke: var(--track); }
+.sym.trk { stroke: var(--track); }
+.sym.fill.trk { fill: var(--track); }
+.lline.dash { border-top-color: var(--track); }
 .gedge.on { stroke: var(--fg); }
 .ghit { stroke: transparent; stroke-width: 12px; fill: none; cursor: pointer; }   /* fill이 없으면 곡선(path)의 안쪽이 검게 채워진다 */
 .gnode { cursor: pointer; transition: opacity .15s; }
@@ -425,7 +449,7 @@ const LANG = (() => {
   try { return localStorage.getItem("mailtrace.lang") === "en" ? "en" : "ko"; } catch { return "ko"; }
 })();
 const LOCALE = LANG === "en" ? "en-GB" : "ko-KR";
-const I18N_EN = {"서울": "Seoul", "일": "d", "시간": "h", "분": "m", "초": "s", "메일 발송 서비스": "email delivery service", "클라우드": "cloud", "메일함": "mailbox", "호스팅": "hosting", "데이터센터 경유 — ": "Via data centre — ", "운영 주체 미상": "operator unknown", "통신사 회선 — ": "Telecom line — ", "내부망 (위치 없음)": "Internal network (no location)", "데이터센터": "Data centre", "통신사 회선": "Telecom line", "알 수 없음": "Unknown", "자체 서버": "Own servers", " (미확인)": " (unrecognised)", "1×1 크기 속성": "1×1 size attributes", "1px 스타일": "1px style", "이름에 ‘": "name contains ‘", "이미지": "image", "글꼴": "font", "스타일시트": "stylesheet", "스크립트": "script", "프레임": "frame", "미디어": "media", "자동 이동": "auto redirect", "JSON 형식이 아닙니다.": "This is not JSON.", "메일 기록 배열이 아닙니다. parse_mbox.py가 만든 파일인지 확인해 주세요.": "This is not a list of mail records. Please check that the file was made by parse_mbox.py.", "을(를) 그리지 못했습니다: ": " could not be drawn: ", "이 파일에는 위치 정보가 없어서 지구본과 ‘어디서 출발했나’를 그릴 수 없습니다. ": "This file has no location data, so the globe and ‘Where it came from’ cannot be drawn. ", "파서를 --geo-city와 --geo-asn 옵션과 함께 실행해 만든 messages.json을 넣어 주세요.": "Please load a messages.json made by running the parser with --geo-city and --geo-asn.", "지구본": "Globe", "'어디서 출발했나'": "'Where it came from'", "통의 메일": "emails", "개의 추적 픽셀 (": "tracking pixels (in ", "통)": ")", "곳의 제3자 도메인": "third-party domains", "통이 데이터센터 경유": "via data centres", "받은 기간": "received", " 상세 보기": " — open details", "날짜 없음": "No date", "(이름 없음)": "(no name)", "데이터센터 경유": "Via data centre", "위치 없음": "No location", "추적 요소: 픽셀 + 파라미터가 붙은 링크": "Tracking elements: pixels + links with parameters", "추적 픽셀 ": "Tracking pixel  ", "개": "", "제3자 도메인 ": "Third-party domains: ", "곳": "", "통": "", "최신순": "newest first", "오래된 순": "oldest first", "많은 순": "most first", "적은 순": "fewest first", "가나다순": "A–Z", "역순": "Z–A", "보는 중 ": "Showing  ", "모두 보기 ×": "Show all ×", "관계도를 그리지 못했습니다: ": "Could not draw the relationship map: ", "Received 헤더가 없습니다.": "No Received headers.", "Gmail 내부 전달": "Gmail internal handoff", "(보낸 서버 기록 없음)": "(no sending server recorded)", "데이터센터 경유 — Google (메일함 · 위치 비공개)": "Via data centre — Google (mailbox · location undisclosed)", "시각 기록 없음": "No timestamp", "받은편지함": "Inbox", "Google 데이터센터 · 위치 비공개 (헤더에 IP가 없습니다)": "Google data centre · location undisclosed (no IP in the headers)", "첫 구간부터 ": "From the first hop: ", "평면": "Flat", "확대": "Zoom in", "축소": "Zoom out", "처음 보기": "Reset view", " · 끌어서 돌려보기 · ": " · drag to rotate · ", " + 스크롤, 두 손가락, 더블클릭으로 확대": " + scroll, pinch or double-click to zoom", "지도를 그리지 못했습니다: ": "Could not draw the map: ", " + 스크롤로 확대": " + scroll to zoom", "나 · ": "Me · ", " (여는 곳)": " (where I open it)", "경유 위치: ": "Hop locations: ", "■ 데이터센터 ○ 그 밖의 위치 · 선은 지구 위 최단 경로(대권) · 숫자는 아래 경유 순서 · 옅은 마지막 선은 Google 데이터센터(위치 비공개)를 거쳐 ": "■ data centre  ○ elsewhere · lines are great-circle routes · numbers match the hop list below · the faint last line passes Google data centres (location undisclosed) and ends where it is opened, ", "에서 여는 구간": "", "통 — 누르면 Archive에서 이 메일만": " — click to see only these in the Archive", "누르면 Archive에서 이 메일만": "Click to see only these in the Archive", "통 / ": " / ", "데이터센터를 거쳐 도착한 메일": "of emails arrived via a data centre", "데이터센터를 거쳐 온 메일": "Emails that came via a data centre", "대한민국 밖에서 출발한 메일": "of emails started outside South Korea", "출발 위치를 알 수 있는 메일 중": "among emails with a known starting point", "한국 쪽 발신자의 메일 중 해외에서 출발": "of Korean senders’ emails started abroad", "한국 쪽 발신자 = 보낸 주소가 .kr로 끝나거나 보낸 사람 이름이 한글인 경우": "Korean sender = address ends in .kr or the sender name is in Hangul", "한국 쪽 발신자 · 해외에서 출발": "Korean senders · started abroad", "에서 출발한 메일": " — emails that started here", " 데이터센터를 거친 메일": " — emails through this data centre", "데이터센터에서 출발": "Started at a data centre", "그 밖의 곳에서 출발": "Started elsewhere", "한 칸 = 메일 한 통 · 행을 누르면 Archive에서 그 메일만": "One square = one email · click a row to see those emails in the Archive", "어디서 출발했나": "Where it came from", "출발 나라": "Country of origin", "위치를 알 수 있는 첫 구간 기준 · 위치 없음 ": "First located hop · no location: ", "거쳐 간 데이터센터의 운영 주체": "Who runs the data centres it passed through", "한 통이 여러 곳을 거치면 각각 셉니다": "An email passing through several is counted for each", "출발 도시 (상위 12곳)": "City of origin (top 12)", "작은 글씨: 그 출발 지점의 네트워크를 운영하는 곳 중 가장 많은 것 · 해당 메일 수/그 도시 전체": "Small text: the most common network operator at that point · its emails / all from that city", "나": "Me", "메일을 여는 곳 · ": "where I open my email · ", "발송 서비스": "Sending service", "메일을 실제로 보낸 곳 · 번호는 메일 수 순위": "who actually sent it · number = rank by emails", "출발 위치": "Origin", "▲ 데이터센터 △ 그 밖의 곳": "▲ data centre  △ elsewhere", "보낸 회사": "Sender", "메일 수 상위 60곳": "top 60 by emails", "추적 도메인": "Tracking domain", "추적 픽셀이 신호를 보내는 곳 · 상위 30곳": "where tracking pixels report to · top 30", "범례 +": "Legend +", "범례 −": "Legend −", "(제목 없음)": "(no subject)", "닫기": "Close", " · 데이터센터 (": "  · data centre (", "경유 구간": "Hops", "곳 · ": " · ", "추적 픽셀": "Tracking pixels", "제3자 도메인": "Third-party domains", "내 이메일 주소": "My email address", "주소 ": "In ", "곳에 담김 (": " URLs (", "← 목록": "← List", "상세 보기 →": "Open details →", "검색": "Search", "열면 신호가 가는 길": "Where a signal goes when opened", "메일이 온 길": "How the email came", "맞는 메일이 없습니다.": "No matching emails.", "… 외 ": "… and ", " (관계도)": " (map)", "Archive에서 이 메일만 보기": "See only these in the Archive", "굵을수록 메일이 많음 · 나로 가는 마지막 구간은 Google 서버를 거쳐 ": "thicker = more emails · the last leg to me passes Google’s servers and is opened in ", "에서 열림": "", "나 → 추적 도메인": "me → tracking domain", " 접기": " — hide", " 펼치기": " — show", ", 메일 ": ", emails: ", "메일 관계도: ": "Email relationship map: ", "개 기호, ": " symbols, ", "개 선": " lines", "[나 · ": "[ME · ", "메일은 Google 서버(위치 비공개)를 거쳐 ": "Emails pass Google’s servers (location undisclosed) and are opened in ", " 보이기": " — show", "메일이 온 길 · 굵을수록 많음": "How the email came · thicker = more", "열면 신호가 가는 길 · 나 → 추적 도메인": "Where a signal goes when opened · me → tracking domain", "출발 위치와 나(": "Origins and me (", ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다. 메일은 Google 서버(위치 비공개)를 거쳐 ": ") are in their real places; other symbols hang near what they connect to. Emails pass Google’s servers (location undisclosed) and are opened in ", "에서 열립니다.": ".", "끌어서 돌리기 · ": "Drag to rotate · ", " + 스크롤, 두 손가락, 더블클릭으로 확대 · 기호나 선을 누르면 메일 목록.": " + scroll, pinch or double-click to zoom · click a symbol or line for its emails.", "이 페이지는 메일 속 어떤 것도 불러오지 않습니다. 위치: IP Geolocation by DB-IP (CC BY 4.0) · 지도: Natural Earth.": "This page loads nothing from inside the emails. Locations: IP Geolocation by DB-IP (CC BY 4.0) · Map: Natural Earth.", "설명": "About", "재생": "Play", "멈춤": "Pause", "보낸 사람 · 도메인 · 서비스": "sender · domain · service", "메일 검색": "Search emails", "지구본 위 관계도": "Relationship map on the globe", "제3자": "Third party", "링크 ": "Links: ", "파라미터 ": "Parameters  ", "경유 서버": "Relay server", "반송 주소": "Return-Path", "DKIM 서명": "DKIM signature", "헤더": "Header", "← 돌아가기 (Esc)": "← Back  (Esc)", "보낸 사람 표시": "Displayed sender", "실제 발송": "Actually sent by", "없음": "None", "추적": "Tracking", " 픽셀": " pixels", " 파라미터 링크": " links with parameters", " 제3자 도메인": " third-party domains", "경유 경로": "Route", "위에서 아래로, 처음 보낸 서버부터 받은편지함까지. 선의 길이는 구간 사이에 걸린 시간입니다. ": "Top to bottom, from the first sending server to the inbox. Line length is the time between hops. ", "■ 데이터센터 ○ 통신사 회선 – 내부망·미상": "■ data centre  ○ telecom line  – internal / unknown", "이 메일이 연결되는 곳 ": "Where this email connects  ", "왼쪽은 메일을 여는 것만으로 브라우저가 접속하는 곳, 오른쪽은 링크를 눌렀을 때 가는 곳입니다. 이 페이지는 어느 쪽에도 접속하지 않았습니다.": "Left: where your browser connects just by opening the email. Right: where links take you. This page has connected to neither.", "열면 자동으로 접속 · ": "Contacted on open · ", "누르면 이동 · ": "Linked · ", "보이지 않는 크기의 이미지. 메일을 여는 순간 이 주소로 요청이 가고, 주소에 담긴 값으로 누가 언제 열었는지 기록됩니다. 아래 주소는 글자일 뿐 불러오지 않았습니다.": "Invisibly small images. The moment the email is opened, a request goes to this address, and the values inside it record who opened it and when. The addresses below are text only; nothing was loaded.", "찾지 못했습니다.": "None found.", "외부 리소스 주소 전체 · ": "All external resource URLs · ", "링크 주소 전체 · ": "All link URLs · ", "파일을 읽지 못했습니다.": "Could not read the file.", "파서가 만든": "Drop the", "을 여기에 끌어다 놓으세요.": "made by the parser here.", "파일 선택": "Choose file", "관계도": "Relationship map", "지도 없이 본 메일의 길. 기호나 선을 누르면 그 자리에 메일 목록이 뜹니다. 끌어서 이동, ⌘/Ctrl + 스크롤이나 더블클릭으로 확대.": "The routes without the map. Click a symbol or line to list its emails right there. Drag to move; ⌘/Ctrl + scroll or double-click to zoom.", "정렬": "Sort", "날짜": "Date", "추적 픽셀 1개": "1 tracking pixel", "제3자 도메인 1곳": "1 third-party domain", "받은 시각": "Received", "보낸 사람": "Sender", "추적 요소": "Tracking", "이 페이지는 메일 속 이미지·글꼴·스타일시트·스크립트를 하나도 불러오지 않습니다. 브라우저 보안 정책(Content-Security-Policy)으로 바깥 요청을 모두 막아 두었고, 모든 주소는 글자로만 표시합니다. 링크도 누를 수 없게 했습니다.": "This page loads none of the images, fonts, stylesheets or scripts inside the emails. A Content-Security-Policy blocks every outside request, every address is shown as text only, and links cannot be clicked.", "추적 요소 = 추적 픽셀 + 파라미터가 붙은 링크. 데이터센터·통신사 분류와 위치는 IP 대역을 가진 회사 이름과 위치 DB에 따른 추정입니다.": "Tracking elements = tracking pixels + links with parameters. Data-centre / telecom classes and locations are estimates from the IP range owner’s name and a location database.", "지도: Natural Earth (퍼블릭 도메인), Equal Earth 투영, 태평양 중심.": "Map: Natural Earth (public domain), Equal Earth projection, Pacific-centred.", "페이지": "Pages", "다른 파일 불러오기": "Load another file", "데이터센터를 거친 메일만 보기": "Show only mail that passed through a data centre", "데이터센터만": "Data centres only", "데이터센터를 거친 메일만 · ■ 거쳐 간 데이터센터": "Only mail via a data centre · ■ data centres passed through", "자세히": "Detail", "(가림)": "(redacted)"};
+const I18N_EN = {"서울": "Seoul", "일": "d", "시간": "h", "분": "m", "초": "s", "메일 발송 서비스": "email delivery service", "클라우드": "cloud", "메일함": "mailbox", "호스팅": "hosting", "데이터센터 경유 — ": "Via data centre — ", "운영 주체 미상": "operator unknown", "통신사 회선 — ": "Telecom line — ", "내부망 (위치 없음)": "Internal network (no location)", "데이터센터": "Data centre", "통신사 회선": "Telecom line", "알 수 없음": "Unknown", "자체 서버": "Own servers", " (미확인)": " (unrecognised)", "1×1 크기 속성": "1×1 size attributes", "1px 스타일": "1px style", "이름에 ‘": "name contains ‘", "이미지": "image", "글꼴": "font", "스타일시트": "stylesheet", "스크립트": "script", "프레임": "frame", "미디어": "media", "자동 이동": "auto redirect", "JSON 형식이 아닙니다.": "This is not JSON.", "메일 기록 배열이 아닙니다. parse_mbox.py가 만든 파일인지 확인해 주세요.": "This is not a list of mail records. Please check that the file was made by parse_mbox.py.", "을(를) 그리지 못했습니다: ": " could not be drawn: ", "이 파일에는 위치 정보가 없어서 지구본과 ‘어디서 출발했나’를 그릴 수 없습니다. ": "This file has no location data, so the globe and ‘Where it came from’ cannot be drawn. ", "파서를 --geo-city와 --geo-asn 옵션과 함께 실행해 만든 messages.json을 넣어 주세요.": "Please load a messages.json made by running the parser with --geo-city and --geo-asn.", "지구본": "Globe", "'어디서 출발했나'": "'Where it came from'", "통의 메일": "emails", "개의 추적 픽셀 (": "tracking pixels (in ", "통)": ")", "곳의 제3자 도메인": "third-party domains", "통이 데이터센터 경유": "via data centres", "받은 기간": "received", " 상세 보기": " — open details", "날짜 없음": "No date", "(이름 없음)": "(no name)", "데이터센터 경유": "Via data centre", "위치 없음": "No location", "추적 요소: 픽셀 + 파라미터가 붙은 링크": "Tracking elements: pixels + links with parameters", "추적 픽셀 ": "Tracking pixel  ", "개": "", "제3자 도메인 ": "Third-party domains: ", "곳": "", "통": "", "최신순": "newest first", "오래된 순": "oldest first", "많은 순": "most first", "적은 순": "fewest first", "가나다순": "A–Z", "역순": "Z–A", "보는 중 ": "Showing  ", "모두 보기 ×": "Show all ×", "관계도를 그리지 못했습니다: ": "Could not draw the relationship map: ", "Received 헤더가 없습니다.": "No Received headers.", "Gmail 내부 전달": "Gmail internal handoff", "(보낸 서버 기록 없음)": "(no sending server recorded)", "데이터센터 경유 — Google (메일함 · 위치 비공개)": "Via data centre — Google (mailbox · location undisclosed)", "시각 기록 없음": "No timestamp", "받은편지함": "Inbox", "Google 데이터센터 · 위치 비공개 (헤더에 IP가 없습니다)": "Google data centre · location undisclosed (no IP in the headers)", "첫 구간부터 ": "From the first hop: ", "평면": "Flat", "확대": "Zoom in", "축소": "Zoom out", "처음 보기": "Reset view", " · 끌어서 돌려보기 · ": " · drag to rotate · ", " + 스크롤, 두 손가락, 더블클릭으로 확대": " + scroll, pinch or double-click to zoom", "지도를 그리지 못했습니다: ": "Could not draw the map: ", " + 스크롤로 확대": " + scroll to zoom", "나 · ": "Me · ", " (여는 곳)": " (where I open it)", "경유 위치: ": "Hop locations: ", "■ 데이터센터 ○ 그 밖의 위치 · 선은 지구 위 최단 경로(대권) · 숫자는 아래 경유 순서 · 옅은 마지막 선은 Google 데이터센터(위치 비공개)를 거쳐 ": "■ data centre  ○ elsewhere · lines are great-circle routes · numbers match the hop list below · the faint last line passes Google data centres (location undisclosed) and ends where it is opened, ", "에서 여는 구간": "", "통 — 누르면 Archive에서 이 메일만": " — click to see only these in the Archive", "누르면 Archive에서 이 메일만": "Click to see only these in the Archive", "통 / ": " / ", "데이터센터를 거쳐 도착한 메일": "of emails arrived via a data centre", "데이터센터를 거쳐 온 메일": "Emails that came via a data centre", "대한민국 밖에서 출발한 메일": "of emails started outside South Korea", "출발 위치를 알 수 있는 메일 중": "among emails with a known starting point", "한국 쪽 발신자의 메일 중 해외에서 출발": "of Korean senders’ emails started abroad", "한국 쪽 발신자 = 보낸 주소가 .kr로 끝나거나 보낸 사람 이름이 한글인 경우": "Korean sender = address ends in .kr or the sender name is in Hangul", "한국 쪽 발신자 · 해외에서 출발": "Korean senders · started abroad", "에서 출발한 메일": " — emails that started here", " 데이터센터를 거친 메일": " — emails through this data centre", "데이터센터에서 출발": "Started at a data centre", "그 밖의 곳에서 출발": "Started elsewhere", "한 칸 = 메일 한 통 · 행을 누르면 Archive에서 그 메일만": "One square = one email · click a row to see those emails in the Archive", "어디서 출발했나": "Where it came from", "출발 나라": "Country of origin", "위치를 알 수 있는 첫 구간 기준 · 위치 없음 ": "First located hop · no location: ", "거쳐 간 데이터센터의 운영 주체": "Who runs the data centres it passed through", "한 통이 여러 곳을 거치면 각각 셉니다": "An email passing through several is counted for each", "출발 도시 (상위 12곳)": "City of origin (top 12)", "작은 글씨: 그 출발 지점의 네트워크를 운영하는 곳 중 가장 많은 것 · 해당 메일 수/그 도시 전체": "Small text: the most common network operator at that point · its emails / all from that city", "나": "Me", "메일을 여는 곳 · ": "where I open my email · ", "발송 서비스": "Sending service", "메일을 실제로 보낸 곳 · 번호는 메일 수 순위": "who actually sent it · number = rank by emails", "출발 위치": "Origin", "▲ 데이터센터 △ 그 밖의 곳": "▲ data centre  △ elsewhere", "보낸 회사": "Sender", "메일 수 상위 60곳": "top 60 by emails", "추적 도메인": "Tracking domain", "추적 픽셀이 신호를 보내는 곳 · 상위 30곳": "where tracking pixels report to · top 30", "범례 +": "Legend +", "범례 −": "Legend −", "(제목 없음)": "(no subject)", "닫기": "Close", " · 데이터센터 (": "  · data centre (", "경유 구간": "Hops", "곳 · ": " · ", "추적 픽셀": "Tracking pixels", "제3자 도메인": "Third-party domains", "내 이메일 주소": "My email address", "주소 ": "In ", "곳에 담김 (": " URLs (", "← 목록": "← List", "상세 보기 →": "Open details →", "검색": "Search", "열면 신호가 가는 길": "Where a signal goes when opened", "메일이 온 길": "How the email came", "맞는 메일이 없습니다.": "No matching emails.", "… 외 ": "… and ", " (관계도)": " (map)", "Archive에서 이 메일만 보기": "See only these in the Archive", "굵을수록 메일이 많음 · 나로 가는 마지막 구간은 Google 서버를 거쳐 ": "thicker = more emails · the last leg to me passes Google’s servers and is opened in ", "에서 열림": "", "나 → 추적 도메인": "me → tracking domain", " 접기": " — hide", " 펼치기": " — show", ", 메일 ": ", emails: ", "메일 관계도: ": "Email relationship map: ", "개 기호, ": " symbols, ", "개 선": " lines", "[나 · ": "[ME · ", "메일은 Google 서버(위치 비공개)를 거쳐 ": "Emails pass Google’s servers (location undisclosed) and are opened in ", " 보이기": " — show", "메일이 온 길 · 굵을수록 많음": "How the email came · thicker = more", "열면 신호가 가는 길 · 나 → 추적 도메인": "Where a signal goes when opened · me → tracking domain", "출발 위치와 나(": "Origins and me (", ")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다. 메일은 Google 서버(위치 비공개)를 거쳐 ": ") are in their real places; other symbols hang near what they connect to. Emails pass Google’s servers (location undisclosed) and are opened in ", "에서 열립니다.": ".", "끌어서 돌리기 · ": "Drag to rotate · ", " + 스크롤, 두 손가락, 더블클릭으로 확대 · 기호나 선을 누르면 메일 목록.": " + scroll, pinch or double-click to zoom · click a symbol or line for its emails.", "이 페이지는 메일 속 어떤 것도 불러오지 않습니다. 위치: IP Geolocation by DB-IP (CC BY 4.0) · 지도: Natural Earth.": "This page loads nothing from inside the emails. Locations: IP Geolocation by DB-IP (CC BY 4.0) · Map: Natural Earth.", "설명": "About", "재생": "Play", "멈춤": "Pause", "보낸 사람 · 도메인 · 서비스": "sender · domain · service", "메일 검색": "Search emails", "지구본 위 관계도": "Relationship map on the globe", "제3자": "Third party", "링크 ": "Links: ", "파라미터 ": "Parameters  ", "경유 서버": "Relay server", "반송 주소": "Return-Path", "DKIM 서명": "DKIM signature", "헤더": "Header", "← 돌아가기 (Esc)": "← Back  (Esc)", "보낸 사람 표시": "Displayed sender", "실제 발송": "Actually sent by", "없음": "None", "추적": "Tracking", " 픽셀": " pixels", " 파라미터 링크": " links with parameters", " 제3자 도메인": " third-party domains", "경유 경로": "Route", "위에서 아래로, 처음 보낸 서버부터 받은편지함까지. 선의 길이는 구간 사이에 걸린 시간입니다. ": "Top to bottom, from the first sending server to the inbox. Line length is the time between hops. ", "■ 데이터센터 ○ 통신사 회선 – 내부망·미상": "■ data centre  ○ telecom line  – internal / unknown", "이 메일이 연결되는 곳 ": "Where this email connects  ", "왼쪽은 메일을 여는 것만으로 브라우저가 접속하는 곳, 오른쪽은 링크를 눌렀을 때 가는 곳입니다. 이 페이지는 어느 쪽에도 접속하지 않았습니다.": "Left: where your browser connects just by opening the email. Right: where links take you. This page has connected to neither.", "열면 자동으로 접속 · ": "Contacted on open · ", "누르면 이동 · ": "Linked · ", "보이지 않는 크기의 이미지. 메일을 여는 순간 이 주소로 요청이 가고, 주소에 담긴 값으로 누가 언제 열었는지 기록됩니다. 아래 주소는 글자일 뿐 불러오지 않았습니다.": "Invisibly small images. The moment the email is opened, a request goes to this address, and the values inside it record who opened it and when. The addresses below are text only; nothing was loaded.", "찾지 못했습니다.": "None found.", "외부 리소스 주소 전체 · ": "All external resource URLs · ", "링크 주소 전체 · ": "All link URLs · ", "파일을 읽지 못했습니다.": "Could not read the file.", "파서가 만든": "Drop the", "을 여기에 끌어다 놓으세요.": "made by the parser here.", "파일 선택": "Choose file", "관계도": "Relationship map", "지도 없이 본 메일의 길. 기호나 선을 누르면 그 자리에 메일 목록이 뜹니다. 끌어서 이동, ⌘/Ctrl + 스크롤이나 더블클릭으로 확대.": "The routes without the map. Click a symbol or line to list its emails right there. Drag to move; ⌘/Ctrl + scroll or double-click to zoom.", "정렬": "Sort", "날짜": "Date", "추적 픽셀 1개": "1 tracking pixel", "제3자 도메인 1곳": "1 third-party domain", "받은 시각": "Received", "보낸 사람": "Sender", "추적 요소": "Tracking", "이 페이지는 메일 속 이미지·글꼴·스타일시트·스크립트를 하나도 불러오지 않습니다. 브라우저 보안 정책(Content-Security-Policy)으로 바깥 요청을 모두 막아 두었고, 모든 주소는 글자로만 표시합니다. 링크도 누를 수 없게 했습니다.": "This page loads none of the images, fonts, stylesheets or scripts inside the emails. A Content-Security-Policy blocks every outside request, every address is shown as text only, and links cannot be clicked.", "추적 요소 = 추적 픽셀 + 파라미터가 붙은 링크. 데이터센터·통신사 분류와 위치는 IP 대역을 가진 회사 이름과 위치 DB에 따른 추정입니다.": "Tracking elements = tracking pixels + links with parameters. Data-centre / telecom classes and locations are estimates from the IP range owner’s name and a location database.", "지도: Natural Earth (퍼블릭 도메인), Equal Earth 투영, 태평양 중심.": "Map: Natural Earth (public domain), Equal Earth projection, Pacific-centred.", "페이지": "Pages", "다른 파일 불러오기": "Load another file", "데이터센터를 거친 메일만 보기": "Show only mail that passed through a data centre", "데이터센터만": "Data centres only", "데이터센터를 거친 메일만 · ■ 거쳐 간 데이터센터": "Only mail via a data centre · ■ data centres passed through", "자세히": "Detail", "(가림)": "(redacted)", "이야기": "Story", "건너뛰기": "Skip", "다음 →": "Next →", "직접 둘러보기 →": "Explore →", "처음부터 다시 보기 →": "Watch from the start →", "메일": "Mail", "내 위치 (고정)": "My position (fixed)", "‘거쳐 가거나 지켜본 곳’은 보낸 회사와 내 메일함(Google)을 뺀 도메인 수입니다: 발송 서비스, 전자 서명(DKIM), 경유 서버, 메일을 열 때 불러오는 곳.": "‘Handled or watched’ counts domains other than the sender and my mailbox (Google): sending services, signatures (DKIM), relay servers and whatever loads when the email is opened."};
 function L(ko) {
   if (LANG !== "en") return ko;
   const v = I18N_EN[ko] ?? I18N_EN[ko.replace(/\s+/g, " ")];
@@ -1371,8 +1395,8 @@ function symbol(type, n, size) {
   } else if (type === "sender") {
     add("rect", { x: -s * .8, y: -s * .8, width: s * 1.6, height: s * 1.6, class: "sym" });
   } else if (type === "tracker") {
-    add("circle", { r: s * .85, class: "sym" });
-    add("circle", { r: s * .22, class: "sym fill" });
+    add("circle", { r: s * .85, class: "sym trk" });
+    add("circle", { r: s * .22, class: "sym fill trk" });
   }
   return g;
 }
@@ -1800,6 +1824,36 @@ function graphView() {
 // 그래서 지구본이 돌아도 떨리지 않고 매끄럽게 따라온다.
 const geoState = { show: { me: true, service: true, city: true, sender: false, tracker: false }, sel: null, back: null };
 
+// 첫 화면 이야기에 쓰는 숫자
+function storyFacts() {
+  const n = DATA.length, senders = new Set(), touched = new Set(), countries = new Set(), cities = new Map(), ops = new Map(), svcs = new Set(), px = new Set();
+  const MINE = new Set(["google.com", "gmail.com", "googlemail.com"]);   // 내 메일함(Gmail)은 따로
+  const useful = h => h && h.includes(".") && !/^[\d.:]+$/.test(h) && !/\.(internal|local|lan|localdomain)$/i.test(h);
+  let dc = 0, withPx = 0, t0 = Infinity, t1 = -Infinity;
+  for (const r of DATA) {
+    const own = regDomain((r.sender && r.sender.domain) || "");
+    if (own) senders.add(own);
+    const other = host => { if (!useful(host)) return; const d = regDomain(host); if (d && d !== own && !MINE.has(d)) touched.add(d); };
+    other(r.service && r.service.domain);
+    (r.dkim_domains || []).forEach(other);
+    (r.hops || []).forEach(hp => { other(hp.rdns); other(hp.from); });
+    ((r.domains && r.domains.contacted_on_open) || []).forEach(other);
+    const o = originOf(r);
+    if (o && o.country) { countries.add(o.country); const k = place(o); cities.set(k, (cities.get(k) || 0) + 1); }
+    if (r.route && r.route.via_datacenter) dc++;
+    for (const op of new Set(((r.route && r.route.datacenters) || []).map(d => d.operator).filter(Boolean))) ops.set(op, (ops.get(op) || 0) + 1);
+    if (r._svc) svcs.add(r._svc);
+    if (r._pixels) withPx++;
+    (r.pixels || []).forEach(p => p.domain && px.add(regDomain(p.domain)));
+    if (r._t) { t0 = Math.min(t0, r._t); t1 = Math.max(t1, r._t); }
+  }
+  const top = m => [...m.entries()].sort((a, b) => b[1] - a[1])[0] || [null, 0];
+  const [topCity, topCityN] = top(cities), [topOp, topOpN] = top(ops);
+  return { n, senders: senders.size, touched: touched.size, countries: countries.size, cities: cities.size, topCity, topCityN,
+           dc, services: svcs.size, topOp, topOpN, withPx, pxDomains: px.size,
+           days: isFinite(t0) ? Math.max(1, Math.round((t1 - t0) / 86400000)) : 30 };
+}
+
 function geoRelView() {
   if (!WORLD) return null;
   const M = graphModel();
@@ -2001,13 +2055,13 @@ function geoRelView() {
     const pix = vm.reduce((a, r) => a + r._pixels, 0);
     const third = new Set(vm.flatMap(r => (r.domains && r.domains.third_party) || [])).size;
     statsBox.replaceChildren(
-      read("MAIL", vm.length), read("PIXEL", pix), read("VIA DC", dc), read("3RD PARTY", third));
+      read(L("메일"), vm.length), read(L("추적 픽셀"), pix), read(L("데이터센터 경유"), dc), read(L("제3자 도메인"), third));
     readout.replaceChildren(
       h("div", { class: "rh" }, L("[나 · ") + ME_PLACE.name.toUpperCase() + "]"),
       h("div", { class: "rv2" }, dms(ME_PLACE.lat, "N", "S")),
       h("div", { class: "rv2" }, dms(ME_PLACE.lon, "E", "W")),
       h("div", { class: "rsep" }),
-      h("div", { class: "rh" }, "CENTRE FIX"),
+      h("div", { class: "rh" }, L("내 위치 (고정)")),
       h("div", { class: "rv2 rit" }, L("메일은 Google 서버(위치 비공개)를 거쳐 ") + ME_PLACE.name + L("에서 열림")));
   }
 
@@ -2025,19 +2079,21 @@ function geoRelView() {
     h("div", { class: "rsep" }),
     h("p", null, L("출발 위치와 나(") + ME_PLACE.name + L(")는 실제 자리, 나머지 기호는 이어진 곳 근처에 매달려 있습니다. 메일은 Google 서버(위치 비공개)를 거쳐 ") + ME_PLACE.name + L("에서 열립니다.")),
     h("p", null, L("끌어서 돌리기 · ") + (IS_MAC ? "⌘" : "Ctrl") + L(" + 스크롤, 두 손가락, 더블클릭으로 확대 · 기호나 선을 누르면 메일 목록.")),
-    h("p", { class: "faint" }, L("이 페이지는 메일 속 어떤 것도 불러오지 않습니다. 위치: IP Geolocation by DB-IP (CC BY 4.0) · 지도: Natural Earth.")));
+    h("p", null, L("‘거쳐 가거나 지켜본 곳’은 보낸 회사와 내 메일함(Google)을 뺀 도메인 수입니다: 발송 서비스, 전자 서명(DKIM), 경유 서버, 메일을 열 때 불러오는 곳.")),
+    h("p", { class: "faint" }, L("이 페이지는 메일 속 어떤 것도 불러오지 않습니다. 위치: IP Geolocation by DB-IP (CC BY 4.0) · 지도: Natural Earth.")),
+    h("button", { class: "replay", on: { click: () => { infoCard.hidden = true; infoBtn.setAttribute("aria-expanded", "false"); story.go(0); } } }, L("처음부터 다시 보기 →")));
   const infoBtn = h("button", { class: "rbtn info", "aria-label": L("설명"), "aria-expanded": "false",
     on: { click: () => { infoCard.hidden = !infoCard.hidden; infoBtn.setAttribute("aria-expanded", String(!infoCard.hidden)); } } }, "?");
   const dcBtn = h("button", { class: "rbtn dcbtn", "aria-pressed": "false", "aria-label": L("데이터센터를 거친 메일만 보기"),
-    on: { click: () => {
-      const on = !geoState.only;
-      geoState.only = on ? (i => !!(DATA[i].route && DATA[i].route.via_datacenter)) : null;
-      dcBtn.setAttribute("aria-pressed", String(on));
-      for (const p of pts) if (p.dc) p.hidden = !on;
-      routes.length = 0;
-      if (on) routes.push(...dcRoutes);
-      built = null; refreshNumbers(); ctl.reselect(); invalidate();
-    } } }, "DC", h("span", { class: "rtip" }, L("데이터센터만")));
+    on: { click: () => setDC(!geoState.only) } }, "DC", h("span", { class: "rtip" }, L("데이터센터만")));
+  function setDC(on) {
+    geoState.only = on ? (i => !!(DATA[i].route && DATA[i].route.via_datacenter)) : null;
+    dcBtn.setAttribute("aria-pressed", String(on));
+    for (const p of pts) if (p.dc) p.hidden = !on;
+    routes.length = 0;
+    if (on) routes.push(...dcRoutes);
+    built = null; refreshNumbers(); ctl.reselect(); invalidate();
+  }
   const rail = h("div", { class: "rail" }, railBtns, dcBtn, infoBtn);
   function syncRail() { railBtns.forEach(b => b.setAttribute("aria-pressed", String(geoState.show[b.dataset.type]))); }
 
@@ -2045,12 +2101,83 @@ function geoRelView() {
   // Archive는 위 메뉴로 가므로, 오른쪽 아래에는 지구본/평면 전환 하나만
   const modeBtn = h("button", { class: "circ inv" }, L("평면"));
 
+  const story = makeStory();
+  // ---- 첫 화면 이야기: 지구본은 그대로 두고, 한 단계씩 보이는 것을 바꾸며 한 문장씩 말한다
+  // 0 한 문장 요약 → 1 출발한 곳 → 2 거쳐 간 서버 → 3 열면 나가는 신호 → 직접 둘러보기
+  function makeStory() {
+    const F = storyFacts();
+    const pct = (a, b) => b ? Math.round(100 * a / b) : 0;
+    const B = (t, cls) => h("b", cls ? { class: cls } : null, String(t));
+    const KO = LANG !== "en";
+    const SHOW = (service, tracker) => ({ service, city: true, sender: false, tracker });
+    const steps = [
+      { label: KO ? "내 받은편지함의 인터넷 지도" : "The internet map of my inbox", show: SHOW(true, false), dc: false,
+        head: KO ? ["보낸 회사는 ", B(F.senders + "곳"), ". 그런데 이 메일들을 거쳐 가거나 지켜본 곳은 ", B(F.touched + "곳"), "입니다."]
+                 : [B(F.senders), " companies sent these emails. ", B(F.touched), " others handled or watched them on the way."],
+        body: KO ? `지난 ${F.days}일 동안 받은 메일 ${F.n}통이 어디서 출발해, 누구의 서버를 거쳐, 열었을 때 어디로 신호를 보내는지 따라가 봅니다.`
+                 : `Follow ${F.n} emails from the last ${F.days} days: where they left from, whose servers carried them, and where they signal when opened.` },
+      { label: KO ? "1 · 출발한 곳" : "1 · Where they left from", show: SHOW(false, false), dc: false,
+        head: KO ? ["메일은 ", B(F.countries + "개 나라"), ", ", B(F.cities + "개 도시"), "에서 출발했습니다."]
+                 : ["The emails left from ", B(F.cities + (F.cities === 1 ? " city" : " cities")), " in ", B(F.countries + (F.countries === 1 ? " country" : " countries")), "."],
+        body: (F.topCity ? (KO ? `가장 많은 곳은 ${F.topCity} (${F.topCityN}통). ` : `Most came from ${F.topCity} (${F.topCityN}). `) : "")
+            + (KO ? "보낸 회사가 한국에 있어도, 메일은 대개 그 회사가 빌린 해외 서버에서 출발합니다. ▲는 데이터센터, △는 그 밖의 곳입니다."
+                  : "Even when the company is in Korea, the email usually leaves from a server it rents abroad. ▲ data centre, △ elsewhere.") },
+      { label: KO ? "2 · 거쳐 간 서버" : "2 · The servers in between", show: SHOW(true, false), dc: true,
+        head: KO ? [B(`${F.dc}통 (${pct(F.dc, F.n)}%)`), "이 데이터센터를 거쳤습니다."]
+                 : [B(`${F.dc} emails (${pct(F.dc, F.n)}%)`), " passed through a data centre."],
+        body: KO ? `회사가 직접 보내지 않고 ${F.services}개 발송 서비스(⬡)가 대신 보냈습니다.` + (F.topOp ? ` 가장 많이 거친 곳은 ${F.topOp} (${F.topOpN}통).` : "") + " ■는 거쳐 간 데이터센터 자리입니다."
+                 : `The companies did not send them themselves: ${F.services} sending services (⬡) did.` + (F.topOp ? ` The most used: ${F.topOp} (${F.topOpN}).` : "") + " ■ marks each data centre passed." },
+      { label: KO ? "3 · 열면 나가는 신호" : "3 · The signal when you open", show: SHOW(false, true), dc: false,
+        head: KO ? [B(`${F.withPx}통 (${pct(F.withPx, F.n)}%)`, "trk"), "에 추적 픽셀이 숨어 있습니다. 열면 ", B(F.pxDomains + "곳", "trk"), "으로 ‘읽음’ 신호가 갑니다."]
+                 : [B(`${F.withPx} emails (${pct(F.withPx, F.n)}%)`, "trk"), " hide a tracking pixel. Opening them sends a ‘read’ signal to ", B(F.pxDomains + " places", "trk"), "."],
+        body: KO ? "추적 픽셀은 1×1 크기의 보이지 않는 이미지입니다. 메일을 열면 이 이미지를 내려받으면서, 언제 몇 번 열었는지가 보낸 쪽에 기록됩니다. 빨간 점선이 그 신호의 길입니다. (이 페이지는 픽셀을 불러오지 않습니다.)"
+                 : "A tracking pixel is an invisible 1×1 image. Opening the email downloads it, and the sender logs when and how often you opened it. The red dashed lines are those signals. (This page never loads them.)" },
+    ];
+    const el = h("div", { class: "hud story", role: "region", "aria-live": "polite", "aria-label": L("이야기") });
+    let at = 0;
+    function render() {
+      const st = steps[at], last = at === steps.length - 1;
+      el.replaceChildren(
+        h("div", { class: "sstep" }, st.label),
+        h("p", { class: "shead" }, st.head),
+        h("p", { class: "sbody" }, st.body),
+        h("div", { class: "snav" },
+          h("button", { class: "snext", on: { click: () => go(at + 1) } }, last ? L("직접 둘러보기 →") : L("다음 →")),
+          last ? null : h("button", { class: "sskip", on: { click: () => go(steps.length) } }, L("건너뛰기")),
+          h("span", { class: "sdots", "aria-hidden": "true" }, steps.map((_, i) => h("i", { class: i === at ? "on" : "" })))));
+    }
+    function apply(show, dc) {
+      Object.assign(geoState.show, show);
+      ctl.select(null);
+      syncRail(); setDC(dc);
+    }
+    function go(k) {
+      if (el.parentElement) el.parentElement.classList.toggle("storying", k < steps.length);
+      if (k >= steps.length) {   // 끝: 기본 보기로 돌아가 버튼을 보여 준다
+        el.hidden = true; rail.hidden = false;
+        apply({ service: true, city: true, sender: false, tracker: false }, false);
+        return;
+      }
+      at = Math.max(0, k);
+      el.hidden = false; rail.hidden = true; infoCard.hidden = true;
+      apply(steps[at].show, steps[at].dc);
+      render();
+    }
+    document.addEventListener("keydown", e => {
+      if (el.hidden || document.getElementById("page-globe").hidden || e.target.closest("input, textarea")) return;
+      if (e.key === "ArrowRight") { e.preventDefault(); go(at + 1); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); go(at - 1); }
+      else if (e.key === "Escape") go(steps.length);
+    });
+    return { el, go };
+  }
+
   const fig = worldView({
     points: pts, routes, spin: true, maxH: () => innerHeight, fill: true,
     ariaLabel: L("지구본 위 관계도"), remember: false, caption: "",
     hud: { cross: ME_PLACE },
     overlay: { mount: (stage, inv) => {
-      stage.append(svg, ctl.info, readout, rail, infoCard,
+      stage.append(svg, ctl.info, readout, rail, infoCard, story.el,
         h("div", { class: "bbar" }, statsBox), h("div", { class: "circles" }, modeBtn));
       invalidate = inv; host.el = stage;
     }, draw: overlayDraw },
@@ -2060,7 +2187,7 @@ function geoRelView() {
     fig.api.setMode(next); modeBtn.textContent = next === "globe" ? L("평면") : L("지구본");
   });
   syncRail(); refreshNumbers();
-  ctl.reselect();
+  story.go(0);
   return fig;
 }
 
