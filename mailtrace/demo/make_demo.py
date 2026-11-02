@@ -4,6 +4,7 @@
 발송 서비스 호스트 이름과 위치 DB도 흉내 낸 것이다.
 
     python3 demo/make_demo.py          # demo/demo.json 생성
+    python3 demo/embed_demo.py         # 뷰어 첫 화면의 "예시로 보기"에 넣기
 """
 
 import base64
