@@ -13,6 +13,8 @@ Standard library only.
 --anchor latest  window ends at the newest message in the archive
                  (useful when the export is a few weeks old; costs one
                  extra header-only pass)
+--redact         가림 모드: 분석에 필요한 구조(도메인, 파라미터 이름, 경유 서버)만
+                 남기고 나를 알아볼 수 있는 값은 버린다 — 전시·공유용
 """
 
 import argparse
@@ -783,6 +785,39 @@ def annotate_me(rec, forms, address):
 # ---------------------------------------------------------------------------
 # main
 
+# ---------------------------------------------------------------------------
+# 가림 모드 (--redact)
+#
+# 추적 주소·링크에는 받는 사람마다 다른 번호(uid, 토큰, 수신 거부 키)가 값으로 들어 있고,
+# 반송 주소(Return-Path)에는 내 주소가 통째로 들어가기도 한다(bounce-…=me=gmail.com@…).
+# 이 값들을 지우고 "어디로, 어떤 이름의 파라미터를 붙여 보내는지"만 남긴다.
+
+def redact_url(url):
+    """https://host/경로?uid=abc&e=x → https://host/…?uid=&e= (경로와 값은 지움)"""
+    try:
+        u = urlsplit(url)
+        host = u.hostname or ""
+        port = u.port
+    except ValueError:
+        return None
+    if not host:
+        return None
+    q = "&".join(k + "=" for k, _ in parse_qsl(u.query, keep_blank_values=True))
+    return (u.scheme or "https") + "://" + host + (f":{port}" if port else "") + \
+        ("/…" if u.path.strip("/") else "/") + ("?" + q if q else "")
+
+
+def redact(rec):
+    rec["subject"] = None                      # 제목은 내 생활을 그대로 드러낸다
+    rec["message_id"] = None
+    rp = rec.get("return_path")
+    rec["return_path"] = ("…@" + addr_domain(rp)) if rp else None
+    for item in rec["pixels"] + rec["resources"] + rec["links"]:
+        item["url"] = redact_url(item["url"])
+    rec["redacted"] = True
+    return rec
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("mbox")
@@ -794,6 +829,8 @@ def main():
     ap.add_argument("--geo-asn", help="DB-IP ASN lite CSV(.gz) — 경유 IP의 네트워크 운영 주체")
     ap.add_argument("--me", metavar="주소@gmail.com",
                     help="이 이메일 주소가 픽셀·링크 주소 안에 (그대로·base64·해시로) 들어 있는지 찾는다. 주소는 저장하지 않음")
+    ap.add_argument("--redact", action="store_true",
+                    help="가림 모드: 제목·메시지 ID·주소 속 값(토큰·ID)·반송 주소를 지우고 도메인·파라미터 이름만 남긴다")
     args = ap.parse_args()
 
     hparse = BytesHeaderParser(policy=policy.compat32)
@@ -859,6 +896,8 @@ def main():
                         me_where[w] += 1
                     for d in {reg_domain(x["domain"]) for x in rec["me"]}:
                         me_domains[d] += 1
+            if args.redact:
+                redact(rec)                    # --me 검사는 지우기 전의 주소로 한다
             rec["id"] = stats["kept"]
             stats["kept"] += 1
             stats["pixels"] += rec["counts"]["pixels"]
@@ -909,6 +948,8 @@ def main():
         with open(args.out, "w", encoding="utf-8") as fh:
             fh.write("[\n" + ",\n".join(json.dumps(r, ensure_ascii=False) for r in records) + "\n]\n")
         geo.summary(records, args.top)
+    if args.redact:
+        w("\n가림 모드: 제목·메시지 ID·반송 주소·주소 속 값(토큰·ID)을 지웠습니다. 도메인과 파라미터 이름은 남아 있습니다.\n")
     w(f"\n저장: {args.out}\n")
 
 
