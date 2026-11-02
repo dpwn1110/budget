@@ -3,10 +3,7 @@
 build_fonts.py — Pretendard(SIL OFL 1.1)를 viewer.html 안에 data: URI로 넣는다.
 인터넷 없이도, 어느 컴퓨터에서나 같은 글꼴로 보이게 하려는 것.
 
-- Pretendard  300 · 400 (KS X 1001 한글 + 라틴 부분 집합)
-
-데이터·큰 숫자용 Neue Sammlung(nice to type)은 상업 글꼴이라 넣지 않는다.
-컴퓨터에 설치돼 있으면 뷰어가 이름으로 찾아 쓰고, 없으면 Pretendard로 보인다.
+- Pretendard  300 · 400 · 600 (KS X 1001 한글 + 라틴 부분 집합) — 하나로 쓰고 굵기·크기로 층을 나눈다
 
 글꼴 파일(woff2)과 목록(faces.json)은 이 폴더에 두고, viewer.html의 /*FONTS-BEGIN*/ … /*FONTS-END*/ 사이를 채운다.
 
@@ -23,7 +20,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VIEWER = os.path.join(os.path.dirname(HERE), "viewer.html")
-PRETENDARD = [("300", "Light"), ("400", "Regular")]
+PRETENDARD = [("300", "Light"), ("400", "Regular"), ("600", "SemiBold")]
 
 
 def vendor_pretendard(src):

@@ -12,5 +12,12 @@
   "weight": "400",
   "file": "Pretendard-Regular.subset.woff2",
   "range": null
+ },
+ {
+  "family": "Pretendard",
+  "style": "normal",
+  "weight": "600",
+  "file": "Pretendard-SemiBold.subset.woff2",
+  "range": null
  }
 ]
