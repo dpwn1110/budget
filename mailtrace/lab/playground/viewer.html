@@ -53,7 +53,7 @@ header.top { position: fixed; z-index: 20; top: 16px; left: 16px; padding: 0; bo
 /* 스크롤하는 페이지에서는 메뉴 뒤를 검은 띠로 가려 글자가 겹치지 않게 */
 body:not(.globe-mode) header.top { top: 0; left: 0; right: 0; padding: 16px 16px 10px; background: var(--bg); border-bottom: 1px solid var(--hair); }
 .brand { display: flex; }
-main { padding-top: 76px; }
+main { padding-top: max(76px, calc(var(--headh, 56px) + 20px)); }   /* 칩이 둘째 줄로 내려가 헤더가 높아져도 내용이 가려지지 않게 */
 body.globe-mode { overflow: hidden; }
 body.globe-mode footer { display: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -319,7 +319,7 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 .sym.fill.trk { fill: var(--track); }
 .lline.dash { border-top-color: var(--track); }
 .gedge.on { stroke: var(--fg); }
-.ghit { stroke: transparent; stroke-width: 12px; fill: none; cursor: pointer; }   /* fill이 없으면 곡선(path)의 안쪽이 검게 채워진다 */
+.ghit { stroke: transparent; stroke-width: 14px; fill: none; cursor: pointer; }   /* fill이 없으면 곡선(path)의 안쪽이 검게 채워진다 */
 .gnode { cursor: pointer; transition: opacity .15s; }
 .gnode:focus-visible { outline: none; }
 .gnode:focus-visible .sym { stroke-width: 2.5; }
@@ -392,6 +392,8 @@ section.part > .note { margin: 0 0 32px; color: var(--dim); font-size: 13px; max
 @media (max-width: 760px) { #selchip { margin-left: 0; padding-left: 0; border-left: 0; flex-wrap: wrap; gap: 4px 12px; } }
 .gnode, .gedge { transition: opacity .18s ease; }
 .gnode.out, .gedge.out { opacity: .16; }
+/* 작은 묶음: 나머지를 더 어둡게 하지 않고, 고른 것을 은은하게 빛나게 (왼쪽 버튼에 쓰는 그 빛) */
+.few .gnode.in .sym, .few .gedge.on { filter: drop-shadow(0 0 3px rgba(255,255,255,.75)); }
 .u { transition: opacity .18s ease; }
 .u.out { opacity: .14; }
 .stat.pick { text-align: left; cursor: pointer; }
@@ -821,6 +823,7 @@ function route() {
   fromDetail = false;
 }
 window.addEventListener("hashchange", () => { route(); renderChip(); });
+new ResizeObserver(([e]) => document.documentElement.style.setProperty("--headh", e.target.offsetHeight + "px")).observe(document.getElementById("top"));
 // Esc: 열린 것(메일 상세, 이야기, 찾기 목록)이 먼저 닫히고, 그다음에 선택을 푼다
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape" || !SEL || e.defaultPrevented) return;
@@ -1238,6 +1241,7 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
       if (anim.t0 === null) anim.t0 = t;
       const f = Math.min(1, (t - anim.t0) / anim.dur), e = 1 - Math.pow(1 - f, 3);
       lam0 = anim.from + (anim.to - anim.from) * e; dirty = true;
+      if (anim.pto != null) phi0 = anim.pfrom + (anim.pto - anim.pfrom) * e;
       if (f >= 1) anim = null;
     } else if (mode === "globe" && spin && !REDUCE && !dragging && !pinch && zoom < 1.05 && t > resumeAt) {
       // 서쪽에서 동쪽으로 자전하는 것처럼 보이게. 마우스를 올려 두면 기호를 누를 수 있게 천천히.
@@ -1310,7 +1314,14 @@ function worldView({ points, routes, spin, maxH, caption, ariaLabel, remember, o
   sync();
   requestAnimationFrame(frame);
   // 바깥(첫 화면의 버튼들)에서 쓰는 조작
-  fig.api = { mode: () => mode, setMode: m => { mode = m; sync(); }, zoom: f => zoomAt(f, W / 2, H / 2), reset };
+  // lookAt: 지구본을 그 경도·위도 쪽으로 천천히 돌리고, 잠시 스스로 돌지 않는다 (확대 중이거나 평면이면 그대로)
+  function lookAt(lon, lat) {
+    if (mode !== "globe" || zoom > 1.05 || REDUCE) return;
+    const d = ((lon - lam0) % 360 + 540) % 360 - 180;
+    anim = { from: lam0, to: lam0 + d, pfrom: phi0, pto: Math.max(-35, Math.min(42, lat)), t0: null, dur: 900 };
+    resumeAt = performance.now() + 6000;
+  }
+  fig.api = { mode: () => mode, setMode: m => { mode = m; sync(); }, zoom: f => zoomAt(f, W / 2, H / 2), reset, lookAt };
   return fig;
 }
 
@@ -1367,13 +1378,21 @@ const SUBS = {
 };
 // toggle: 같은 것을 다시 누르면 풀기 (기호). go: 고른 뒤 지구본으로 (Analysis의 숫자·행)
 function setSel(s, { toggle = false, go = false } = {}) {
+  clearTimeout(peekTimer);
   if (s && !s.ids.size) s = null;
   if (toggle && s && SEL && s.key === SEL.key) s = null;
   SEL = s; PEEK = null;
   paintSel();
   if (go && location.hash !== "#/") location.hash = "#/";
 }
+// 겹친 선들 위를 지날 때 깜빡이지 않게: 떠날 때는 잠깐(90ms) 기다렸다 지우고, 그 사이 다른 것에 닿으면 바로 바꾼다
+let peekTimer = 0;
 function peek(s) {
+  clearTimeout(peekTimer);
+  if (!s) { peekTimer = setTimeout(() => applyPeek(null), 90); return; }
+  applyPeek(s);
+}
+function applyPeek(s) {
   if ((PEEK && PEEK.key) === (s && s.key)) return;
   PEEK = s;
   paintSel(true);
@@ -1773,8 +1792,12 @@ function relCtl(M, st, renderer, popupIn) {
   // 강조: 지금 보이는 묶음(미리 보기 또는 선택)이 지나간 것만 그대로, 나머지는 흐리게 (지우지 않는다).
   // 선택이 있으면 기호 아래 숫자도 "고른 것 / 전체"
   function applyEmphasis(nodeEls, edgeEls, ids) {
+    let root = null;
     for (const { el, n } of nodeEls) {
-      el.classList.toggle("out", !!ids && n.type !== "me" && !n.mails.some(i => ids.has(i)));
+      root = root || el.ownerSVGElement;
+      const has = !!ids && n.type !== "me" && n.mails.some(i => ids.has(i));
+      el.classList.toggle("out", !!ids && n.type !== "me" && !has);
+      el.classList.toggle("in", has);
       const sub = el.querySelector(".gsub"), total = n.count ?? n.mails.length;
       if (sub) sub.textContent = SEL && n.type !== "me" ? Math.min(total, n.mails.filter(i => SEL.ids.has(i)).length) + " / " + total + L("통") : total + L("통");
     }
@@ -1783,6 +1806,7 @@ function relCtl(M, st, renderer, popupIn) {
       el.classList.toggle("out", !!ids && !on);
       el.classList.toggle("on", !!on);
     }
+    if (root) root.classList.toggle("few", !!ids && ids.size <= Math.max(3, DATA.length * .15));
   }
   const side = popupIn ? null : h("div", { class: "gside" }, legend, info);
   return { build, bindNode, bindEdge, applyEmphasis, hover, select, side, legend, legendBtn, info, inTime,
@@ -2141,7 +2165,7 @@ function geoRelView() {
     const RANK = { me: 0, city: 1, service: 2, sender: 3, tracker: 4 };
     const boxes = [];
     const ranked = [...built.els.nodes.values()].filter(({ n }) => shown.has(n.id))
-      .sort((a, b) => RANK[a.n.type] - RANK[b.n.type] || b.n.mails.length - a.n.mails.length);
+      .sort((a, b) => (b.el.classList.contains("in") - a.el.classList.contains("in")) || RANK[a.n.type] - RANK[b.n.type] || b.n.mails.length - a.n.mails.length);   // 고른 것의 이름이 먼저 자리를 잡는다
     for (const item of built.els.nodes.values()) if (!shown.has(item.n.id)) item.el.style.display = "none";
     for (const item of ranked) {
       const { el, n } = item, p = pos.get(n.id);
@@ -2268,6 +2292,13 @@ function geoRelView() {
   onSel("globe", only => {
     ctl.hover();
     if (only) return;
+    // 작은 묶음(전체의 4분의 1 이하)은 그 길이 한눈에 보이게 지구본을 살짝 돌린다:
+    // 출발 위치들과 나(추적 도메인은 내 곁에 매달려 있다)의 한가운데 쪽으로
+    if (SEL && SEL.ids.size <= DATA.length / 4 && fig && fig.api) {
+      const at = [...SEL.ids].map(i => originOf(DATA[i])).filter(o => o && o.lat != null).map(o => ({ lat: o.lat, lon: o.lon }));
+      at.push({ lat: ME_PLACE.lat, lon: ME_PLACE.lon, weight: Math.max(1, at.length) });
+      const c = centerOf(at); fig.api.lookAt(c.lam, c.phi);
+    }
     const dc = !!SEL && SEL.key === "dc";
     dcBtn.setAttribute("aria-pressed", String(dc));
     for (const p of pts) if (p.dc) p.hidden = !dc;
